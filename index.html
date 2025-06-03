@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>КИВИ BDG — Планировщик закупок</title>
+    <link rel="icon" type="image/png" href="https://cdn.abacus.ai/images/9def1789-3a84-47d1-8403-586336c53bdd.png">
+    <style>
+        body {
+            background: #ff3ebf;
+            min-height: 100vh;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 500px;
+            margin: 32px auto 0 auto;
+            background: #fff;
+            border-radius: 18px;
+            box-shadow: 0 2px 16px rgba(0,0,0,0.10);
+            padding: 0 0 24px 0;
+            overflow: hidden;
+        }
+        .header {
+            background: #ff3ebf;
+            color: #fff;
+            padding: 28px 24px 18px 24px;
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            position: relative;
+        }
+        .logo-block {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+        .bdg-logo {
+            font-size: 2.2rem;
+            font-weight: 900;
+            letter-spacing: 0.12em;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 2px;
+        }
+        .bdg-logo img {
+            width: 32px;
+            height: 32px;
+            vertical-align: middle;
+        }
+        .subtitle {
+            font-size: 0.92rem;
+            color: #fff;
+            opacity: 0.85;
+            margin-left: 2px;
+        }
+        .download-btn {
+            background: #fff;
+            color: #ff3ebf;
+            border: none;
+            border-radius: 8px;
+            padding: 8px 16px 8px 12px;
+            font-size: 1rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+            transition: background 0.2s, color 0.2s;
+        }
+        .download-btn:hover {
+            background: #ffe0f4;
+            color: #d6007a;
+        }
+        .download-btn img {
+            width: 22px;
+            height: 22px;
+        }
+        .budget-block {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 18px 24px 0 24px;
+            gap: 16px;
+        }
+        .budget-input input {
+            width: 120px;
+            padding: 10px;
+            border: 2px solid #ffb6e6;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: #ff3ebf;
+            background: #fff6fb;
+        }
+        .budget-input input:focus {
+            outline: none;
+            border-color: #ff3ebf;
+        }
+        .summary {
+            text-align: right;
+            font-size: 1rem;
+            color: #ff3ebf;
+        }
+        .summary div {
+            margin: 2px 0;
+        }
+        .spent {
+            color: #ff3ebf;
+            font-weight: bold;
+        }
+        .remaining {
+            color: #34C759;
+            font-weight: bold;
+        }
+        .warning {
+            background: #ffe0f4;
+            color: #d6007a;
+            padding: 10px;
+            border-radius: 6px;
+            margin: 18px 24px 0 24px;
+            font-size: 1rem;
+            font-weight: bold;
+            text-align: center;
+        }
+        .stores-list {
+            margin: 24px 24px 0 24px;
+        }
+        .store {
+            margin-bottom: 20px;
+            border: 1px solid #ffe0f4;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        .store-header {
+            background: #fff6fb;
+            padding: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #ffe0f4;
+        }
+        .store-name {
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: #ff3ebf;
+        }
+        .store-subtotal {
+            font-size: 1rem;
+            color: #d6007a;
+            font-weight: bold;
+        }
+        .items-list {
+            padding: 0;
+        }
+        .item {
+            display: flex;
+            align-items: center;
+            padding: 12px 15px;
+            border-bottom: 1px solid #fff6fb;
+        }
+        .item:last-child {
+            border-bottom: none;
+        }
+        .item input[type="checkbox"] {
+            margin-right: 12px;
+            transform: scale(1.2);
+        }
+         .item-delete {
+            background: none;
+            border: none;
+            color: #d6007a;
+            cursor: pointer;
+            font-size: 1.2rem;
+            padding: 0;
+            margin-left: auto;
+        }
+        .item-details {
+            flex: 1;
+            font-size: 1rem;
+        }
+        .item-name {
+            font-weight: 500;
+            color: #333;
+        }
+        .item-calc {
+            color: #666;
+            font-size: 0.95rem;
+        }
+        .item-total {
+            font-weight: bold;
+            color: #ff3ebf;
+        }
+        .item.checked {
+            opacity: 0.6;
+        }
+        .item.checked .item-details {
+            text-decoration: line-through;
+        }
+        .add-buttons {
+            margin: 24px 24px 0 24px;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .btn {
+            padding: 10px 15px;
+            border: none;
+            border-radius: 6px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .btn-primary {
+            background: #ff3ebf;
+            color: white;
+        }
+        .btn-primary:hover {
+            background: #d6007a;
+        }
+        .btn-secondary {
+            background: #fff6fb;
+            color: #ff3ebf;
+        }
+        .btn-secondary:hover {
+            background: #ffe0f4;
+        }
+        .delete-store-btn {
+            background: none;
+            border: none;
+            color: #d6007a;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: bold;
+            padding: 0;
+        }
+        @media (max-width: 600px) {
+            .container {
+                max-width: 100vw;
+                margin: 0;
+                border-radius: 0;
+            }
+            .header, .budget-block, .stores-list, .add-buttons, .warning {
+                margin-left: 0 !important;
+                margin-right: 0 !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo-block">
+                <div class="bdg-logo">
+                    <img src="https://cdn.abacus.ai/images/9def1789-3a84-47d1-8403-586336c53bdd.png" alt="Корзинка">
+                    BDG
+                </div>
+                <div class="subtitle">Продукт КИВИ Маркет</div>
+            </div>
+            <button class="download-btn" onclick="showDownloadInfo()">
+                <img src="https://cdn.abacus.ai/images/9def1789-3a84-47d1-8403-586336c53bdd.png" alt="Скачать">
+                СКАЧАТЬ
+            </button>
+        </div>
+        <div class="budget-block">
+            <div class="budget-input">
+                <input type="number" id="budgetInput" placeholder="Бюджет (руб)" min="0">
+            </div>
+            <div class="summary">
+                <div>Потрачено: <span class="spent" id="spentAmount">0</span> руб</div>
+                <div>Остаток: <span class="remaining" id="remainingAmount">0</span> руб</div>
+            </div>
+        </div>
+        <div id="warningMessage" class="warning" style="display: none;">
+            ⚠️ Вам не хватит денег! Превышение бюджета на <span id="overBudgetAmount">0</span> руб.
+        </div>
+        <div id="storesList" class="stores-list">
+            <!-- Магазины будут добавляться сюда -->
+        </div>
+        <div class="add-buttons">
+            <button class="btn btn-primary" onclick="openAddStoreModal()">+ Добавить магазин</button>
+            <button class="btn btn-secondary" onclick="clearAllData()">Очистить всё</button>
+        </div>
+    </div>
+    <!-- Модальное окно для добавления магазина -->
+    <div id="storeModal" class="modal" style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.3);z-index:1000;">
+        <div class="modal-content" style="background:#fff;padding:24px;border-radius:12px;max-width:400px;margin:80px auto;">
+            <div class="modal-header" style="font-size:1.2rem;font-weight:bold;margin-bottom:15px;">Добавить магазин</div>
+            <div class="form-group" style="margin-bottom:15px;">
+                <label for="storeName">Название магазина:</label>
+                <input type="text" id="storeName" placeholder="Например: Пятёрочка" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:6px;font-size:1rem;">
+            </div>
+            <div class="modal-buttons" style="display:flex;gap:10px;justify-content:flex-end;">
+                <button class="btn btn-secondary" onclick="closeStoreModal()">Отмена</button>
+                <button class="btn btn-primary" onclick="addStore()">Добавить</button>
+            </div>
+        </div>
+    </div>
+    <!-- Модальное окно для добавления товара -->
+    <div id="itemModal" class="modal" style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.3);z-index:1000;">
+        <div class="modal-content" style="background:#fff;padding:24px;border-radius:12px;max-width:400px;margin:80px auto;">
+            <div class="modal-header" style="font-size:1.2rem;font-weight:bold;margin-bottom:15px;">Добавить товар</div>
+            <div class="form-group" style="margin-bottom:15px;">
+                <label for="itemName">Название товара:</label>
+                <input type="text" id="itemName" placeholder="Например: Хлеб" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:6px;font-size:1rem;">
+            </div>
+            <div class="form-group" style="margin-bottom:15px;">
+                <label for="itemQuantity">Количество:</label>
+                <input type="number" id="itemQuantity" placeholder="1" min="1" value="1" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:6px;font-size:1rem;">
+            </div>
+            <div class="form-group" style="margin-bottom:15px;">
+                <label for="itemPrice">Цена за единицу (руб):</label>
+                <input type="number" id="itemPrice" placeholder="50" min="0" step="0.01" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:6px;font-size:1rem;">
+            </div>
+            <div class="modal-buttons" style="display:flex;gap:10px;justify-content:flex-end;">
+                <button class="btn btn-secondary" onclick="closeItemModal()">Отмена</button>
+                <button class="btn btn-primary" onclick="addItem()">Добавить</button>
+            </div>
+        </div>
+    </div>
+    <!-- Popup для инструкции скачивания -->
+    <div id="downloadPopup" style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.3);z-index:2000;">
+        <div style="background:#fff;padding:24px 18px 18px 18px;border-radius:14px;max-width:350px;margin:80px auto;position:relative;">
+            <div style="font-size:1.1rem;font-weight:bold;margin-bottom:10px;color:#ff3ebf;">Как установить на телефон?</div>
+            <div style="font-size:1rem;color:#333;line-height:1.5;">
+                <b>Android:</b> Откройте сайт в Chrome → Меню (⋮) → <b>Добавить на главный экран</b>.<br><br>
+                <b>iPhone:</b> Откройте сайт в Safari → Поделиться → <b>На экран "Домой"</b>.<br><br>
+                После этого приложение появится на главном экране с иконкой корзинки и названием <b>КИВИ BDG</b>.
+            </div>
+            <button onclick="closeDownloadInfo()" style="margin-top:18px;padding:8px 18px;background:#ff3ebf;color:#fff;border:none;border-radius:8px;font-size:1rem;cursor:pointer;">Понятно</button>
+        </div>
+    </div>
+    <script>
+        let appData = {
+            budget: 0,
+            stores: []
+        };
+        let currentStoreIndex = -1;
+        // Загрузка данных при старте
+        window.addEventListener('load', function() {
+            loadData();
+            renderApp();
+        });
+        // Сохранение данных в localStorage
+        function saveData() {
+            localStorage.setItem('shoppingAppData', JSON.stringify(appData));
+        }
+        // Загрузка данных из localStorage
+        function loadData() {
+            const saved = localStorage.getItem('shoppingAppData');
+            if (saved) {
+                appData = JSON.parse(saved);
+            }
+        }
+        // Обновление бюджета
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('budgetInput').addEventListener('input', function() {
+                appData.budget = parseFloat(this.value) || 0;
+                saveData();
+                updateSummary();
+            });
+        });
+        // Отрисовка всего приложения
+        function renderApp() {
+            document.getElementById('budgetInput').value = appData.budget || '';
+            renderStores();
+            updateSummary();
+        }
+        // Отрисовка магазинов
+        function renderStores() {
+            const container = document.getElementById('storesList');
+            container.innerHTML = '';
+            appData.stores.forEach((store, storeIndex) => {
+                const storeDiv = document.createElement('div');
+                storeDiv.className = 'store';
+                const subtotal = calculateStoreSubtotal(store);
+                storeDiv.innerHTML = `
+                    <div class="store-header">
+                        <div class="store-name">
+                            🛒 ${store.name}
+                        </div>
+                        <div>
+                            <button class="btn btn-secondary" onclick="toggleAllItems(${storeIndex})">
+                                Отметить всё
+                            </button>
+                            <button class="delete-store-btn" onclick="deleteStore(${storeIndex})">
+                                Удалить
+                            </button>
+                        </div>
+                        <div class="store-subtotal">₽ ${subtotal}</div>
+                    </div>
+                    <div class="items-list">
+                        ${store.items.map((item, itemIndex) => `
+                            <div class="item ${item.bought ? 'checked' : ''}">
+                                <input type="checkbox" ${item.bought ? 'checked' : ''} 
+                                       onchange="toggleItem(${storeIndex}, ${itemIndex})">
+                                <div class="item-details">
+                                    <div class="item-name">${item.name}</div>
+                                    <div class="item-calc">
+                                        ${item.quantity} шт x ${item.price} руб = 
+                                        <span class="item-total">${(item.quantity * item.price).toFixed(2)} руб</span>
+                                    </div>
+                                </div>
+                                <button class="item-delete" onclick="deleteItem(${storeIndex}, ${itemIndex})">
+                                    ×
+                                </button>
+                            </div>
+                        `).join('')}
+                        <div class="item">
+                            <button class="btn btn-secondary" onclick="openAddItemModal(${storeIndex})" style="width: 100%;">
+                                + Добавить товар
+                            </button>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(storeDiv);
+            });
+        }
+        // Подсчет подитога по магазину
+        function calculateStoreSubtotal(store) {
+            return store.items.reduce((sum, item) => sum + (item.quantity * item.price), 0).toFixed(2);
+        }
+        // Подсчет общих трат
+        function calculateTotalSpent() {
+            return appData.stores.reduce((total, store) => {
+                return total + store.items.reduce((storeTotal, item) => {
+                    return storeTotal + (item.bought ? item.quantity * item.price : 0);
+                }, 0);
+            }, 0);
+        }
+        // Подсчет общей суммы всех товаров
+        function calculateTotalPlanned() {
+            return appData.stores.reduce((total, store) => {
+                return total + store.items.reduce((storeTotal, item) => {
+                    return storeTotal + (item.quantity * item.price);
+                }, 0);
+            }, 0);
+        }
+        // Обновление сводки
+        function updateSummary() {
+            const spent = calculateTotalSpent();
+            const planned = calculateTotalPlanned();
+            const remaining = appData.budget - planned;
+            document.getElementById('spentAmount').textContent = spent.toFixed(2);
+            document.getElementById('remainingAmount').textContent = remaining.toFixed(2);
+            // Показать предупреждение если планируемая сумма превышает бюджет
+            const warning = document.getElementById('warningMessage');
+            const overBudget = planned - appData.budget;
+            if (appData.budget > 0 && planned > appData.budget) {
+                warning.style.display = 'block';
+                document.getElementById('overBudgetAmount').textContent = overBudget.toFixed(2);
+            } else {
+                warning.style.display = 'none';
+            }
+        }
+        // Переключение состояния товара (куплен/не куплен)
+        function toggleItem(storeIndex, itemIndex) {
+            appData.stores[storeIndex].items[itemIndex].bought = 
+                !appData.stores[storeIndex].items[itemIndex].bought;
+            saveData();
+            renderApp();
+        }
+        // Отметить/снять все товары в магазине
+        function toggleAllItems(storeIndex) {
+            const allBought = appData.stores[storeIndex].items.every(item => item.bought);
+            appData.stores[storeIndex].items.forEach(item => {
+                item.bought = !allBought;
+            });
+            saveData();
+            renderApp();
+        }
+        // Удаление товара
+        function deleteItem(storeIndex, itemIndex) {
+            if (confirm('Вы уверены, что хотите удалить этот товар?')) {
+                appData.stores[storeIndex].items.splice(itemIndex, 1);
+                saveData();
+                renderApp();
+            }
+        }
+        // Удаление магазина
+        function deleteStore(storeIndex) {
+            if (confirm('Вы уверены, что хотите удалить этот магазин?')) {
+                appData.stores.splice(storeIndex, 1);
+                saveData();
+                renderApp();
+            }
+        }
+        // Модальные окна
+        function openAddStoreModal() {
+            document.getElementById('storeName').value = '';
+            document.getElementById('storeModal').style.display = 'block';
+        }
+        function closeStoreModal() {
+            document.getElementById('storeModal').style.display = 'none';
+        }
+        function openAddItemModal(storeIndex) {
+            currentStoreIndex = storeIndex;
+            document.getElementById('itemName').value = '';
+            document.getElementById('itemQuantity').value = '1';
+            document.getElementById('itemPrice').value = '';
+            document.getElementById('itemModal').style.display = 'block';
+        }
+        function closeItemModal() {
+            document.getElementById('itemModal').style.display = 'none';
+            currentStoreIndex = -1;
+        }
+        // Добавление магазина
+        function addStore() {
+            const name = document.getElementById('storeName').value.trim();
+            if (!name) {
+                alert('Введите название магазина');
+                return;
+            }
+            appData.stores.push({
+                name: name,
+                items: []
+            });
+            saveData();
+            renderApp();
+            closeStoreModal();
+        }
+        // Добавление товара
+        function addItem() {
+            const name = document.getElementById('itemName').value.trim();
+            const quantity = parseInt(document.getElementById('itemQuantity').value) || 1;
+            const price = parseFloat(document.getElementById('itemPrice').value) || 0;
+            if (!name) {
+                alert('Введите название товара');
+                return;
+            }
+            if (price <= 0) {
+                alert('Введите корректную цену');
+                return;
+            }
+            appData.stores[currentStoreIndex].items.push({
+                name: name,
+                quantity: quantity,
+                price: price,
+                bought: false
+            });
+            saveData();
+            renderApp();
+            closeItemModal();
+        }
+        // Очистка всех данных
+        function clearAllData() {
+            if (confirm('Вы уверены, что хотите удалить все данные?')) {
+                appData = { budget: 0, stores: [] };
+                saveData();
+                renderApp();
+            }
+        }
+        // Закрытие модальных окон по клику вне их
+        window.addEventListener('click', function(event) {
+            const storeModal = document.getElementById('storeModal');
+            const itemModal = document.getElementById('itemModal');
+            const downloadPopup = document.getElementById('downloadPopup');
+            if (event.target === storeModal) {
+                closeStoreModal();
+            }
+            if (event.target === itemModal) {
+                closeItemModal();
+            }
+            if (event.target === downloadPopup) {
+                closeDownloadInfo();
+            }
+        });
+        // Popup для кнопки "Скачать"
+        function showDownloadInfo() {
+            document.getElementById('downloadPopup').style.display = 'block';
+        }
+        function closeDownloadInfo() {
+            document.getElementById('downloadPopup').style.display = 'none';
+        }
+        // Добавим несколько примеров для демонстрации (только если данных нет)
+        if (!localStorage.getItem('shoppingAppData')) {
+            appData.stores = [
+                {
+                    name: "Пятёрочка",
+                    items: [
+                        { name: "Хлеб", quantity: 2, price: 50, bought: false },
+                        { name: "Молоко", quantity: 3, price: 70, bought: false },
+                        { name: "Яйца", quantity: 2, price: 90, bought: true }
+                    ]
+                },
+                {
+                    name: "Магнит",
+                    items: [
+                        { name: "Шампунь", quantity: 1, price: 250, bought: false },
+                        { name: "Дезодорант", quantity: 1, price: 120, bought: false }
+                    ]
+                }
+            ];
+            appData.budget = 5000;
+            saveData();
+        }
+    </script>
+</body>
+</html>
