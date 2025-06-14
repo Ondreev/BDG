@@ -7,335 +7,65 @@
     <link rel="icon" type="image/png" href="https://cdn.abacus.ai/images/9def1789-3a84-47d1-8403-586336c53bdd.png">
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
     <style>
-        body {
-            background: #ff3ebf;
-            min-height: 100vh;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            margin: 0;
-            padding: 0;
-        }
-        .container {
-            max-width: 500px;
-            margin: 32px auto 0 auto;
-            background: #fff;
-            border-radius: 18px;
-            box-shadow: 0 2px 16px rgba(0,0,0,0.10);
-            padding: 0 0 24px 0;
-            overflow: hidden;
-        }
-        .header {
-            background: #ff3ebf;
-            color: #fff;
-            padding: 28px 24px 18px 24px;
-            display: flex;
-            align-items: flex-start;
-            justify-content: space-between;
-            position: relative;
-        }
-        .logo-block {
-            display: flex;
-            flex-direction: column;
-            align-items: flex-start;
-        }
-        .bdg-logo {
-            font-size: 2.2rem;
-            font-weight: 900;
-            letter-spacing: 0.12em;
-            color: #fff;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            margin-bottom: 2px;
-        }
-        .bdg-logo img {
-            width: 32px;
-            height: 32px;
-            vertical-align: middle;
-        }
-        .subtitle {
-            font-size: 0.92rem;
-            color: #fff;
-            opacity: 0.85;
-            margin-left: 2px;
-        }
-        .header-buttons {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
-        .download-btn {
-            background: #fff;
-            color: #ff3ebf;
-            border: none;
-            border-radius: 8px;
-            padding: 8px 16px 8px 12px;
-            font-size: 1rem;
-            font-weight: 600;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            cursor: pointer;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.07);
-            transition: background 0.2s, color 0.2s;
-        }
-        .download-btn:hover {
-            background: #ffe0f4;
-            color: #d6007a;
-        }
-        .download-btn img {
-            width: 22px;
-            height: 22px;
-        }
-        .telegram-btn {
-            background: #fff;
-            color: #179cde;
-            border: none;
-            border-radius: 8px;
-            padding: 8px 16px;
-            font-size: 1rem;
-            font-weight: 600;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            cursor: pointer;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.07);
-            transition: background 0.2s, color 0.2s;
-            text-decoration: none;
-        }
-        .telegram-btn:hover {
-            background: #e5f5fb;
-            color: #0f6fa0;
-        }
-        .budget-block {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin: 18px 24px 0 24px;
-            gap: 16px;
-        }
-        .budget-input {
-            position: relative;
-        }
-        .budget-input input {
-            width: 120px;
-            padding: 10px;
-            border: 2px solid #ffb6e6;
-            border-radius: 8px;
-            font-size: 1.1rem;
-            font-weight: bold;
-            color: #ff3ebf;
-            background: #fff6fb;
-        }
-        .budget-input input:focus {
-            outline: none;
-            border-color: #ff3ebf;
-        }
-        .budget-input input::placeholder {
-            color: #ffb6e6;
-            opacity: 0.7;
-        }
-        .summary {
-            text-align: right;
-            font-size: 1rem;
-            color: #ff3ebf;
-        }
-        .summary div {
-            margin: 2px 0;
-        }
-        .spent {
-            color: #ff3ebf;
-            font-weight: bold;
-        }
-        .remaining {
-            color: #34C759;
-            font-weight: bold;
-        }
-        .warning {
-            background: #ffe0f4;
-            color: #d6007a;
-            padding: 10px;
-            border-radius: 6px;
-            margin: 18px 24px 0 24px;
-            font-size: 1rem;
-            font-weight: bold;
-            text-align: center;
-        }
-        .stores-list {
-            margin: 24px 24px 0 24px;
-        }
-        .store {
-            margin-bottom: 20px;
-            border: 1px solid #ffe0f4;
-            border-radius: 8px;
-            overflow: hidden;
-        }
-        .store-header {
-            background: #fff6fb;
-            padding: 10px 15px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-        .store-header input[type="checkbox"] {
-            margin-right: 8px;
-            transform: scale(1.1);
-            cursor: pointer;
-        }
-        .store-name {
-            flex: 1;
-            font-size: 1.1rem;
-            font-weight: bold;
-            color: #ff3ebf;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-        .store-subtotal {
-            font-size: 1rem;
-            color: #d6007a;
-            font-weight: bold;
-            margin: 0 10px;
-            white-space: nowrap;
-        }
-        .store-delete {
-            background: none;
-            border: none;
-            color: #d6007a;
-            cursor: pointer;
-            font-size: 1.3rem;
-            padding: 0;
-        }
-        .items-list {
-            padding: 0;
-        }
-        .item {
-            display: flex;
-            align-items: center;
-            padding: 12px 15px;
-            border-bottom: 1px solid #fff6fb;
-            cursor: move;
-            transition: background-color 0.2s;
-        }
-        .item:hover {
-            background-color: #fafafa;
-        }
-        .item:last-child {
-            border-bottom: none;
-        }
-        .item.sortable-ghost {
-            opacity: 0.4;
-        }
-        .item.sortable-chosen {
-            background-color: #fff6fb;
-        }
-        .item input[type="checkbox"] {
-            margin-right: 12px;
-            transform: scale(1.2);
-            cursor: pointer;
-        }
-        .item-delete {
-            background: none;
-            border: none;
-            color: #d6007a;
-            cursor: pointer;
-            font-size: 1.2rem;
-            padding: 0;
-            margin-left: auto;
-        }
-        .item-details {
-            flex: 1;
-            font-size: 1rem;
-        }
-        .item-name {
-            font-weight: 500;
-            color: #333;
-        }
-        .item-calc {
-            color: #666;
-            font-size: 0.95rem;
-        }
-        .item-total {
-            font-weight: bold;
-            color: #ff3ebf;
-        }
-        .item.checked {
-            opacity: 0.6;
-        }
-        .item.checked .item-details {
-            text-decoration: line-through;
-        }
-        .add-buttons {
-            margin: 24px 24px 0 24px;
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-        }
-        .btn {
-            padding: 10px 15px;
-            border: none;
-            border-radius: 6px;
-            font-size: 1rem;
-            cursor: pointer;
-            transition: background-color 0.2s;
-        }
-        .btn-primary {
-            background: #ff3ebf;
-            color: white;
-        }
-        .btn-primary:hover {
-            background: #d6007a;
-        }
-        .btn-secondary {
-            background: #fff6fb;
-            color: #ff3ebf;
-        }
-        .btn-secondary:hover {
-            background: #ffe0f4;
-        }
-        .autocomplete-list {
-            position: absolute;
-            top: 100%;
-            left: 0;
-            width: 100%;
-            background: #fff;
-            border: 1px solid #ddd;
-            border-radius: 6px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-            z-index: 10;
-            list-style: none;
-            padding: 0;
-            margin: 0;
-        }
-        .autocomplete-list li {
-            padding: 10px;
-            cursor: pointer;
-        }
-        .autocomplete-list li:hover {
-            background: #ffe0f4;
-        }
-        .drag-handle {
-            color: #ccc;
-            font-size: 1.2rem;
-            margin-right: 8px;
-            cursor: move;
-        }
+        body { background: #ff3ebf; min-height: 100vh; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; margin: 0; padding: 0; }
+        .container { max-width: 500px; margin: 32px auto 0 auto; background: #fff; border-radius: 18px; box-shadow: 0 2px 16px rgba(0,0,0,0.10); padding: 0 0 24px 0; overflow: hidden; }
+        .header { background: #ff3ebf; color: #fff; padding: 28px 24px 18px 24px; display: flex; align-items: flex-start; justify-content: space-between; position: relative; }
+        .logo-block { display: flex; flex-direction: column; align-items: flex-start; }
+        .bdg-logo { font-size: 2.2rem; font-weight: 900; letter-spacing: 0.12em; color: #fff; display: flex; align-items: center; gap: 10px; margin-bottom: 2px; }
+        .bdg-logo img { width: 32px; height: 32px; vertical-align: middle; }
+        .subtitle { font-size: 0.92rem; color: #fff; opacity: 0.85; margin-left: 2px; }
+        .header-buttons { display: flex; flex-direction: column; gap: 8px; }
+        .download-btn { background: #fff; color: #ff3ebf; border: none; border-radius: 8px; padding: 8px 16px 8px 12px; font-size: 1rem; font-weight: 600; display: flex; align-items: center; gap: 8px; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.07); transition: background 0.2s, color 0.2s; }
+        .download-btn:hover { background: #ffe0f4; color: #d6007a; }
+        .download-btn img { width: 22px; height: 22px; }
+        .telegram-btn { background: #fff; color: #179cde; border: none; border-radius: 8px; padding: 8px 16px; font-size: 1rem; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.07); transition: background 0.2s, color 0.2s; text-decoration: none; }
+        .telegram-btn:hover { background: #e5f5fb; color: #0f6fa0; }
+        .budget-block { display: flex; justify-content: space-between; align-items: center; margin: 18px 24px 0 24px; gap: 16px; }
+        .budget-input { position: relative; }
+        .budget-input input { width: 120px; padding: 10px; border: 2px solid #ffb6e6; border-radius: 8px; font-size: 1.1rem; font-weight: bold; color: #ff3ebf; background: #fff6fb; }
+        .budget-input input:focus { outline: none; border-color: #ff3ebf; }
+        .budget-input input::placeholder { color: #ffb6e6; opacity: 0.7; }
+        .summary { text-align: right; font-size: 1rem; color: #ff3ebf; }
+        .summary div { margin: 2px 0; }
+        .spent { color: #ff3ebf; font-weight: bold; }
+        .remaining { color: #34C759; font-weight: bold; }
+        .warning { background: #ffe0f4; color: #d6007a; padding: 10px; border-radius: 6px; margin: 18px 24px 0 24px; font-size: 1rem; font-weight: bold; text-align: center; }
+        .stores-list { margin: 24px 24px 0 24px; }
+        .store { margin-bottom: 20px; border: 1px solid #ffe0f4; border-radius: 8px; overflow: hidden; }
+        .store-header { background: #fff6fb; padding: 10px 15px; display: flex; align-items: center; justify-content: space-between; }
+        .store-header input[type="checkbox"] { margin-right: 8px; transform: scale(1.1); cursor: pointer; }
+        .store-name { flex: 1; font-size: 1.1rem; font-weight: bold; color: #ff3ebf; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .store-subtotal { font-size: 1rem; color: #d6007a; font-weight: bold; margin: 0 10px; white-space: nowrap; }
+        .store-delete { background: none; border: none; color: #d6007a; cursor: pointer; font-size: 1.3rem; padding: 0; }
+        .items-list { padding: 0; }
+        .item { display: flex; align-items: center; padding: 12px 15px; border-bottom: 1px solid #fff6fb; cursor: move; transition: background-color 0.2s; }
+        .item:hover { background-color: #fafafa; }
+        .item:last-child { border-bottom: none; }
+        .item.sortable-ghost { opacity: 0.4; }
+        .item.sortable-chosen { background-color: #fff6fb; }
+        .item input[type="checkbox"] { margin-right: 12px; transform: scale(1.2); cursor: pointer; }
+        .item-delete { background: none; border: none; color: #d6007a; cursor: pointer; font-size: 1.2rem; padding: 0; margin-left: auto; }
+        .item-details { flex: 1; font-size: 1rem; }
+        .item-name { font-weight: 500; color: #333; }
+        .item-calc { color: #666; font-size: 0.95rem; }
+        .item-total { font-weight: bold; color: #ff3ebf; }
+        .item.checked { opacity: 0.6; }
+        .item.checked .item-details { text-decoration: line-through; }
+        .add-buttons { margin: 24px 24px 0 24px; display: flex; gap: 10px; flex-wrap: wrap; }
+        .btn { padding: 10px 15px; border: none; border-radius: 6px; font-size: 1rem; cursor: pointer; transition: background-color 0.2s; }
+        .btn-primary { background: #ff3ebf; color: white; }
+        .btn-primary:hover { background: #d6007a; }
+        .btn-secondary { background: #fff6fb; color: #ff3ebf; }
+        .btn-secondary:hover { background: #ffe0f4; }
+        .autocomplete-list { position: absolute; top: 100%; left: 0; width: 100%; background: #fff; border: 1px solid #ddd; border-radius: 6px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); z-index: 10; list-style: none; padding: 0; margin: 0; }
+        .autocomplete-list li { padding: 10px; cursor: pointer; }
+        .autocomplete-list li:hover { background: #ffe0f4; }
+        .drag-handle { color: #ccc; font-size: 1.2rem; margin-right: 8px; cursor: move; }
         @media (max-width: 600px) {
-            .container {
-                max-width: calc(100vw - 16px);
-                margin: 8px;
-                border-radius: 18px;
-            }
-            .header {
-                padding: 24px 20px 16px 20px;
-            }
-            .budget-block, .stores-list, .add-buttons, .warning {
-                margin-left: 20px;
-                margin-right: 20px;
-            }
-            .budget-input input {
-                width: 100px;
-            }
+            .container { max-width: calc(100vw - 16px); margin: 8px; border-radius: 18px; }
+            .header { padding: 24px 20px 16px 20px; }
+            .budget-block, .stores-list, .add-buttons, .warning { margin-left: 20px; margin-right: 20px; }
+            .budget-input input { width: 100px; }
         }
     </style>
 </head>
@@ -371,8 +101,7 @@
         <div id="warningMessage" class="warning" style="display: none;">
             ⚠️ Вам не хватит денег! Превышение бюджета на <span id="overBudgetAmount">0</span> руб.
         </div>
-        <div id="storesList" class="stores-list">
-        </div>
+        <div id="storesList" class="stores-list"></div>
         <div class="add-buttons">
             <button class="btn btn-primary" onclick="openAddStoreModal()">+ Добавить магазин</button>
             <button class="btn btn-secondary" onclick="clearAllData()">Очистить всё</button>
@@ -393,7 +122,7 @@
     </div>
     <div id="itemModal" class="modal" style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.3);z-index:1000;">
         <div class="modal-content" style="background:#fff;padding:24px;border-radius:12px;max-width:400px;margin:80px auto;position:relative;">
-            <div class="modal-header" style="font-size:1.2rem;font-weight:bold;margin-bottom:15px;">Добавить товар</div>
+            <div class="modal-header" style="font-size:1.2rem;font-weight:bold;margin-bottom:15px;" id="itemModalTitle">Добавить товар</div>
             <div class="form-group" style="margin-bottom:15px; position: relative;">
                 <label for="itemName">Название товара:</label>
                 <input type="text" id="itemName" placeholder="Например: Хлеб" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:6px;font-size:1rem;" oninput="showAutocomplete()">
@@ -409,7 +138,7 @@
             </div>
             <div class="modal-buttons" style="display:flex;gap:10px;justify-content:flex-end;">
                 <button class="btn btn-secondary" onclick="closeItemModal()">Отмена</button>
-                <button class="btn btn-primary" onclick="addItem()">Добавить</button>
+                <button class="btn btn-primary" id="itemModalSaveBtn" onclick="addOrEditItem()">Добавить</button>
             </div>
         </div>
     </div>
@@ -431,16 +160,18 @@
             allItems: []
         };
         let currentStoreIndex = -1;
-        
+        let editStoreIndex = -1;
+        let editItemIndex = -1;
+
         window.addEventListener('load', function() {
             loadData();
             renderApp();
         });
-        
+
         function saveData() {
             localStorage.setItem('shoppingAppData', JSON.stringify(appData));
         }
-        
+
         function loadData() {
             const saved = localStorage.getItem('shoppingAppData');
             if (saved) {
@@ -450,7 +181,7 @@
                 }
             }
         }
-        
+
         document.addEventListener('DOMContentLoaded', function() {
             document.getElementById('budgetInput').addEventListener('input', function() {
                 appData.budget = parseFloat(this.value) || 0;
@@ -458,7 +189,7 @@
                 updateSummary();
             });
         });
-        
+
         function renderApp() {
             const budgetInput = document.getElementById('budgetInput');
             budgetInput.value = appData.budget || '';
@@ -467,7 +198,7 @@
             updateSummary();
             initializeDragAndDrop();
         }
-        
+
         function renderStores() {
             const container = document.getElementById('storesList');
             container.innerHTML = '';
@@ -487,15 +218,15 @@
                             <div class="item ${item.bought ? 'checked' : ''}" data-item-index="${itemIndex}">
                                 <input type="checkbox" ${item.bought ? 'checked' : ''} 
                                        onchange="toggleItem(${storeIndex}, ${itemIndex})">
-                                <div class="item-details" style="cursor: grab;">
-                                    <div class="item-name" onclick="editItemName(${storeIndex}, ${itemIndex})" style="cursor: pointer;">
+                                <div class="item-details" style="cursor: grab;" ondblclick="openEditItemModal(${storeIndex}, ${itemIndex})">
+                                    <div class="item-name">
                                         <span id="itemName-${storeIndex}-${itemIndex}">${item.name}</span>
                                     </div>
                                     <div class="item-calc">
-                                        <span onclick="editItemQuantity(${storeIndex}, ${itemIndex})" style="cursor: pointer;">
+                                        <span>
                                             <span id="itemQuantity-${storeIndex}-${itemIndex}">${formatQuantity(item.quantity)}</span> ${getQuantityUnit(item.quantity)}
                                         </span> x 
-                                        <span onclick="editItemPrice(${storeIndex}, ${itemIndex})" style="cursor: pointer;">
+                                        <span>
                                             <span id="itemPrice-${storeIndex}-${itemIndex}">${item.price}</span> руб
                                         </span> = 
                                         <span class="item-total">${(item.quantity * item.price).toFixed(2)} руб</span>
@@ -512,15 +243,15 @@
                 container.appendChild(storeDiv);
             });
         }
-        
+
         function formatQuantity(quantity) {
             return quantity % 1 === 0 ? quantity.toString() : quantity.toFixed(2).replace(/\.?0+$/, '');
         }
-        
+
         function getQuantityUnit(quantity) {
             return quantity % 1 === 0 ? 'шт' : 'кг';
         }
-        
+
         function initializeDragAndDrop() {
             document.querySelectorAll('.items-list').forEach((list, storeIndex) => {
                 if (list.children.length > 1) {
@@ -542,11 +273,11 @@
                 }
             });
         }
-        
+
         function calculateStoreSubtotal(store) {
             return store.items.reduce((sum, item) => sum + (item.quantity * item.price), 0).toFixed(2);
         }
-        
+
         function calculateTotalSpent() {
             return appData.stores.reduce((total, store) => {
                 return total + store.items.reduce((storeTotal, item) => {
@@ -554,7 +285,7 @@
                 }, 0);
             }, 0);
         }
-        
+
         function calculateTotalPlanned() {
             return appData.stores.reduce((total, store) => {
                 return total + store.items.reduce((storeTotal, item) => {
@@ -562,14 +293,14 @@
                 }, 0);
             }, 0);
         }
-        
+
         function updateSummary() {
             const spent = calculateTotalSpent();
             const planned = calculateTotalPlanned();
             const remaining = appData.budget - spent;
             document.getElementById('spentAmount').textContent = spent.toFixed(2);
             document.getElementById('remainingAmount').textContent = remaining.toFixed(2);
-            
+
             const warning = document.getElementById('warningMessage');
             const overBudget = planned - appData.budget;
             if (appData.budget > 0 && planned > appData.budget) {
@@ -579,14 +310,14 @@
                 warning.style.display = 'none';
             }
         }
-        
+
         function toggleItem(storeIndex, itemIndex) {
             appData.stores[storeIndex].items[itemIndex].bought = 
                 !appData.stores[storeIndex].items[itemIndex].bought;
             saveData();
             renderApp();
         }
-        
+
         function toggleAllItems(storeIndex) {
             const allBought = appData.stores[storeIndex].items.every(item => item.bought);
             appData.stores[storeIndex].items.forEach(item => {
@@ -595,7 +326,7 @@
             saveData();
             renderApp();
         }
-        
+
         function deleteItem(storeIndex, itemIndex) {
             if (confirm('Вы уверены, что хотите удалить этот товар?')) {
                 appData.stores[storeIndex].items.splice(itemIndex, 1);
@@ -603,7 +334,7 @@
                 renderApp();
             }
         }
-        
+
         function deleteStore(storeIndex) {
             if (confirm('Вы уверены, что хотите удалить этот магазин?')) {
                 appData.stores.splice(storeIndex, 1);
@@ -611,144 +342,115 @@
                 renderApp();
             }
         }
-        
-        function editItemName(storeIndex, itemIndex) {
-            const itemNameSpan = document.getElementById(`itemName-${storeIndex}-${itemIndex}`);
-            const itemName = itemNameSpan.textContent;
-            const input = document.createElement('input');
-            input.type = 'text';
-            input.value = itemName;
-            input.style.width = '100%';
-            input.style.fontSize = '1rem';
-            input.addEventListener('blur', function() {
-                const newName = input.value.trim();
-                if (newName) {
-                    appData.stores[storeIndex].items[itemIndex].name = newName;
-                    saveData();
-                    renderApp();
-                } else {
-                    itemNameSpan.textContent = itemName;
-                }
-            });
-            input.addEventListener('keydown', function(event) {
-                if (event.key === 'Enter') {
-                    input.blur();
-                }
-            });
-            itemNameSpan.textContent = '';
-            itemNameSpan.appendChild(input);
-            input.focus();
+
+        function openEditItemModal(storeIndex, itemIndex) {
+            editStoreIndex = storeIndex;
+            editItemIndex = itemIndex;
+            const item = appData.stores[storeIndex].items[itemIndex];
+            document.getElementById('itemName').value = item.name;
+            document.getElementById('itemQuantity').value = item.quantity;
+            document.getElementById('itemPrice').value = item.price;
+            document.getElementById('autocompleteList').style.display = 'none';
+            document.getElementById('autocompleteList').innerHTML = '';
+            document.getElementById('itemModal').style.display = 'block';
+            document.getElementById('itemModalTitle').textContent = 'Редактировать товар';
+            document.getElementById('itemModalSaveBtn').textContent = 'Сохранить';
         }
-        
-        function editItemQuantity(storeIndex, itemIndex) {
-            const itemQuantitySpan = document.getElementById(`itemQuantity-${storeIndex}-${itemIndex}`);
-            const itemQuantity = itemQuantitySpan.textContent;
-            const input = document.createElement('input');
-            input.type = 'number';
-            input.value = itemQuantity;
-            input.step = '0.01';
-            input.min = '0.01';
-            input.style.width = '60px';
-            input.style.fontSize = '0.95rem';
-            input.addEventListener('blur', function() {
-                const newQuantity = parseFloat(input.value);
-                if (!isNaN(newQuantity) && newQuantity > 0) {
-                    appData.stores[storeIndex].items[itemIndex].quantity = newQuantity;
-                    saveData();
-                    renderApp();
-                } else {
-                    itemQuantitySpan.textContent = itemQuantity;
-                }
-            });
-            input.addEventListener('keydown', function(event) {
-                if (event.key === 'Enter') {
-                    input.blur();
-                }
-            });
-            itemQuantitySpan.textContent = '';
-            itemQuantitySpan.appendChild(input);
-            input.focus();
-        }
-        
-        function editItemPrice(storeIndex, itemIndex) {
-            const itemPriceSpan = document.getElementById(`itemPrice-${storeIndex}-${itemIndex}`);
-            const itemPrice = itemPriceSpan.textContent;
-            const input = document.createElement('input');
-            input.type = 'number';
-            input.value = itemPrice;
-            input.step = '0.01';
-            input.style.width = '60px';
-            input.style.fontSize = '0.95rem';
-            input.addEventListener('blur', function() {
-                const newPrice = parseFloat(input.value);
-                if (!isNaN(newPrice) && newPrice >= 0) {
-                    appData.stores[storeIndex].items[itemIndex].price = newPrice;
-                    saveData();
-                    renderApp();
-                } else {
-                    itemPriceSpan.textContent = itemPrice;
-                }
-            });
-            input.addEventListener('keydown', function(event) {
-                if (event.key === 'Enter') {
-                    input.blur();
-                }
-            });
-            itemPriceSpan.textContent = '';
-            itemPriceSpan.appendChild(input);
-            input.focus();
-        }
-        
-        function openAddStoreModal() {
-            document.getElementById('storeName').value = '';
-            document.getElementById('storeModal').style.display = 'block';
-        }
-        
-        function closeStoreModal() {
-            document.getElementById('storeModal').style.display = 'none';
-        }
-        
+
         function openAddItemModal(storeIndex) {
             currentStoreIndex = storeIndex;
+            editStoreIndex = -1;
+            editItemIndex = -1;
             document.getElementById('itemName').value = '';
             document.getElementById('itemQuantity').value = '1';
             document.getElementById('itemPrice').value = '';
             document.getElementById('autocompleteList').style.display = 'none';
             document.getElementById('autocompleteList').innerHTML = '';
             document.getElementById('itemModal').style.display = 'block';
+            document.getElementById('itemModalTitle').textContent = 'Добавить товар';
+            document.getElementById('itemModalSaveBtn').textContent = 'Добавить';
         }
-        
+
         function closeItemModal() {
             document.getElementById('itemModal').style.display = 'none';
             currentStoreIndex = -1;
+            editItemIndex = -1;
+            editStoreIndex = -1;
+            document.getElementById('itemModalTitle').textContent = 'Добавить товар';
+            document.getElementById('itemModalSaveBtn').textContent = 'Добавить';
         }
-        
-        function addStore() {
-            const name = document.getElementById('storeName').value.trim();
+
+        function addOrEditItem() {
+            const name = document.getElementById('itemName').value.trim();
+            const quantity = parseFloat(document.getElementById('itemQuantity').value) || 1;
+            const price = parseFloat(document.getElementById('itemPrice').value) || 0;
+
             if (!name) {
-                alert('Введите название магазина');
+                alert('Введите название товара');
                 return;
             }
-            appData.stores.push({
-                name: name,
-                items: []
-            });
+            if (price <= 0) {
+                alert('Введите корректную цену');
+                return;
+            }
+            if (quantity <= 0) {
+                alert('Введите корректное количество');
+                return;
+            }
+
+            if (editItemIndex !== -1 && editStoreIndex !== -1) {
+                // Режим редактирования
+                appData.stores[editStoreIndex].items[editItemIndex] = {
+                    ...appData.stores[editStoreIndex].items[editItemIndex],
+                    name: name,
+                    quantity: quantity,
+                    price: price
+                };
+            } else {
+                // Режим добавления
+                const newItem = {
+                    name: name,
+                    quantity: quantity,
+                    price: price,
+                    bought: false
+                };
+                appData.stores[currentStoreIndex].items.push(newItem);
+            }
+
+            // Обновление allItems
+            const existingItemIndex = appData.allItems.findIndex(item => 
+                item.name.toLowerCase() === name.toLowerCase()
+            );
+            if (existingItemIndex !== -1) {
+                appData.allItems[existingItemIndex] = {
+                    name: name,
+                    quantity: quantity,
+                    price: price
+                };
+            } else {
+                appData.allItems.push({
+                    name: name,
+                    quantity: quantity,
+                    price: price
+                });
+            }
+
             saveData();
             renderApp();
-            closeStoreModal();
+            closeItemModal();
         }
-        
+
         function showAutocomplete() {
             const itemNameInput = document.getElementById('itemName');
             const itemName = itemNameInput.value.trim().toLowerCase();
             const autocompleteList = document.getElementById('autocompleteList');
             autocompleteList.innerHTML = '';
-            
+
             if (itemName.length > 0) {
                 const suggestions = appData.allItems.filter(item => 
                     item.name.toLowerCase().includes(itemName)
                 );
-                
+
                 if (suggestions.length > 0) {
                     suggestions.forEach(item => {
                         const li = document.createElement('li');
@@ -769,124 +471,93 @@
                 autocompleteList.style.display = 'none';
             }
         }
-        
-        function addItem() {
-            const name = document.getElementById('itemName').value.trim();
-            const quantity = parseFloat(document.getElementById('itemQuantity').value) || 1;
-            const price = parseFloat(document.getElementById('itemPrice').value) || 0;
-            
-           if (!name) {
-    alert('Введите название товара');
-    return;
-}
-if (price <= 0) {
-    alert('Введите корректную цену');
-    return;
-}
-if (quantity <= 0) {
-    alert('Введите корректное количество');
-    return;
-}
 
-const newItem = {
-    name: name,
-    quantity: quantity,
-    price: price,
-    bought: false
-};
-
-appData.stores[currentStoreIndex].items.push(newItem);
-
-const existingItemIndex = appData.allItems.findIndex(item => 
-    item.name.toLowerCase() === name.toLowerCase()
-);
-
-if (existingItemIndex !== -1) {
-    appData.allItems[existingItemIndex] = {
-        name: name,
-        quantity: quantity,
-        price: price
-    };
-} else {
-    appData.allItems.push({
-        name: name,
-        quantity: quantity,
-        price: price
-    });
-}
-
-saveData();
-renderApp();
-closeItemModal();
-}
-
-function clearAllData() {
-    if (confirm('Вы уверены, что хотите удалить все данные?')) {
-        appData = { budget: 0, stores: [], allItems: [] };
-        saveData();
-        renderApp();
-    }
-}
-
-window.addEventListener('click', function(event) {
-    const storeModal = document.getElementById('storeModal');
-    const itemModal = document.getElementById('itemModal');
-    const downloadPopup = document.getElementById('downloadPopup');
-    const autocompleteList = document.getElementById('autocompleteList');
-    
-    if (event.target === storeModal) {
-        closeStoreModal();
-    }
-    if (event.target === itemModal) {
-        closeItemModal();
-    }
-    if (event.target === downloadPopup) {
-        closeDownloadInfo();
-    }
-    if (event.target !== document.getElementById('itemName')) {
-        autocompleteList.style.display = 'none';
-    }
-});
-
-function showDownloadInfo() {
-    document.getElementById('downloadPopup').style.display = 'block';
-}
-
-function closeDownloadInfo() {
-    document.getElementById('downloadPopup').style.display = 'none';
-}
-
-// Демо-данные для первого запуска
-if (!localStorage.getItem('shoppingAppData')) {
-    appData.stores = [
-        {
-            name: "Пятёрочка",
-            items: [
-                { name: "Хлеб", quantity: 2, price: 50, bought: false },
-                { name: "Молоко", quantity: 3, price: 70, bought: false },
-                { name: "Яйца", quantity: 2, price: 90, bought: true },
-                { name: "Бананы", quantity: 0.5, price: 120, bought: false }
-            ]
-        },
-        {
-            name: "Магнит",
-            items: [
-                { name: "Шампунь", quantity: 1, price: 250, bought: false },
-                { name: "Дезодорант", quantity: 1, price: 120, bought: false }
-            ]
+        function addStore() {
+            const name = document.getElementById('storeName').value.trim();
+            if (!name) {
+                alert('Введите название магазина');
+                return;
+            }
+            appData.stores.push({
+                name: name,
+                items: []
+            });
+            saveData();
+            renderApp();
+            closeStoreModal();
         }
-    ];
-    appData.budget = 5000;
-    appData.allItems = [
-        { name: "Хлеб", quantity: 2, price: 50 },
-        { name: "Молоко", quantity: 3, price: 70 },
-        { name: "Яйца", quantity: 2, price: 90 },
-        { name: "Бананы", quantity: 0.5, price: 120 },
-        { name: "Шампунь", quantity: 1, price: 250 },
-        { name: "Дезодорант", quantity: 1, price: 120 }
-    ];
-    saveData();
-}
-</script>
+
+        function closeStoreModal() {
+            document.getElementById('storeModal').style.display = 'none';
+        }
+
+        function clearAllData() {
+            if (confirm('Вы уверены, что хотите удалить все данные?')) {
+                appData = { budget: 0, stores: [], allItems: [] };
+                saveData();
+                renderApp();
+            }
+        }
+
+        window.addEventListener('click', function(event) {
+            const storeModal = document.getElementById('storeModal');
+            const itemModal = document.getElementById('itemModal');
+            const downloadPopup = document.getElementById('downloadPopup');
+            const autocompleteList = document.getElementById('autocompleteList');
+
+            if (event.target === storeModal) {
+                closeStoreModal();
+            }
+            if (event.target === itemModal) {
+                closeItemModal();
+            }
+            if (event.target === downloadPopup) {
+                closeDownloadInfo();
+            }
+            if (event.target !== document.getElementById('itemName')) {
+                autocompleteList.style.display = 'none';
+            }
+        });
+
+        function showDownloadInfo() {
+            document.getElementById('downloadPopup').style.display = 'block';
+        }
+
+        function closeDownloadInfo() {
+            document.getElementById('downloadPopup').style.display = 'none';
+        }
+
+        // Демо-данные для первого запуска
+        if (!localStorage.getItem('shoppingAppData')) {
+            appData.stores = [
+                {
+                    name: "Пятёрочка",
+                    items: [
+                        { name: "Хлеб", quantity: 2, price: 50, bought: false },
+                        { name: "Молоко", quantity: 3, price: 70, bought: false },
+                        { name: "Яйца", quantity: 2, price: 90, bought: true },
+                        { name: "Бананы", quantity: 0.5, price: 120, bought: false }
+                    ]
+                },
+                {
+                    name: "Магнит",
+                    items: [
+                        { name: "Шампунь", quantity: 1, price: 250, bought: false },
+                        { name: "Дезодорант", quantity: 1, price: 120, bought: false }
+                    ]
+                }
+            ];
+            appData.budget = 5000;
+            appData.allItems = [
+                { name: "Хлеб", quantity: 2, price: 50 },
+                { name: "Молоко", quantity: 3, price: 70 },
+                { name: "Яйца", quantity: 2, price: 90 },
+                { name: "Бананы", quantity: 0.5, price: 120 },
+                { name: "Шампунь", quantity: 1, price: 250 },
+                { name: "Дезодорант", quantity: 1, price: 120 }
+            ];
+            saveData();
+        }
+    </script>
 </body>
 </html>
