@@ -20,6 +20,23 @@
         .download-btn img { width: 22px; height: 22px; }
         .telegram-btn { background: #fff; color: #179cde; border: none; border-radius: 8px; padding: 8px 16px; font-size: 1rem; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.07); transition: background 0.2s, color 0.2s; text-decoration: none; }
         .telegram-btn:hover { background: #e5f5fb; color: #0f6fa0; }
+        .lists-bar { display: flex; align-items: center; gap: 10px; margin: 18px 24px 0 24px; flex-wrap: wrap; }
+        .lists-bar button { background: #fff6fb; color: #ff3ebf; border: none; border-radius: 8px; padding: 8px 16px; font-size: 0.95rem; font-weight: 600; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.07); transition: background 0.2s, color 0.2s; }
+        .lists-bar button:hover { background: #ffe0f4; color: #d6007a; }
+        .lists-bar .current-list { font-weight: bold; color: #d6007a; background: #ffe0f4; padding: 8px 12px; border-radius: 8px; font-size: 0.95rem; }
+        .lists-modal { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.3); z-index: 2000; display: flex; align-items: center; justify-content: center; }
+        .lists-modal-content { background: #fff; border-radius: 14px; padding: 24px; max-width: 400px; width: 90vw; max-height: 80vh; overflow-y: auto; }
+        .lists-modal-title { font-size: 1.2rem; font-weight: bold; margin-bottom: 12px; color: #ff3ebf; }
+        .lists-list { list-style: none; padding: 0; margin: 0 0 12px 0; }
+        .lists-list li { display: flex; align-items: center; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #ffe0f4; }
+        .lists-list li:last-child { border-bottom: none; }
+        .lists-list .list-name { flex: 1; font-size: 1rem; }
+        .lists-list .list-actions { display: flex; gap: 6px; }
+        .lists-list .list-actions button { font-size: 0.85rem; padding: 4px 8px; border: none; border-radius: 4px; cursor: pointer; }
+        .lists-list .list-actions .btn-open { background: #ff3ebf; color: white; }
+        .lists-list .list-actions .btn-rename { background: #fff6fb; color: #ff3ebf; }
+        .lists-list .list-actions .btn-delete { background: #ffebee; color: #d32f2f; }
+        .lists-modal-buttons { display: flex; gap: 10px; justify-content: flex-end; margin-top: 10px; }
         .budget-block { display: flex; justify-content: space-between; align-items: center; margin: 18px 24px 0 24px; gap: 16px; }
         .budget-input { position: relative; }
         .budget-input input { width: 120px; padding: 10px; border: 2px solid #ffb6e6; border-radius: 8px; font-size: 1.1rem; font-weight: bold; color: #ff3ebf; background: #fff6fb; }
@@ -64,8 +81,11 @@
         @media (max-width: 600px) {
             .container { max-width: calc(100vw - 16px); margin: 8px; border-radius: 18px; }
             .header { padding: 24px 20px 16px 20px; }
-            .budget-block, .stores-list, .add-buttons, .warning { margin-left: 20px; margin-right: 20px; }
+            .budget-block, .stores-list, .add-buttons, .warning, .lists-bar { margin-left: 20px; margin-right: 20px; }
             .budget-input input { width: 100px; }
+            .lists-bar { gap: 6px; }
+            .lists-bar button { padding: 6px 12px; font-size: 0.9rem; }
+            .lists-bar .current-list { padding: 6px 10px; font-size: 0.9rem; }
         }
     </style>
 </head>
@@ -89,6 +109,12 @@
                 </a>
             </div>
         </div>
+        <div class="lists-bar" id="listsBar">
+            <button onclick="showListsModal()">📋 Мои списки</button>
+            <span class="current-list" id="currentListName"></span>
+            <button onclick="saveCurrentList()">💾 Сохранить</button>
+            <button onclick="createNewList()">+ Новый</button>
+        </div>
         <div class="budget-block">
             <div class="budget-input">
                 <input type="number" id="budgetInput" placeholder="Введите сумму" min="0">
@@ -107,6 +133,20 @@
             <button class="btn btn-secondary" onclick="clearAllData()">Очистить всё</button>
         </div>
     </div>
+
+    <!-- Модальное окно для списков -->
+    <div id="listsModal" class="lists-modal" style="display:none;">
+        <div class="lists-modal-content">
+            <div class="lists-modal-title">📋 Мои списки покупок</div>
+            <ul class="lists-list" id="listsList"></ul>
+            <div class="lists-modal-buttons">
+                <button class="btn btn-primary" onclick="createNewList(); closeListsModal();">+ Создать новый</button>
+                <button class="btn btn-secondary" onclick="closeListsModal()">Закрыть</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модальное окно добавления магазина -->
     <div id="storeModal" class="modal" style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.3);z-index:1000;">
         <div class="modal-content" style="background:#fff;padding:24px;border-radius:12px;max-width:400px;margin:80px auto;">
             <div class="modal-header" style="font-size:1.2rem;font-weight:bold;margin-bottom:15px;">Добавить магазин</div>
@@ -120,6 +160,8 @@
             </div>
         </div>
     </div>
+
+    <!-- Модальное окно добавления/редактирования товара -->
     <div id="itemModal" class="modal" style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.3);z-index:1000;">
         <div class="modal-content" style="background:#fff;padding:24px;border-radius:12px;max-width:400px;margin:80px auto;position:relative;">
             <div class="modal-header" style="font-size:1.2rem;font-weight:bold;margin-bottom:15px;" id="itemModalTitle">Добавить товар</div>
@@ -142,6 +184,8 @@
             </div>
         </div>
     </div>
+
+    <!-- Попап с инструкцией по скачиванию -->
     <div id="downloadPopup" style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.3);z-index:2000;">
         <div style="background:#fff;padding:24px 18px 18px 18px;border-radius:14px;max-width:350px;margin:80px auto;position:relative;">
             <div style="font-size:1.1rem;font-weight:bold;margin-bottom:10px;color:#ff3ebf;">Как установить на телефон?</div>
@@ -153,44 +197,227 @@
             <button onclick="closeDownloadInfo()" style="margin-top:18px;padding:8px 18px;background:#ff3ebf;color:#fff;border:none;border-radius:8px;font-size:1rem;cursor:pointer;">Понятно</button>
         </div>
     </div>
+
     <script>
-        let appData = {
-            budget: 0,
-            stores: [],
-            allItems: []
-        };
+        // === СИСТЕМА УПРАВЛЕНИЯ СПИСКАМИ ===
+        let allLists = [];
+        let currentListIndex = 0;
+        let appData = { budget: 0, stores: [], allItems: [] };
         let currentStoreIndex = -1;
         let editStoreIndex = -1;
         let editItemIndex = -1;
         let longPressTimer = null;
 
-        window.addEventListener('load', function() {
-            loadData();
-            renderApp();
-        });
-
-        function saveData() {
-            localStorage.setItem('shoppingAppData', JSON.stringify(appData));
-        }
-
-        function loadData() {
-            const saved = localStorage.getItem('shoppingAppData');
+        // Загрузка всех списков из localStorage
+        function loadAllLists() {
+            const saved = localStorage.getItem('shoppingAppAllLists');
             if (saved) {
-                appData = JSON.parse(saved);
-                if (!appData.allItems) {
-                    appData.allItems = [];
+                allLists = JSON.parse(saved);
+                if (allLists.length === 0) {
+                    createDefaultList();
                 }
+            } else {
+                createDefaultList();
             }
         }
 
-        document.addEventListener('DOMContentLoaded', function() {
+        // Создание списка по умолчанию
+        function createDefaultList() {
+            allLists = [{
+                name: 'Мой список',
+                date: new Date().toISOString().slice(0,10),
+                data: {
+                    budget: 5000,
+                    stores: [
+                        {
+                            name: "Пятёрочка",
+                            items: [
+                                { name: "Хлеб", quantity: 2, price: 50, bought: false },
+                                { name: "Молоко", quantity: 3, price: 70, bought: false },
+                                { name: "Яйца", quantity: 2, price: 90, bought: true },
+                                { name: "Бананы", quantity: 0.5, price: 120, bought: false }
+                            ]
+                        },
+                        {
+                            name: "Магнит",
+                            items: [
+                                { name: "Шампунь", quantity: 1, price: 250, bought: false },
+                                { name: "Дезодорант", quantity: 1, price: 120, bought: false }
+                            ]
+                        }
+                    ],
+                    allItems: [
+                        { name: "Хлеб", quantity: 2, price: 50 },
+                        { name: "Молоко", quantity: 3, price: 70 },
+                        { name: "Яйца", quantity: 2, price: 90 },
+                        { name: "Бананы", quantity: 0.5, price: 120 },
+                        { name: "Шампунь", quantity: 1, price: 250 },
+                        { name: "Дезодорант", quantity: 1, price: 120 }
+                    ]
+                }
+            }];
+        }
+
+        // Сохранение всех списков в localStorage
+        function saveAllLists() {
+            localStorage.setItem('shoppingAppAllLists', JSON.stringify(allLists));
+        }
+
+        // Загрузка текущего списка
+        function loadCurrentList() {
+            if (allLists[currentListIndex]) {
+                appData = JSON.parse(JSON.stringify(allLists[currentListIndex].data));
+                if (!appData.allItems) {
+                    appData.allItems = [];
+                }
+                updateCurrentListName();
+            }
+        }
+
+        // Сохранение данных текущего списка
+        function saveCurrentListData() {
+            if (allLists[currentListIndex]) {
+                allLists[currentListIndex].data = JSON.parse(JSON.stringify(appData));
+                saveAllLists();
+            }
+        }
+
+        // Обновление отображения имени текущего списка
+        function updateCurrentListName() {
+            const nameElement = document.getElementById('currentListName');
+            if (allLists[currentListIndex]) {
+                nameElement.textContent = allLists[currentListIndex].name;
+            }
+        }
+
+        // === ИНТЕРФЕЙС УПРАВЛЕНИЯ СПИСКАМИ ===
+
+        // Показать модальное окно со списками
+        function showListsModal() {
+            const ul = document.getElementById('listsList');
+            ul.innerHTML = '';
+
+            allLists.forEach((list, idx) => {
+                const li = document.createElement('li');
+                const isActive = idx === currentListIndex;
+                li.innerHTML = `
+                    <div class="list-name">
+                        <strong>${list.name}</strong>
+                        <div style="color:#888;font-size:0.85em;">${list.date}</div>
+                    </div>
+                    <div class="list-actions">
+                        ${!isActive ? `<button class="btn-open" onclick="selectList(${idx})">Открыть</button>` : '<span style="color:#ff3ebf;font-weight:bold;">Активен</span>'}
+                        <button class="btn-rename" onclick="renameList(${idx})">Переименовать</button>
+                        ${allLists.length > 1 ? `<button class="btn-delete" onclick="deleteList(${idx})">Удалить</button>` : ''}
+                    </div>
+                `;
+                ul.appendChild(li);
+            });
+
+            document.getElementById('listsModal').style.display = 'flex';
+        }
+
+        // Закрыть модальное окно со списками
+        function closeListsModal() {
+            document.getElementById('listsModal').style.display = 'none';
+        }
+
+        // Выбрать список для работы
+        function selectList(idx) {
+            currentListIndex = idx;
+            loadCurrentList();
+            renderApp();
+            closeListsModal();
+        }
+
+        // Переименовать список
+        function renameList(idx) {
+            const newName = prompt('Новое имя списка:', allLists[idx].name);
+            if (newName && newName.trim()) {
+                allLists[idx].name = newName.trim();
+                saveAllLists();
+                updateCurrentListName();
+                showListsModal(); // Обновить модальное окно
+            }
+        }
+
+        // Удалить список
+        function deleteList(idx) {
+            if (allLists.length === 1) {
+                alert('Должен остаться хотя бы один список!');
+                return;
+            }
+
+            if (confirm(`Удалить список "${allLists[idx].name}"?`)) {
+                allLists.splice(idx, 1);
+
+                // Корректировка текущего индекса
+                if (currentListIndex >= allLists.length) {
+                    currentListIndex = allLists.length - 1;
+                } else if (currentListIndex > idx) {
+                    currentListIndex--;
+                }
+
+                saveAllLists();
+                loadCurrentList();
+                renderApp();
+                showListsModal(); // Обновить модальное окно
+            }
+        }
+
+        // Создать новый список
+        function createNewList() {
+            const name = prompt('Название нового списка:', `Список ${new Date().toLocaleDateString()}`);
+            if (name === null) return; // Пользователь отменил
+
+            const finalName = name.trim() || `Список ${new Date().toLocaleDateString()}`;
+            const date = new Date().toISOString().slice(0,10);
+
+            allLists.push({
+                name: finalName,
+                date: date,
+                data: { budget: 0, stores: [], allItems: [] }
+            });
+
+            currentListIndex = allLists.length - 1;
+            saveAllLists();
+            loadCurrentList();
+            renderApp();
+        }
+
+        // Сохранить текущий список (с возможностью переименования)
+        function saveCurrentList() {
+            const currentName = allLists[currentListIndex].name;
+            const newName = prompt('Сохранить как (имя списка):', currentName);
+
+            if (newName === null) return; // Пользователь отменил
+
+            const finalName = newName.trim() || currentName;
+            allLists[currentListIndex].name = finalName;
+            allLists[currentListIndex].date = new Date().toISOString().slice(0,10);
+
+            saveCurrentListData();
+            updateCurrentListName();
+            alert('Список сохранён!');
+        }
+
+        // === ОСНОВНОЙ ФУНКЦИОНАЛ ПРИЛОЖЕНИЯ ===
+
+        // Инициализация при загрузке страницы
+        window.addEventListener('load', function() {
+            loadAllLists();
+            loadCurrentList();
+            renderApp();
+
+            // Обработчик изменения бюджета
             document.getElementById('budgetInput').addEventListener('input', function() {
                 appData.budget = parseFloat(this.value) || 0;
-                saveData();
+                saveCurrentListData();
                 updateSummary();
             });
         });
 
+        // Основная функция рендеринга приложения
         function renderApp() {
             const budgetInput = document.getElementById('budgetInput');
             budgetInput.value = appData.budget || '';
@@ -200,13 +427,16 @@
             initializeDragAndDrop();
         }
 
+        // Рендеринг списка магазинов
         function renderStores() {
             const container = document.getElementById('storesList');
             container.innerHTML = '';
+
             appData.stores.forEach((store, storeIndex) => {
                 const storeDiv = document.createElement('div');
                 storeDiv.className = 'store';
                 const subtotal = Math.round(calculateStoreSubtotal(store));
+
                 storeDiv.innerHTML = `
                     <div class="store-header">
                         <input type="checkbox" onchange="toggleAllItems(${storeIndex})" id="storeCheckbox-${storeIndex}">
@@ -249,11 +479,13 @@
             });
         }
 
+        // === ОБРАБОТЧИКИ ДОЛГОГО НАЖАТИЯ ===
         function startLongPress(storeIndex, itemIndex, el) {
             longPressTimer = setTimeout(function() {
                 openEditItemModal(storeIndex, itemIndex);
-            }, 500); // 500 мс — время удержания
+            }, 500);
         }
+
         function cancelLongPress() {
             if (longPressTimer) {
                 clearTimeout(longPressTimer);
@@ -261,6 +493,7 @@
             }
         }
 
+        // === ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ===
         function formatQuantity(quantity) {
             return quantity % 1 === 0 ? quantity.toString() : quantity.toFixed(2).replace(/\.?0+$/, '');
         }
@@ -269,6 +502,7 @@
             return quantity % 1 === 0 ? 'шт' : 'кг';
         }
 
+        // Инициализация drag & drop
         function initializeDragAndDrop() {
             document.querySelectorAll('.items-list').forEach((list, storeIndex) => {
                 if (list.children.length > 1) {
@@ -283,7 +517,7 @@
                             const items = appData.stores[storeIndex].items;
                             const [removed] = items.splice(evt.oldIndex, 1);
                             items.splice(evt.newIndex, 0, removed);
-                            saveData();
+                            saveCurrentListData();
                             renderApp();
                         }
                     });
@@ -291,10 +525,12 @@
             });
         }
 
+        // Расчёт суммы по магазину
         function calculateStoreSubtotal(store) {
             return store.items.reduce((sum, item) => sum + (item.quantity * item.price), 0).toFixed(2);
         }
 
+        // Расчёт общей потраченной суммы (только купленные товары)
         function calculateTotalSpent() {
             return appData.stores.reduce((total, store) => {
                 return total + store.items.reduce((storeTotal, item) => {
@@ -303,6 +539,7 @@
             }, 0);
         }
 
+        // Расчёт общей запланированной суммы (все товары)
         function calculateTotalPlanned() {
             return appData.stores.reduce((total, store) => {
                 return total + store.items.reduce((storeTotal, item) => {
@@ -311,15 +548,18 @@
             }, 0);
         }
 
+        // Обновление сводки по бюджету
         function updateSummary() {
             const spent = calculateTotalSpent();
             const planned = calculateTotalPlanned();
             const remaining = appData.budget - spent;
+
             document.getElementById('spentAmount').textContent = spent.toFixed(2);
             document.getElementById('remainingAmount').textContent = remaining.toFixed(2);
 
             const warning = document.getElementById('warningMessage');
             const overBudget = planned - appData.budget;
+
             if (appData.budget > 0 && planned > appData.budget) {
                 warning.style.display = 'block';
                 document.getElementById('overBudgetAmount').textContent = overBudget.toFixed(2);
@@ -328,42 +568,52 @@
             }
         }
 
+        // === УПРАВЛЕНИЕ ТОВАРАМИ ===
+
+        // Переключение состояния товара (куплен/не куплен)
         function toggleItem(storeIndex, itemIndex) {
             appData.stores[storeIndex].items[itemIndex].bought = 
                 !appData.stores[storeIndex].items[itemIndex].bought;
-            saveData();
+            saveCurrentListData();
             renderApp();
         }
 
+        // Переключение всех товаров в магазине
         function toggleAllItems(storeIndex) {
             const allBought = appData.stores[storeIndex].items.every(item => item.bought);
             appData.stores[storeIndex].items.forEach(item => {
                 item.bought = !allBought;
             });
-            saveData();
+            saveCurrentListData();
             renderApp();
         }
 
+        // Удаление товара
         function deleteItem(storeIndex, itemIndex) {
             if (confirm('Вы уверены, что хотите удалить этот товар?')) {
                 appData.stores[storeIndex].items.splice(itemIndex, 1);
-                saveData();
+                saveCurrentListData();
                 renderApp();
             }
         }
 
+        // Удаление магазина
         function deleteStore(storeIndex) {
             if (confirm('Вы уверены, что хотите удалить этот магазин?')) {
                 appData.stores.splice(storeIndex, 1);
-                saveData();
+                saveCurrentListData();
                 renderApp();
             }
         }
 
+        // === МОДАЛЬНЫЕ ОКНА ===
+
+        // Открытие модального окна редактирования товара
         function openEditItemModal(storeIndex, itemIndex) {
             editStoreIndex = storeIndex;
             editItemIndex = itemIndex;
             const item = appData.stores[storeIndex].items[itemIndex];
+
             document.getElementById('itemName').value = item.name;
             document.getElementById('itemQuantity').value = item.quantity;
             document.getElementById('itemPrice').value = item.price;
@@ -374,10 +624,12 @@
             document.getElementById('itemModalSaveBtn').textContent = 'Сохранить';
         }
 
+        // Открытие модального окна добавления товара
         function openAddItemModal(storeIndex) {
             currentStoreIndex = storeIndex;
             editStoreIndex = -1;
             editItemIndex = -1;
+
             document.getElementById('itemName').value = '';
             document.getElementById('itemQuantity').value = '1';
             document.getElementById('itemPrice').value = '';
@@ -388,6 +640,7 @@
             document.getElementById('itemModalSaveBtn').textContent = 'Добавить';
         }
 
+        // Закрытие модального окна товара
         function closeItemModal() {
             document.getElementById('itemModal').style.display = 'none';
             currentStoreIndex = -1;
@@ -397,6 +650,7 @@
             document.getElementById('itemModalSaveBtn').textContent = 'Добавить';
         }
 
+        // Добавление или редактирование товара
         function addOrEditItem() {
             const name = document.getElementById('itemName').value.trim();
             const quantity = parseFloat(document.getElementById('itemQuantity').value) || 1;
@@ -434,10 +688,11 @@
                 appData.stores[currentStoreIndex].items.push(newItem);
             }
 
-            // Обновление allItems
+            // Обновление списка всех товаров для автодополнения
             const existingItemIndex = appData.allItems.findIndex(item => 
                 item.name.toLowerCase() === name.toLowerCase()
             );
+
             if (existingItemIndex !== -1) {
                 appData.allItems[existingItemIndex] = {
                     name: name,
@@ -452,11 +707,12 @@
                 });
             }
 
-            saveData();
+            saveCurrentListData();
             renderApp();
             closeItemModal();
         }
 
+        // Показ автодополнения
         function showAutocomplete() {
             const itemNameInput = document.getElementById('itemName');
             const itemName = itemNameInput.value.trim().toLowerCase();
@@ -489,37 +745,52 @@
             }
         }
 
+        // Открытие модального окна добавления магазина
+        function openAddStoreModal() {
+            document.getElementById('storeModal').style.display = 'block';
+            document.getElementById('storeName').value = '';
+        }
+
+        // Добавление магазина
         function addStore() {
             const name = document.getElementById('storeName').value.trim();
             if (!name) {
                 alert('Введите название магазина');
                 return;
             }
+
             appData.stores.push({
                 name: name,
                 items: []
             });
-            saveData();
+
+            saveCurrentListData();
             renderApp();
             closeStoreModal();
         }
 
+        // Закрытие модального окна магазина
         function closeStoreModal() {
             document.getElementById('storeModal').style.display = 'none';
         }
 
+        // Очистка всех данных текущего списка
         function clearAllData() {
-            if (confirm('Вы уверены, что хотите удалить все данные?')) {
+            if (confirm('Вы уверены, что хотите удалить все данные из текущего списка?')) {
                 appData = { budget: 0, stores: [], allItems: [] };
-                saveData();
+                saveCurrentListData();
                 renderApp();
             }
         }
 
+        // === ОБРАБОТЧИКИ СОБЫТИЙ ===
+
+        // Закрытие модальных окон по клику вне их области
         window.addEventListener('click', function(event) {
             const storeModal = document.getElementById('storeModal');
             const itemModal = document.getElementById('itemModal');
             const downloadPopup = document.getElementById('downloadPopup');
+            const listsModal = document.getElementById('listsModal');
             const autocompleteList = document.getElementById('autocompleteList');
 
             if (event.target === storeModal) {
@@ -531,49 +802,24 @@
             if (event.target === downloadPopup) {
                 closeDownloadInfo();
             }
+            if (event.target === listsModal) {
+                closeListsModal();
+            }
             if (event.target !== document.getElementById('itemName')) {
                 autocompleteList.style.display = 'none';
             }
         });
 
+        // === ФУНКЦИИ ДЛЯ СКАЧИВАНИЯ ===
+
+        // Показ информации о скачивании
         function showDownloadInfo() {
             document.getElementById('downloadPopup').style.display = 'block';
         }
 
+        // Закрытие информации о скачивании
         function closeDownloadInfo() {
             document.getElementById('downloadPopup').style.display = 'none';
-        }
-
-        // Демо-данные для первого запуска
-        if (!localStorage.getItem('shoppingAppData')) {
-            appData.stores = [
-                {
-                    name: "Пятёрочка",
-                    items: [
-                        { name: "Хлеб", quantity: 2, price: 50, bought: false },
-                        { name: "Молоко", quantity: 3, price: 70, bought: false },
-                        { name: "Яйца", quantity: 2, price: 90, bought: true },
-                        { name: "Бананы", quantity: 0.5, price: 120, bought: false }
-                    ]
-                },
-                {
-                    name: "Магнит",
-                    items: [
-                        { name: "Шампунь", quantity: 1, price: 250, bought: false },
-                        { name: "Дезодорант", quantity: 1, price: 120, bought: false }
-                    ]
-                }
-            ];
-            appData.budget = 5000;
-            appData.allItems = [
-                { name: "Хлеб", quantity: 2, price: 50 },
-                { name: "Молоко", quantity: 3, price: 70 },
-                { name: "Яйца", quantity: 2, price: 90 },
-                { name: "Бананы", quantity: 0.5, price: 120 },
-                { name: "Шампунь", quantity: 1, price: 250 },
-                { name: "Дезодорант", quantity: 1, price: 120 }
-            ];
-            saveData();
         }
     </script>
 </body>
