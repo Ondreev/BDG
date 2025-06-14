@@ -162,6 +162,7 @@
         let currentStoreIndex = -1;
         let editStoreIndex = -1;
         let editItemIndex = -1;
+        let longPressTimer = null;
 
         window.addEventListener('load', function() {
             loadData();
@@ -218,7 +219,11 @@
                             <div class="item ${item.bought ? 'checked' : ''}" data-item-index="${itemIndex}">
                                 <input type="checkbox" ${item.bought ? 'checked' : ''} 
                                        onchange="toggleItem(${storeIndex}, ${itemIndex})">
-                                <div class="item-details" style="cursor: grab;" ondblclick="openEditItemModal(${storeIndex}, ${itemIndex})">
+                                <div class="item-details" style="cursor: grab;"
+                                    ontouchstart="startLongPress(${storeIndex}, ${itemIndex}, this)" 
+                                    ontouchend="cancelLongPress()" 
+                                    onmousedown="startLongPress(${storeIndex}, ${itemIndex}, this)" 
+                                    onmouseup="cancelLongPress()">
                                     <div class="item-name">
                                         <span id="itemName-${storeIndex}-${itemIndex}">${item.name}</span>
                                     </div>
@@ -242,6 +247,18 @@
                 `;
                 container.appendChild(storeDiv);
             });
+        }
+
+        function startLongPress(storeIndex, itemIndex, el) {
+            longPressTimer = setTimeout(function() {
+                openEditItemModal(storeIndex, itemIndex);
+            }, 500); // 500 мс — время удержания
+        }
+        function cancelLongPress() {
+            if (longPressTimer) {
+                clearTimeout(longPressTimer);
+                longPressTimer = null;
+            }
         }
 
         function formatQuantity(quantity) {
