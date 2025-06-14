@@ -42,13 +42,14 @@
         .store-subtotal{color:#d6007a;font-weight:bold}
         .store-delete{background:none;border:none;color:#d6007a;font-size:1.3rem;cursor:pointer}
         .items-list{padding:0}
-        .item{display:flex;align-items:center;padding:12px 15px;border-bottom:1px solid #fff6fb;cursor:move}
+        .item{display:flex;align-items:center;padding:12px 15px;border-bottom:1px solid #fff6fb}
         .item:last-child{border-bottom:none}
         .item input[type=checkbox]{margin-right:12px;transform:scale(1.2)}
         .item-details{flex:1}
         .item-name{font-weight:500;color:#333;cursor:grab}
         .item-calc{font-size:.95rem;color:#666}
         .item-total{font-weight:bold;color:#ff3ebf;margin-left:8px}
+        .item-edit{background:none;border:none;color:#d6007a;font-size:1.2rem;cursor:pointer;margin-left:auto}
         .item-delete{background:none;border:none;color:#d6007a;font-size:1.2rem;cursor:pointer;margin-left:auto}
         .item.checked{opacity:.6}
         .item.checked .item-details{text-decoration:line-through}
@@ -135,7 +136,7 @@ function createDefault(){allLists=[{name:'Мой список',date:new Date().t
 /* === list management === */
 function loadCurrent(){appData=JSON.parse(JSON.stringify(allLists[currentListIndex].data));if(!appData.allItems)appData.allItems=[];updateCurrentListName();}
 function updateCurrentListName(){document.getElementById('currentListName').textContent=allLists[currentListIndex].name;}
-function showListsModal(){const ul=document.getElementById('listsList');ul.innerHTML='';allLists.forEach((l,idx)=>{const li=document.createElement('li');li.style.padding='8px 0';li.innerHTML=`<strong>${l.name}</strong> <small style="color:#888">${l.date}</small> ${idx===currentListIndex?'<span style="color:#ff3ebf;font-weight:bold">(текущий)</span>':`<button onclick="selectList(${idx})">Открыть</button>`} ${allLists.length>1?`<button onclick="deleteList(${idx})">×</button>`:''}`;ul.appendChild(li);});document.getElementById('listsModal').style.display='flex';}
+function showListsModal(){const ul=document.getElementById('listsList');ul.innerHTML='';allLists.forEach((l,idx)=>{const li=document.createElement('li');li.style.padding='8px 0';li.innerHTML=`<strong>${l.name}</strong> <small style="color:#888">${l.date}</small> ${idx===currentListIndex?'<span style="color:#ff3ebf;font-weight:bold">(текущий)</span>':`<span style="color:#ff3ebf;font-weight:bold;cursor:pointer" onclick="selectList(${idx})">Открыть</span>`} ${allLists.length>1?`<button onclick="deleteList(${idx})">×</button>`:''}`;ul.appendChild(li);});document.getElementById('listsModal').style.display='flex';}
 function closeListsModal(){document.getElementById('listsModal').style.display='none';}
 function selectList(i){currentListIndex=i;loadCurrent();renderApp();closeListsModal();}
 function deleteList(i){if(allLists.length===1||!confirm('Удалить список?'))return;allLists.splice(i,1);if(currentListIndex>=allLists.length)currentListIndex=allLists.length-1;saveAll();loadCurrent();renderApp();showListsModal();}
@@ -146,8 +147,8 @@ function saveCurrentList(){const newName=prompt('Сохранить как:',all
 window.addEventListener('load',()=>{loadAll();loadCurrent();renderApp();document.getElementById('budgetInput').addEventListener('input',e=>{appData.budget=parseFloat(e.target.value)||0;updateSummary();allLists[currentListIndex].data=appData;saveAll();});});
 function renderApp(){document.getElementById('budgetInput').value=appData.budget||'';renderStores();updateSummary();initDnD();}
 function renderStores(){const cont=document.getElementById('storesList');cont.innerHTML='';appData.stores.forEach((s,si)=>{const subtotal=s.items.reduce((t,it)=>t+it.quantity*it.price,0);const div=document.createElement('div');div.className='store';div.innerHTML=`<div class="store-header"><input type="checkbox" onchange="toggleAll(${si})"><div class="store-name">${s.name}</div><div class="store-subtotal">${Math.round(subtotal)} руб</div><button class="store-delete" onclick="deleteStore(${si})">×</button></div><ul class="items-list" id="items-${si}"></ul><div class="add-buttons"><button class="btn-secondary" onclick="openAddItemModal(${si})">+ Товар</button></div>`;cont.appendChild(div);renderItems(si);});}
-function renderItems(si){const ul=document.getElementById('items-'+si);ul.innerHTML='';appData.stores[si].items.forEach((it,ii)=>{const li=document.createElement('li');li.className='item'+(it.bought?' checked':'');li.dataset.storeIndex=si;li.dataset.itemIndex=ii;li.innerHTML=`<input type="checkbox" onclick="toggleItem(${si},${ii})" ${it.bought?'checked':''}><div class="item-details"><div class="item-name">${it.name}</div><div class="item-calc">${it.quantity} × ${it.price}</div></div><div class="item-total">${Math.round(it.quantity*it.price)} руб</div><button class="item-delete" onclick="deleteItem(${si},${ii})">×</button>`;li.addEventListener('dblclick',()=>openEditItemModal(si,ii));li.addEventListener('touchstart',()=>{longPressTimer=setTimeout(()=>openEditItemModal(si,ii),500);});li.addEventListener('touchend',()=>clearTimeout(longPressTimer));ul.appendChild(li);});}
-function updateSummary(){const spent=appData.stores.reduce((tot,s)=>tot+s.items.filter(i=>i.bought).reduce((t,it)=>t+it.quantity*it.price,0),0);document.getElementById('spentAmount').textContent=Math.round(spent);const rem=appData.budget-spent;document.getElementById('remainingAmount').textContent=Math.round(rem);const warn=document.getElementById('warningMessage');document.getElementById('overBudgetAmount').textContent=Math.abs(Math.round(rem));warn.style.display=rem<0?'block':'none';allLists[currentListIndex].data=appData;saveAll();}
+function renderItems(si){const ul=document.getElementById('items-'+si);ul.innerHTML='';appData.stores[si].items.forEach((it,ii)=>{const li=document.createElement('li');li.className='item'+(it.bought?' checked':'');li.dataset.storeIndex=si;li.dataset.itemIndex=ii;li.innerHTML=`<input type="checkbox" onclick="toggleItem(${si},${ii})" ${it.bought?'checked':''}><div class="item-details"><div class="item-name">${it.name}</div><div class="item-calc">${it.quantity} × ${it.price}</div></div><div class="item-total">${Math.round(it.quantity*it.price)} руб</div><button class="item-edit" onclick="openEditItemModal(${si},${ii})">✏️</button><button class="item-delete" onclick="deleteItem(${si},${ii})">×</button>`;ul.appendChild(li);});}
+function updateSummary(){const spent=appData.stores.reduce((tot,s)=>tot+s.items.reduce((t,it)=>t+it.quantity*it.price,0),0);document.getElementById('spentAmount').textContent=Math.round(spent);const rem=appData.budget-spent;document.getElementById('remainingAmount').textContent=Math.round(rem);const warn=document.getElementById('warningMessage');warn.style.display=rem<0?'block':'none';document.getElementById('overBudgetAmount').textContent=Math.abs(Math.round(rem));allLists[currentListIndex].data=appData;saveAll();}
 /* stores */
 function openAddStoreModal(){document.getElementById('storeName').value='';document.getElementById('storeModal').style.display='flex';}
 function closeStoreModal(){document.getElementById('storeModal').style.display='none';}
