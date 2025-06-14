@@ -46,13 +46,13 @@
         .item:last-child{border-bottom:none}
         .item input[type=checkbox]{margin-right:12px;transform:scale(1.2)}
         .item-details{flex:1}
-        .item-name{font-weight:500;color:#333}
+        .item-name{font-weight:500;color:#333;cursor:grab}
         .item-calc{font-size:.95rem;color:#666}
         .item-total{font-weight:bold;color:#ff3ebf;margin-left:8px}
         .item-delete{background:none;border:none;color:#d6007a;font-size:1.2rem;cursor:pointer;margin-left:auto}
         .item.checked{opacity:.6}
         .item.checked .item-details{text-decoration:line-through}
-        .add-buttons{margin:24px 24px 0 24px;display:flex;gap:10px}
+        .add-buttons{margin:24px 24px 0 24px;display:flex;gap:10px;flex-wrap:wrap}
         .btn-primary{background:#ff3ebf;color:#fff;border:none;border-radius:6px;padding:10px 15px;font-size:1rem;cursor:pointer}
         .btn-secondary{background:#fff6fb;color:#ff3ebf;border:none;border-radius:6px;padding:10px 15px;font-size:1rem;cursor:pointer}
         .btn-primary:hover{background:#d6007a}
@@ -103,11 +103,11 @@
     <div id="storesList" class="stores-list"></div>
     <div class="add-buttons">
         <button class="btn-primary" onclick="openAddStoreModal()">+ Добавить магазин</button>
+        <button class="btn-secondary" onclick="showAboutModal()">О приложении</button>
     </div>
-    <div class="about"><button onclick="showAboutModal()">О приложении</button></div>
 </div>
 <!-- ----- MODALS ----- -->
-<div id="downloadPopup" class="modal-overlay"><div class="modal"><h2>Как установить на телефон?</h2><p><b>Android:</b> Chrome → «Добавить на главный экран».</p><p><b>iPhone:</b> Safari → Поделиться → «На экран "Домой"».</p><div class="modal-buttons"><button class="btn-secondary" onclick="closeDownloadInfo()">Закрыть</button></div></div></div>
+<div id="downloadPopup" class="modal-overlay"><div class="modal"><h2>Как установить на телефон?</h2><p><b>Android:</b> Chrome → «Добавить на главный экран».</p><p><b>iPhone:</b> Safari → Поделиться → «На экран \"Домой\"».</p><div class="modal-buttons"><button class="btn-secondary" onclick="closeDownloadInfo()">Закрыть</button></div></div></div>
 <!-- lists modal -->
 <div id="listsModal" class="modal-overlay"><div class="modal"><h2>Мои списки</h2><ul id="listsList" style="list-style:none;padding:0"></ul><div class="modal-buttons"><button class="btn-primary" onclick="createNewList();closeListsModal()">+ Создать новый</button><button class="btn-secondary" onclick="closeListsModal()">Закрыть</button></div></div></div>
 <!-- add store modal -->
@@ -146,7 +146,7 @@ function saveCurrentList(){const newName=prompt('Сохранить как:',all
 window.addEventListener('load',()=>{loadAll();loadCurrent();renderApp();document.getElementById('budgetInput').addEventListener('input',e=>{appData.budget=parseFloat(e.target.value)||0;updateSummary();allLists[currentListIndex].data=appData;saveAll();});});
 function renderApp(){document.getElementById('budgetInput').value=appData.budget||'';renderStores();updateSummary();initDnD();}
 function renderStores(){const cont=document.getElementById('storesList');cont.innerHTML='';appData.stores.forEach((s,si)=>{const subtotal=s.items.reduce((t,it)=>t+it.quantity*it.price,0);const div=document.createElement('div');div.className='store';div.innerHTML=`<div class="store-header"><input type="checkbox" onchange="toggleAll(${si})"><div class="store-name">${s.name}</div><div class="store-subtotal">${Math.round(subtotal)} руб</div><button class="store-delete" onclick="deleteStore(${si})">×</button></div><ul class="items-list" id="items-${si}"></ul><div class="add-buttons"><button class="btn-secondary" onclick="openAddItemModal(${si})">+ Товар</button></div>`;cont.appendChild(div);renderItems(si);});}
-function renderItems(si){const ul=document.getElementById('items-'+si);ul.innerHTML='';appData.stores[si].items.forEach((it,ii)=>{const li=document.createElement('li');li.className='item'+(it.bought?' checked':'');li.dataset.storeIndex=si;li.dataset.itemIndex=ii;li.innerHTML=`<input type="checkbox" onchange="toggleItem(${si},${ii})" ${it.bought?'checked':''}><div class="item-details"><div class="item-name">${it.name}</div><div class="item-calc">${it.quantity} × ${it.price}</div></div><div class="item-total">${Math.round(it.quantity*it.price)} руб</div><button class="item-delete" onclick="deleteItem(${si},${ii})">×</button>`;li.addEventListener('mousedown',()=>openEditItemModal(si,ii));li.addEventListener('touchstart',()=>{longPressTimer=setTimeout(()=>openEditItemModal(si,ii),500);});li.addEventListener('touchend',()=>clearTimeout(longPressTimer));ul.appendChild(li);});}
+function renderItems(si){const ul=document.getElementById('items-'+si);ul.innerHTML='';appData.stores[si].items.forEach((it,ii)=>{const li=document.createElement('li');li.className='item'+(it.bought?' checked':'');li.dataset.storeIndex=si;li.dataset.itemIndex=ii;li.innerHTML=`<input type="checkbox" onclick="toggleItem(${si},${ii})" ${it.bought?'checked':''}><div class="item-details"><div class="item-name">${it.name}</div><div class="item-calc">${it.quantity} × ${it.price}</div></div><div class="item-total">${Math.round(it.quantity*it.price)} руб</div><button class="item-delete" onclick="deleteItem(${si},${ii})">×</button>`;li.addEventListener('dblclick',()=>openEditItemModal(si,ii));li.addEventListener('touchstart',()=>{longPressTimer=setTimeout(()=>openEditItemModal(si,ii),500);});li.addEventListener('touchend',()=>clearTimeout(longPressTimer));ul.appendChild(li);});}
 function updateSummary(){const spent=appData.stores.reduce((tot,s)=>tot+s.items.filter(i=>i.bought).reduce((t,it)=>t+it.quantity*it.price,0),0);document.getElementById('spentAmount').textContent=Math.round(spent);const rem=appData.budget-spent;document.getElementById('remainingAmount').textContent=Math.round(rem);const warn=document.getElementById('warningMessage');document.getElementById('overBudgetAmount').textContent=Math.abs(Math.round(rem));warn.style.display=rem<0?'block':'none';allLists[currentListIndex].data=appData;saveAll();}
 /* stores */
 function openAddStoreModal(){document.getElementById('storeName').value='';document.getElementById('storeModal').style.display='flex';}
@@ -157,14 +157,14 @@ function deleteStore(i){if(confirm('Удалить магазин?')){appData.st
 function openAddItemModal(si){currentStoreIndex=si;editItemIndex=-1;document.getElementById('itemModalTitle').textContent='Добавить товар';document.getElementById('itemModalSaveBtn').textContent='Добавить';document.getElementById('itemName').value='';document.getElementById('itemQuantity').value='1';document.getElementById('itemPrice').value='';document.getElementById('itemModal').style.display='flex';}
 function openEditItemModal(si,ii){currentStoreIndex=si;editItemIndex=ii;const it=appData.stores[si].items[ii];document.getElementById('itemModalTitle').textContent='Редактировать товар';document.getElementById('itemModalSaveBtn').textContent='Сохранить';document.getElementById('itemName').value=it.name;document.getElementById('itemQuantity').value=it.quantity;document.getElementById('itemPrice').value=it.price;document.getElementById('itemModal').style.display='flex';}
 function closeItemModal(){document.getElementById('itemModal').style.display='none';}
-function addOrEditItem(){const name=document.getElementById('itemName').value.trim();const qty=parseFloat(document.getElementById('itemQuantity').value);const price=parseFloat(document.getElementById('itemPrice').value);if(!name||isNaN(qty)||isNaN(price))return;if(editItemIndex===-1){appData.stores[currentStoreIndex].items.push({name,quantity:qty,price,bought:false});if(!appData.allItems.find(i=>i.name===name))appData.allItems.push({name,quantity:qty,price});}else{const it=appData.stores[currentStoreIndex].items[editItemIndex];it.name=name;it.quantity=qty;it.price=price;}closeItemModal();renderApp();}
-function deleteItem(si,ii){if(confirm('Удалить товар?')){appData.stores[si].items.splice(ii,1);renderApp();}}
+function addOrEditItem(){const name=document.getElementById('itemName').value.trim();const qty=parseFloat(document.getElementById('itemQuantity').value);const price=parseFloat(document.getElementById('itemPrice').value);if(!name||isNaN(qty)||isNaN(price))return;if(editItemIndex===-1){appData.stores[currentStoreIndex].items.push({name,quantity:qty,price,bought:false});if(!appData.allItems.find(i=>i.name===name))appData.allItems.push({name,quantity:qty,price});}else{const it=appData.stores[currentStoreIndex].items[editItemIndex];it.name=name;it.quantity=qty;it.price=price;}closeItemModal();renderApp();updateSummary();}
+function deleteItem(si,ii){if(confirm('Удалить товар?')){appData.stores[si].items.splice(ii,1);renderApp();updateSummary();}}
 function toggleItem(si,ii){const it=appData.stores[si].items[ii];it.bought=!it.bought;updateSummary();renderItems(si);}
 function toggleAll(si){const chk=document.querySelector('#items-'+si).parentElement.querySelector('input[type=checkbox]');appData.stores[si].items.forEach(it=>it.bought=chk.checked);updateSummary();renderItems(si);}
 /* autocomplete */
 function showAutocomplete(){const inp=document.getElementById('itemName');const list=document.getElementById('autocompleteList');const v=inp.value.toLowerCase();list.innerHTML='';if(v.length<2){list.style.display='none';return;}const sugg=appData.allItems.map(i=>i.name).filter(n=>n.toLowerCase().startsWith(v)).slice(0,5);if(!sugg.length){list.style.display='none';return;}sugg.forEach(s=>{const li=document.createElement('li');li.textContent=s;li.onclick=()=>{inp.value=s;list.style.display='none';};list.appendChild(li);});list.style.display='block';}
 /* drag */
-function initDnD(){appData.stores.forEach((s,si)=>{const ul=document.getElementById('items-'+si);new Sortable(ul,{group:'shared',handle:'.item-name',animation:150,onAdd:evt=>{const from=parseInt(evt.from.parentElement.querySelector('ul').id.split('-')[1]);const to=si;const item=appData.stores[from].items.splice(evt.oldIndex,1)[0];appData.stores[to].items.splice(evt.newIndex,0,item);renderApp();}});});}
+function initDnD(){appData.stores.forEach((s,si)=>{const ul=document.getElementById('items-'+si);new Sortable(ul,{group:'shared',handle:'.item-name',animation:150,onMove:evt=>{return evt.dragged.dataset.storeIndex!==evt.to.dataset.storeIndex;},onUpdate:evt=>{const oldStoreIndex=parseInt(evt.from.dataset.storeIndex);const newStoreIndex=parseInt(evt.to.dataset.storeIndex);const oldIndex=evt.oldIndex;const newIndex=evt.newIndex;if(oldStoreIndex===newStoreIndex)return;const item=appData.stores[oldStoreIndex].items.splice(oldIndex,1)[0];appData.stores[newStoreIndex].items.splice(newIndex,0,item);renderApp();updateSummary();}});});}
 /* about & download */
 function showAboutModal(){document.getElementById('aboutModal').style.display='flex';}
 function closeAboutModal(){document.getElementById('aboutModal').style.display='none';}
