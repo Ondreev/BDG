@@ -1,10 +1,10 @@
-<!DOCTYPE html>
+html_content = '''<!DOCTYPE html>
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>КИВИ BDG</title>
-    <link rel="icon" type="https://cdn.abacus.ai/images/9def1789-3a84-47d1-8403-586336c53bdd.png" href="''' + icon_url + '''">
+    <title>КИВИ BDG — Планировщик закупок</title>
+    <link rel="icon" type="image/png" href="https://cdn.abacus.ai/images/9def1789-3a84-47d1-8403-586336c53bdd.png">
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
     <style>
         body {
@@ -166,10 +166,13 @@
         .store-header {
             background: #fff6fb;
             padding: 15px;
+            border-bottom: 1px solid #ffe0f4;
+        }
+        .store-header-top {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            border-bottom: 1px solid #ffe0f4;
+            margin-bottom: 10px;
         }
         .store-name {
             font-size: 1.1rem;
@@ -180,6 +183,25 @@
             font-size: 1rem;
             color: #d6007a;
             font-weight: bold;
+        }
+        .store-controls {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+        }
+        .store-controls button {
+            background: none;
+            border: none;
+            color: #d6007a;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 600;
+            padding: 5px 10px;
+            border-radius: 4px;
+            transition: background-color 0.2s;
+        }
+        .store-controls button:hover {
+            background: #ffe0f4;
         }
         .items-list {
             padding: 0;
@@ -268,15 +290,6 @@
         .btn-secondary:hover {
             background: #ffe0f4;
         }
-        .delete-store-btn {
-            background: none;
-            border: none;
-            color: #d6007a;
-            cursor: pointer;
-            font-size: 1rem;
-            font-weight: bold;
-            padding: 0;
-        }
         .autocomplete-list {
             position: absolute;
             top: 100%;
@@ -328,17 +341,17 @@
         <div class="header">
             <div class="logo-block">
                 <div class="bdg-logo">
-                    <img src="''' + icon_url + '''" alt="Корзинка">
+                    <img src="https://cdn.abacus.ai/images/9def1789-3a84-47d1-8403-586336c53bdd.png" alt="🛒">
                     BDG
                 </div>
                 <div class="subtitle">Продукт КИВИ Маркет</div>
             </div>
             <div class="header-buttons">
                 <button class="download-btn" onclick="showDownloadInfo()">
-                    <img src="''' + icon_url + '''" alt="Скачать">
+                    <img src="https://cdn.abacus.ai/images/9def1789-3a84-47d1-8403-586336c53bdd.png" alt="📱">
                     СКАЧАТЬ
                 </button>
-                <a href="''' + telegram_link + '''" class="telegram-btn" target="_blank">
+                <a href="https://t.me/ondreeff" class="telegram-btn" target="_blank">
                     КИВИ Маркет
                 </a>
             </div>
@@ -459,12 +472,14 @@
                 const subtotal = calculateStoreSubtotal(store);
                 storeDiv.innerHTML = `
                     <div class="store-header">
-                        <div class="store-name">🛒 ${store.name}</div>
-                        <div>
-                            <button class="btn btn-secondary" onclick="toggleAllItems(${storeIndex})">Отметить всё</button>
-                            <button class="delete-store-btn" onclick="deleteStore(${storeIndex})">Удалить</button>
+                        <div class="store-header-top">
+                            <div class="store-name">🛒 ${store.name}</div>
+                            <div class="store-subtotal">₽ ${subtotal}</div>
                         </div>
-                        <div class="store-subtotal">₽ ${subtotal}</div>
+                        <div class="store-controls">
+                            <button onclick="toggleAllItems(${storeIndex})">Отметить всё</button>
+                            <button onclick="deleteStore(${storeIndex})">Удалить</button>
+                        </div>
                     </div>
                     <div class="items-list" data-store-index="${storeIndex}">
                         ${store.items.map((item, itemIndex) => `
