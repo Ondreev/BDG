@@ -114,6 +114,9 @@
             margin: 18px 24px 0 24px;
             gap: 16px;
         }
+        .budget-input {
+            position: relative;
+        }
         .budget-input input {
             width: 120px;
             padding: 10px;
@@ -127,6 +130,10 @@
         .budget-input input:focus {
             outline: none;
             border-color: #ff3ebf;
+        }
+        .budget-input input::placeholder {
+            color: #ffb6e6;
+            opacity: 0.7;
         }
         .summary {
             text-align: right;
@@ -165,43 +172,39 @@
         }
         .store-header {
             background: #fff6fb;
-            padding: 15px;
-            border-bottom: 1px solid #ffe0f4;
-        }
-        .store-header-top {
+            padding: 10px 15px;
             display: flex;
-            justify-content: space-between;
             align-items: center;
-            margin-bottom: 10px;
+            justify-content: space-between;
+        }
+        .store-header input[type="checkbox"] {
+            margin-right: 8px;
+            transform: scale(1.1);
+            cursor: pointer;
         }
         .store-name {
+            flex: 1;
             font-size: 1.1rem;
             font-weight: bold;
             color: #ff3ebf;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
         .store-subtotal {
             font-size: 1rem;
             color: #d6007a;
             font-weight: bold;
+            margin: 0 10px;
+            white-space: nowrap;
         }
-        .store-controls {
-            display: flex;
-            justify-content: center;
-            gap: 15px;
-        }
-        .store-controls button {
+        .store-delete {
             background: none;
             border: none;
             color: #d6007a;
             cursor: pointer;
-            font-size: 0.9rem;
-            font-weight: 600;
-            padding: 5px 10px;
-            border-radius: 4px;
-            transition: background-color 0.2s;
-        }
-        .store-controls button:hover {
-            background: #ffe0f4;
+            font-size: 1.3rem;
+            padding: 0;
         }
         .items-list {
             padding: 0;
@@ -358,7 +361,7 @@
         </div>
         <div class="budget-block">
             <div class="budget-input">
-                <input type="number" id="budgetInput" placeholder="Бюджет (руб)" min="0">
+                <input type="number" id="budgetInput" placeholder="Введите сумму" min="0">
             </div>
             <div class="summary">
                 <div>Потрачено: <span class="spent" id="spentAmount">0</span> руб</div>
@@ -457,7 +460,9 @@
         });
         
         function renderApp() {
-            document.getElementById('budgetInput').value = appData.budget || '';
+            const budgetInput = document.getElementById('budgetInput');
+            budgetInput.value = appData.budget || '';
+            budgetInput.placeholder = 'Введите сумму';
             renderStores();
             updateSummary();
             initializeDragAndDrop();
@@ -469,25 +474,20 @@
             appData.stores.forEach((store, storeIndex) => {
                 const storeDiv = document.createElement('div');
                 storeDiv.className = 'store';
-                const subtotal = calculateStoreSubtotal(store);
+                const subtotal = Math.round(calculateStoreSubtotal(store));
                 storeDiv.innerHTML = `
                     <div class="store-header">
-                        <div class="store-header-top">
-                            <div class="store-name">🛒 ${store.name}</div>
-                            <div class="store-subtotal">₽ ${subtotal}</div>
-                        </div>
-                        <div class="store-controls">
-                            <button onclick="toggleAllItems(${storeIndex})">Отметить всё</button>
-                            <button onclick="deleteStore(${storeIndex})">Удалить</button>
-                        </div>
+                        <input type="checkbox" onchange="toggleAllItems(${storeIndex})" id="storeCheckbox-${storeIndex}">
+                        <label class="store-name" for="storeCheckbox-${storeIndex}">🛒 ${store.name}</label>
+                        <div class="store-subtotal">${subtotal} ₽</div>
+                        <button class="store-delete" onclick="deleteStore(${storeIndex})">×</button>
                     </div>
                     <div class="items-list" data-store-index="${storeIndex}">
                         ${store.items.map((item, itemIndex) => `
                             <div class="item ${item.bought ? 'checked' : ''}" data-item-index="${itemIndex}">
-                                <div class="drag-handle">⋮⋮</div>
                                 <input type="checkbox" ${item.bought ? 'checked' : ''} 
                                        onchange="toggleItem(${storeIndex}, ${itemIndex})">
-                                <div class="item-details">
+                                <div class="item-details" style="cursor: grab;">
                                     <div class="item-name" onclick="editItemName(${storeIndex}, ${itemIndex})" style="cursor: pointer;">
                                         <span id="itemName-${storeIndex}-${itemIndex}">${item.name}</span>
                                     </div>
@@ -526,7 +526,7 @@
                 if (list.children.length > 1) {
                     new Sortable(list, {
                         animation: 150,
-                        handle: '.drag-handle',
+                        handle: '.item-details',
                         filter: '.item:last-child',
                         onEnd: function (evt) {
                             if (evt.newIndex >= appData.stores[storeIndex].items.length) {
@@ -775,117 +775,118 @@
             const quantity = parseFloat(document.getElementById('itemQuantity').value) || 1;
             const price = parseFloat(document.getElementById('itemPrice').value) || 0;
             
-            if (!name) {
-                alert('Введите название товара');
-                return;
-            }
-            if (price <= 0) {
-                alert('Введите корректную цену');
-                return;
-            }
-            if (quantity <= 0) {
-                alert('Введите корректное количество');
-                return;
-            }
-            
-            const newItem = {
-                name: name,
-                quantity: quantity,
-                price: price,
-                bought: false
-            };
-            
-            appData.stores[currentStoreIndex].items.push(newItem);
-            
-            const existingItemIndex = appData.allItems.findIndex(item => 
-                item.name.toLowerCase() === name.toLowerCase()
-            );
-            
-            if (existingItemIndex !== -1) {
-                appData.allItems[existingItemIndex] = {
-                    name: name,
-                    quantity: quantity,
-                    price: price
-                };
-            } else {
-                appData.allItems.push({
-                    name: name,
-                    quantity: quantity,
-                    price: price
-                });
-            }
-            
-            saveData();
-            renderApp();
-            closeItemModal();
+           if (!name) {
+    alert('Введите название товара');
+    return;
+}
+if (price <= 0) {
+    alert('Введите корректную цену');
+    return;
+}
+if (quantity <= 0) {
+    alert('Введите корректное количество');
+    return;
+}
+
+const newItem = {
+    name: name,
+    quantity: quantity,
+    price: price,
+    bought: false
+};
+
+appData.stores[currentStoreIndex].items.push(newItem);
+
+const existingItemIndex = appData.allItems.findIndex(item => 
+    item.name.toLowerCase() === name.toLowerCase()
+);
+
+if (existingItemIndex !== -1) {
+    appData.allItems[existingItemIndex] = {
+        name: name,
+        quantity: quantity,
+        price: price
+    };
+} else {
+    appData.allItems.push({
+        name: name,
+        quantity: quantity,
+        price: price
+    });
+}
+
+saveData();
+renderApp();
+closeItemModal();
+}
+
+function clearAllData() {
+    if (confirm('Вы уверены, что хотите удалить все данные?')) {
+        appData = { budget: 0, stores: [], allItems: [] };
+        saveData();
+        renderApp();
+    }
+}
+
+window.addEventListener('click', function(event) {
+    const storeModal = document.getElementById('storeModal');
+    const itemModal = document.getElementById('itemModal');
+    const downloadPopup = document.getElementById('downloadPopup');
+    const autocompleteList = document.getElementById('autocompleteList');
+    
+    if (event.target === storeModal) {
+        closeStoreModal();
+    }
+    if (event.target === itemModal) {
+        closeItemModal();
+    }
+    if (event.target === downloadPopup) {
+        closeDownloadInfo();
+    }
+    if (event.target !== document.getElementById('itemName')) {
+        autocompleteList.style.display = 'none';
+    }
+});
+
+function showDownloadInfo() {
+    document.getElementById('downloadPopup').style.display = 'block';
+}
+
+function closeDownloadInfo() {
+    document.getElementById('downloadPopup').style.display = 'none';
+}
+
+// Демо-данные для первого запуска
+if (!localStorage.getItem('shoppingAppData')) {
+    appData.stores = [
+        {
+            name: "Пятёрочка",
+            items: [
+                { name: "Хлеб", quantity: 2, price: 50, bought: false },
+                { name: "Молоко", quantity: 3, price: 70, bought: false },
+                { name: "Яйца", quantity: 2, price: 90, bought: true },
+                { name: "Бананы", quantity: 0.5, price: 120, bought: false }
+            ]
+        },
+        {
+            name: "Магнит",
+            items: [
+                { name: "Шампунь", quantity: 1, price: 250, bought: false },
+                { name: "Дезодорант", quantity: 1, price: 120, bought: false }
+            ]
         }
-        
-        function clearAllData() {
-            if (confirm('Вы уверены, что хотите удалить все данные?')) {
-                appData = { budget: 0, stores: [], allItems: [] };
-                saveData();
-                renderApp();
-            }
-        }
-        
-        window.addEventListener('click', function(event) {
-            const storeModal = document.getElementById('storeModal');
-            const itemModal = document.getElementById('itemModal');
-            const downloadPopup = document.getElementById('downloadPopup');
-            const autocompleteList = document.getElementById('autocompleteList');
-            
-            if (event.target === storeModal) {
-                closeStoreModal();
-            }
-            if (event.target === itemModal) {
-                closeItemModal();
-            }
-            if (event.target === downloadPopup) {
-                closeDownloadInfo();
-            }
-            if (event.target !== document.getElementById('itemName')) {
-                autocompleteList.style.display = 'none';
-            }
-        });
-        
-        function showDownloadInfo() {
-            document.getElementById('downloadPopup').style.display = 'block';
-        }
-        
-        function closeDownloadInfo() {
-            document.getElementById('downloadPopup').style.display = 'none';
-        }
-        
-        if (!localStorage.getItem('shoppingAppData')) {
-            appData.stores = [
-                {
-                    name: "Пятёрочка",
-                    items: [
-                        { name: "Хлеб", quantity: 2, price: 50, bought: false },
-                        { name: "Молоко", quantity: 3, price: 70, bought: false },
-                        { name: "Яйца", quantity: 2, price: 90, bought: true },
-                        { name: "Бананы", quantity: 0.5, price: 120, bought: false }
-                    ]
-                },
-                {
-                    name: "Магнит",
-                    items: [
-                        { name: "Шампунь", quantity: 1, price: 250, bought: false },
-                        { name: "Дезодорант", quantity: 1, price: 120, bought: false }
-                    ]
-                }
-            ];
-            appData.budget = 5000;
-            appData.allItems = [
-                { name: "Хлеб", quantity: 2, price: 50 },
-                { name: "Молоко", quantity: 3, price: 70 },
-                { name: "Яйца", quantity: 2, price: 90 },
-                { name: "Бананы", quantity: 0.5, price: 120 },
-                { name: "Шампунь", quantity: 1, price: 250 },
-                { name: "Дезодорант", quantity: 1, price: 120 }
-            ];
-            saveData();
-        }
-    </script>
+    ];
+    appData.budget = 5000;
+    appData.allItems = [
+        { name: "Хлеб", quantity: 2, price: 50 },
+        { name: "Молоко", quantity: 3, price: 70 },
+        { name: "Яйца", quantity: 2, price: 90 },
+        { name: "Бананы", quantity: 0.5, price: 120 },
+        { name: "Шампунь", quantity: 1, price: 250 },
+        { name: "Дезодорант", quantity: 1, price: 120 }
+    ];
+    saveData();
+}
+</script>
 </body>
 </html>
