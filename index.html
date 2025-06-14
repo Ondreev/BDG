@@ -1,163 +1,186 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>КИВИ BDG — Планировщик закупок</title>
-    <link rel="icon" type="image/png" href="https://cdn.abacus.ai/images/9def1789-3a84-47d1-8403-586336c53bdd.png">
-    <style>
-        body {
-            background: #ff3ebf;
-            min-height: 100vh;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            margin: 0;
-            padding: 0 12px;
-        }
-        /* Остальные стили оставить как есть */
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>КИВИ BDG — Планировщик закупок</title>
+  <link rel="icon" type="image/png" href="https://cdn.abacus.ai/images/9def1789-3a84-47d1-8403-586336c53bdd.png"/>
+  <style>
+    body {
+      background: #ff3ebf;
+      min-height: 100vh;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      margin: 0;
+      padding: 0 12px;
+    }
+    .container {
+      max-width: 600px;
+      margin: 20px auto;
+      background: white;
+      border-radius: 10px;
+      padding: 20px;
+    }
+    .store, .item {
+      border: 1px solid #ffe0f4;
+      border-radius: 8px;
+      margin-bottom: 12px;
+      padding: 10px;
+      background: #fff6fb;
+    }
+    .item.checked { opacity: 0.6; }
+    .btn {
+      padding: 6px 12px;
+      margin: 4px 0;
+      border: none;
+      border-radius: 6px;
+      background: #ff3ebf;
+      color: white;
+      cursor: pointer;
+    }
+  </style>
 </head>
 <body>
-    <!-- Контейнер и шапка — оставить без изменений -->
+<div class="container">
+  <h2>🛒 КИВИ BDG — Планировщик</h2>
+  <input type="number" id="budgetInput" placeholder="Бюджет (руб)" />
+  <div>Потрачено: <span id="spentAmount">0</span> ₽</div>
+  <div>Остаток: <span id="remainingAmount">0</span> ₽</div>
+  <div id="storesList"></div>
+  <button class="btn" onclick="addDemoStore()">+ Добавить магазин</button>
+</div>
 
-    <!-- Модалка добавления товара с новым полем unit -->
-    <div id="itemModal" class="modal" style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.3);z-index:1000;">
-        <div class="modal-content" style="background:#fff;padding:24px;border-radius:12px;max-width:400px;margin:80px auto;position:relative;">
-            <div class="modal-header" style="font-size:1.2rem;font-weight:bold;margin-bottom:15px;">Добавить товар</div>
-            <div class="form-group" style="margin-bottom:15px; position: relative;">
-                <label for="itemName">Название товара:</label>
-                <input type="text" id="itemName" placeholder="Например: Хлеб" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:6px;font-size:1rem;" oninput="showAutocomplete()">
-                <ul id="autocompleteList" class="autocomplete-list" style="display: none;"></ul>
-            </div>
-            <div class="form-group" style="margin-bottom:15px;">
-                <label for="itemQuantity">Количество:</label>
-                <input type="number" id="itemQuantity" placeholder="1" min="1" value="1" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:6px;font-size:1rem;">
-            </div>
-            <div class="form-group" style="margin-bottom:15px;">
-                <label for="itemUnit">Единица измерения:</label>
-                <select id="itemUnit" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:6px;font-size:1rem;">
-                    <option value="шт">шт</option>
-                    <option value="кг">кг</option>
-                </select>
-            </div>
-            <div class="form-group" style="margin-bottom:15px;">
-                <label for="itemPrice">Цена за единицу (руб):</label>
-                <input type="number" id="itemPrice" placeholder="50" min="0" step="0.01" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:6px;font-size:1rem;">
-            </div>
-            <div class="modal-buttons" style="display:flex;gap:10px;justify-content:flex-end;">
-                <button class="btn btn-secondary" onclick="closeItemModal()">Отмена</button>
-                <button class="btn btn-primary" onclick="addItem()">Добавить</button>
-            </div>
-        </div>
-    </div>
+<div id="itemModal" style="display:none;background:#fff;padding:20px;position:fixed;top:10%;left:50%;transform:translateX(-50%);z-index:1000;border-radius:8px;box-shadow:0 2px 10px rgba(0,0,0,0.3);">
+  <h3>Добавить товар</h3>
+  <input type="text" id="itemName" placeholder="Название" /><br/>
+  <input type="number" id="itemQuantity" placeholder="Количество" /><br/>
+  <select id="itemUnit">
+    <option value="шт">шт</option>
+    <option value="кг">кг</option>
+  </select><br/>
+  <input type="number" id="itemPrice" placeholder="Цена" /><br/>
+  <button onclick="addItem()">Добавить</button>
+  <button onclick="closeItemModal()">Отмена</button>
+</div>
 
-    <script>
-        function openAddItemModal(storeIndex) {
-            currentStoreIndex = storeIndex;
-            document.getElementById('itemName').value = '';
-            document.getElementById('itemQuantity').value = '1';
-            document.getElementById('itemPrice').value = '';
-            document.getElementById('itemUnit').value = 'шт';
-            document.getElementById('autocompleteList').style.display = 'none';
-            document.getElementById('autocompleteList').innerHTML = '';
-            document.getElementById('itemModal').style.display = 'block';
-        }
+<script>
+  let appData = { budget: 0, stores: [], allItems: [] };
+  let currentStoreIndex = -1;
 
-        function addItem() {
-            const name = document.getElementById('itemName').value.trim();
-            const quantity = parseInt(document.getElementById('itemQuantity').value) || 1;
-            const price = parseFloat(document.getElementById('itemPrice').value) || 0;
-            const unit = document.getElementById('itemUnit').value || 'шт';
+  function saveData() {
+    localStorage.setItem('shoppingAppData', JSON.stringify(appData));
+  }
 
-            if (!name) {
-                alert('Введите название товара');
-                return;
-            }
-            if (price <= 0) {
-                alert('Введите корректную цену');
-                return;
-            }
+  function loadData() {
+    const saved = localStorage.getItem('shoppingAppData');
+    if (saved) {
+      appData = JSON.parse(saved);
+    } else {
+      appData = {
+        budget: 5000,
+        stores: [
+          {
+            name: "Пятёрочка",
+            items: [
+              { name: "Хлеб", quantity: 1, price: 50, unit: "шт", bought: false },
+              { name: "Молоко", quantity: 1, price: 70, unit: "л", bought: false }
+            ]
+          }
+        ],
+        allItems: []
+      };
+    }
+  }
 
-            const newItem = {
-                name: name,
-                quantity: quantity,
-                price: price,
-                unit: unit,
-                bought: false
-            };
+  function renderApp() {
+    document.getElementById("budgetInput").value = appData.budget;
+    document.getElementById("budgetInput").oninput = function () {
+      appData.budget = parseFloat(this.value) || 0;
+      saveData();
+      updateSummary();
+    };
+    renderStores();
+    updateSummary();
+  }
 
-            appData.stores[currentStoreIndex].items.push(newItem);
+  function renderStores() {
+    const container = document.getElementById("storesList");
+    container.innerHTML = "";
+    appData.stores.forEach((store, storeIndex) => {
+      const div = document.createElement("div");
+      div.className = "store";
+      const subtotal = store.items.reduce((sum, i) => sum + (i.quantity * i.price), 0).toFixed(2);
+      div.innerHTML = `<strong>${store.name}</strong> — ${subtotal} ₽`;
+      store.items.forEach((item, itemIndex) => {
+        const itemDiv = document.createElement("div");
+        itemDiv.className = "item" + (item.bought ? " checked" : "");
+        itemDiv.innerHTML = `
+          <label><input type="checkbox" ${item.bought ? "checked" : ""} onchange="toggleItem(${storeIndex}, ${itemIndex})"/> 
+          ${item.name} — ${item.quantity} ${item.unit || 'шт'} × ${item.price}₽ = ${(item.quantity * item.price).toFixed(2)}₽</label>
+          <button onclick="deleteItem(${storeIndex}, ${itemIndex})">×</button>
+        `;
+        div.appendChild(itemDiv);
+      });
+      const btn = document.createElement("button");
+      btn.className = "btn";
+      btn.innerText = "+ Товар";
+      btn.onclick = () => openAddItemModal(storeIndex);
+      div.appendChild(btn);
+      container.appendChild(div);
+    });
+  }
 
-            const existingItemIndex = appData.allItems.findIndex(item => 
-                item.name.toLowerCase() === name.toLowerCase()
-            );
+  function toggleItem(storeIdx, itemIdx) {
+    appData.stores[storeIdx].items[itemIdx].bought = !appData.stores[storeIdx].items[itemIdx].bought;
+    saveData();
+    renderApp();
+  }
 
-            if (existingItemIndex !== -1) {
-                appData.allItems[existingItemIndex] = {
-                    name: name,
-                    quantity: quantity,
-                    price: price,
-                    unit: unit
-                };
-            } else {
-                appData.allItems.push({
-                    name: name,
-                    quantity: quantity,
-                    price: price,
-                    unit: unit
-                });
-            }
+  function updateSummary() {
+    const spent = appData.stores.reduce((total, store) =>
+      total + store.items.reduce((sum, i) => i.bought ? sum + i.price * i.quantity : sum, 0), 0);
+    document.getElementById("spentAmount").innerText = spent.toFixed(2);
+    document.getElementById("remainingAmount").innerText = (appData.budget - spent).toFixed(2);
+  }
 
-            saveData();
-            renderApp();
-            closeItemModal();
-        }
+  function addDemoStore() {
+    appData.stores.push({ name: "Новый магазин", items: [] });
+    saveData();
+    renderApp();
+  }
 
-        function renderStores() {
-            const container = document.getElementById('storesList');
-            container.innerHTML = '';
-            appData.stores.forEach((store, storeIndex) => {
-                const storeDiv = document.createElement('div');
-                storeDiv.className = 'store';
-                const subtotal = calculateStoreSubtotal(store);
-                storeDiv.innerHTML = `
-                    <div class="store-header">
-                        <div class="store-name">🛒 ${store.name}</div>
-                        <div>
-                            <button class="btn btn-secondary" onclick="toggleAllItems(${storeIndex})">Отметить всё</button>
-                            <button class="delete-store-btn" onclick="deleteStore(${storeIndex})">Удалить</button>
-                        </div>
-                        <div class="store-subtotal">₽ ${subtotal}</div>
-                    </div>
-                    <div class="items-list">
-                        ${store.items.map((item, itemIndex) => `
-                            <div class="item ${item.bought ? 'checked' : ''}">
-                                <input type="checkbox" ${item.bought ? 'checked' : ''} onchange="toggleItem(${storeIndex}, ${itemIndex})">
-                                <div class="item-details">
-                                    <div class="item-name" onclick="editItemName(${storeIndex}, ${itemIndex})" style="cursor: pointer;">
-                                        <span id="itemName-${storeIndex}-${itemIndex}">${item.name}</span>
-                                    </div>
-                                    <div class="item-calc">
-                                        <span onclick="editItemQuantity(${storeIndex}, ${itemIndex})" style="cursor: pointer;">
-                                            <span id="itemQuantity-${storeIndex}-${itemIndex}">${item.quantity}</span> 
-                                            <span id="itemUnit-${storeIndex}-${itemIndex}">${item.unit || 'шт'}</span>
-                                        </span> x 
-                                        <span onclick="editItemPrice(${storeIndex}, ${itemIndex})" style="cursor: pointer;">
-                                            <span id="itemPrice-${storeIndex}-${itemIndex}">${item.price}</span> руб
-                                        </span> = 
-                                        <span class="item-total">\${(item.quantity * item.price).toFixed(2)} руб</span>
-                                    </div>
-                                </div>
-                                <button class="item-delete" onclick="deleteItem(${storeIndex}, ${itemIndex})">×</button>
-                            </div>
-                        `).join('')}
-                        <div class="item">
-                            <button class="btn btn-secondary" onclick="openAddItemModal(${storeIndex})" style="width: 100%;">+ Добавить товар</button>
-                        </div>
-                    </div>
-                `;
-                container.appendChild(storeDiv);
-            });
-        }
-    </script>
+  function openAddItemModal(storeIdx) {
+    currentStoreIndex = storeIdx;
+    document.getElementById("itemName").value = "";
+    document.getElementById("itemQuantity").value = 1;
+    document.getElementById("itemPrice").value = "";
+    document.getElementById("itemUnit").value = "шт";
+    document.getElementById("itemModal").style.display = "block";
+  }
+
+  function closeItemModal() {
+    document.getElementById("itemModal").style.display = "none";
+  }
+
+  function addItem() {
+    const name = document.getElementById("itemName").value;
+    const quantity = parseFloat(document.getElementById("itemQuantity").value);
+    const price = parseFloat(document.getElementById("itemPrice").value);
+    const unit = document.getElementById("itemUnit").value || "шт";
+    if (!name || price <= 0 || quantity <= 0) return alert("Заполните все поля");
+    appData.stores[currentStoreIndex].items.push({ name, quantity, price, unit, bought: false });
+    saveData();
+    closeItemModal();
+    renderApp();
+  }
+
+  function deleteItem(storeIdx, itemIdx) {
+    appData.stores[storeIdx].items.splice(itemIdx, 1);
+    saveData();
+    renderApp();
+  }
+
+  loadData();
+  renderApp();
+</script>
 </body>
 </html>
