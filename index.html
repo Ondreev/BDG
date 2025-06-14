@@ -1,13 +1,10 @@
-icon_url = "https://cdn.abacus.ai/images/9def1789-3a84-47d1-8403-586336c53bdd.png"
-telegram_link = "https://t.me/ondreeff"
-
-html_content = '''<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>КИВИ BDG — Планировщик закупок</title>
-    <link rel="icon" type="image/png" href="''' + icon_url + '''">
+    <title>КИВИ BDG</title>
+    <link rel="icon" type="https://cdn.abacus.ai/images/9def1789-3a84-47d1-8403-586336c53bdd.png" href="''' + icon_url + '''">
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
     <style>
         body {
@@ -876,14 +873,4 @@ html_content = '''<!DOCTYPE html>
         }
     </script>
 </body>
-</html>'''
-
-with open('kiwi_bdg_final.html', 'w', encoding='utf-8') as f:
-    f.write(html_content)
-
-print("✅ Готово! Файл kiwi_bdg_final.html создан с новыми возможностями:")
-print("🔢 Весовые товары - можно вводить дробные количества (0.5, 0.65 и т.д.)")
-print("📱 Улучшенные отступы - приложение не прилипает к краям экрана")
-print("🔄 Перетаскивание товаров - тяни за значок ⋮⋮ чтобы изменить порядок")
-print("💾 Все данные пользователей сохранены - ничего не потеряется при обновлении!")
-print("🎯 Автоматическое определение единиц измерения: шт для целых чисел, кг для дробных")
+</html>
