@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+html_content = '''<!DOCTYPE html>
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
@@ -49,9 +49,7 @@
         .item-delete{background:none;border:none;color:#d6007a;font-size:1.2rem;cursor:pointer;margin-left:8px}
         .item.checked{opacity:.6}
         .item.checked .item-details{text-decoration:line-through}
-        .item-daysleft{font-size:.85em;color:#888;margin-top:2px;display:flex;align-items:center;gap:8px}
-        .item-bar{height:6px;border-radius:3px;background:#ffe0f4;width:100px;flex-shrink:0;overflow:hidden;position:relative}
-        .item-bar-inner{height:100%;background:#ff3ebf;transition:.3s;width:0}
+        .item-daysleft{font-size:.85em;color:#888;margin-top:2px;display:inline-block;font-weight:bold;background-color:yellow;padding:2px 4px;border-radius:4px}
         .add-buttons{margin:24px 24px 0 24px;display:flex;gap:10px;flex-wrap:wrap}
         .btn-primary{background:#ff3ebf;color:#fff;border:none;border-radius:6px;padding:10px 15px;font-size:1rem;cursor:pointer}
         .btn-secondary{background:#fff6fb;color:#ff3ebf;border:none;border-radius:6px;padding:10px 15px;font-size:1rem;cursor:pointer}
@@ -129,8 +127,8 @@ function saveCurrentList(){const newName=prompt('Сохранить как:',all
 window.addEventListener('load',()=>{loadAll();loadCurrent();renderApp();document.getElementById('budgetInput').addEventListener('input',e=>{appData.budget=parseFloat(e.target.value)||0;updateSummary();allLists[currentListIndex].data=appData;saveAll();});setInterval(()=>{renderApp();},60*60*1000);});
 function renderApp(){document.getElementById('budgetInput').value=appData.budget||'';renderStores();updateSummary();initDnD();}
 function renderStores(){const cont=document.getElementById('storesList');cont.innerHTML='';appData.stores.forEach((s,si)=>{const subtotal=s.items.reduce((t,it)=>t+it.quantity*it.price,0);const div=document.createElement('div');div.className='store';div.innerHTML=`<div class="store-header"><input type="checkbox" onchange="toggleAll(${si})"><div class="store-name">${s.name}</div><div class="store-subtotal">${Math.round(subtotal)} руб</div><button class="store-delete" onclick="deleteStore(${si})">×</button></div><ul class="items-list" id="items-${si}"></ul><div class="add-buttons"><button class="btn-secondary" onclick="openAddItemModal(${si})">+ Товар</button></div>`;cont.appendChild(div);renderItems(si);});}
-function renderItems(si){const ul=document.getElementById('items-'+si);ul.innerHTML='';appData.stores[si].items.forEach((it,ii)=>{const li=document.createElement('li');li.className='item'+(it.bought?' checked':'');li.dataset.storeIndex=si;li.dataset.itemIndex=ii;li.innerHTML=`<input type="checkbox" onclick="toggleItem(${si},${ii})" ${it.bought?'checked':''}><div class="item-details"><div class="item-name">${it.name}</div><div class="item-calc">${it.quantity} × ${it.price}</div>${renderDaysLeft(it)}</div><div class="item-total">${Math.round(it.quantity*it.price)} руб</div><button class="item-edit" onclick="openEditItemModal(${si},${ii})">✏️</button><button class="item-delete" onclick="deleteItem(${si},${ii})">×</button>`;ul.appendChild(li);});}
-function renderDaysLeft(it){if(!it.day||it.bought)return'';const days=calcDaysLeft(it.day);const percent=Math.max(0,Math.min(100,100-days/31*100));return `<div class="item-daysleft"><span class="item-bar"><span class="item-bar-inner" style="width:${percent}px"></span></span><span>Осталось ${days} дн.</span></div>`;}
+function renderItems(si){const ul=document.getElementById('items-'+si);ul.innerHTML='';appData.stores[si].items.forEach((it,ii)=>{const li=document.createElement('li');li.className='item'+(it.bought?' checked':'');li.dataset.storeIndex=si;li.dataset.itemIndex=ii;li.innerHTML=`<input type="checkbox" onclick="toggleItem(${si},${ii})" ${it.bought?'checked':''}><div class="item-details"><div class="item-name">${it.name}</div>${renderDaysLeft(it)}<div class="item-calc">${it.quantity} × ${it.price}</div></div><div class="item-total">${Math.round(it.quantity*it.price)} руб</div><button class="item-edit" onclick="openEditItemModal(${si},${ii})">✏️</button><button class="item-delete" onclick="deleteItem(${si},${ii})">×</button>`;ul.appendChild(li);});}
+function renderDaysLeft(it){if(!it.day||it.bought)return'';const days=calcDaysLeft(it.day);return `<div class="item-daysleft">Ост: ${String(days).padStart(2,'0')} дн.</div>`;}
 function calcDaysLeft(day){const now=new Date();const today=now.getDate();const month=now.getMonth();const year=now.getFullYear();let target=new Date(year,month,day);if(today>day){target=new Date(year,month+1,day);}const diff=Math.ceil((target-now)/(1000*60*60*24));return diff;}
 function updateSummary(){const spent=appData.stores.reduce((tot,s)=>tot+s.items.filter(i=>i.bought).reduce((t,it)=>t+it.quantity*it.price,0),0);const totalCost=appData.stores.reduce((tot,s)=>tot+s.items.reduce((t,it)=>t+it.quantity*it.price,0),0);document.getElementById('spentAmount').textContent=Math.round(spent);const rem=appData.budget-spent;document.getElementById('remainingAmount').textContent=Math.round(rem);const warn=document.getElementById('warningMessage');warn.style.display=totalCost>appData.budget&&appData.budget>0?'block':'none';document.getElementById('overBudgetAmount').textContent=Math.abs(Math.round(appData.budget-totalCost));allLists[currentListIndex].data=appData;saveAll();}
 function openAddStoreModal(){document.getElementById('storeName').value='';document.getElementById('storeModal').style.display='flex';}
@@ -152,4 +150,8 @@ function showDownloadInfo(){document.getElementById('downloadPopup').style.displ
 function closeDownloadInfo(){document.getElementById('downloadPopup').style.display='none';}
 </script>
 </body>
-</html>
+</html>'''
+
+with open('index.html','w',encoding='utf-8') as f:
+    f.write(html_content)
+print('index.html создан')
