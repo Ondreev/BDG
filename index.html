@@ -36,6 +36,13 @@ body{
   font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;
   min-height:100vh;overscroll-behavior-y:contain;
 }
+body::before{
+  content:'';position:fixed;inset:0;z-index:-1;pointer-events:none;
+  background:
+    radial-gradient(640px 420px at 12% -6%, rgba(99,102,241,.10), transparent 62%),
+    radial-gradient(720px 480px at 92% -2%, rgba(139,92,246,.09), transparent 62%),
+    var(--bg);
+}
 button{font-family:inherit;color:inherit}
 input,select{font-family:inherit}
 
@@ -112,6 +119,65 @@ input,select{font-family:inherit}
   display:none;margin-top:12px;padding:12px 14px;border-radius:14px;text-align:center;
   background:var(--green-soft);color:#047857;font-size:14px;font-weight:800;
 }
+
+/* ---------- upcoming payments ---------- */
+.pay-card{
+  background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);
+  padding:16px 18px;margin-top:14px;display:none;
+}
+.pay-head{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:6px}
+.pay-title{font-size:15px;font-weight:800;display:flex;align-items:center;gap:8px}
+.pay-title .pdot{width:8px;height:8px;border-radius:99px;background:var(--amber);flex:none}
+.pay-total{font-size:15px;font-weight:800;color:var(--amber);white-space:nowrap}
+.pay-sub{font-size:12px;color:var(--muted);font-weight:600;margin-bottom:10px}
+.pay-row{
+  display:flex;align-items:center;gap:10px;width:100%;padding:10px 2px;border:none;background:none;
+  cursor:pointer;text-align:left;border-top:1px solid var(--line);
+}
+.pay-row .pname{flex:1;min-width:0;font-size:14px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pay-row .pwhen{font-size:12px;font-weight:800;color:var(--amber);background:var(--amber-soft);padding:3px 8px;border-radius:99px;flex:none}
+.pay-row .pwhen.today{color:var(--red);background:var(--red-soft)}
+.pay-row .psum{font-size:14px;font-weight:800;white-space:nowrap;flex:none}
+.pay-more{font-size:12.5px;font-weight:700;color:var(--muted);padding:8px 2px 0;border-top:1px solid var(--line)}
+
+/* ---------- chart card ---------- */
+.chart-card{
+  background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);
+  padding:18px;margin-top:14px;
+}
+.chart-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:16px}
+.chart-title{font-size:15px;font-weight:800}
+.seg{display:flex;background:var(--bg);border-radius:12px;padding:3px;flex:none}
+.seg button{
+  border:none;background:none;padding:7px 14px;border-radius:9px;
+  font-size:13px;font-weight:700;color:var(--muted);cursor:pointer;transition:all .18s;
+}
+.seg button.on{background:#fff;color:var(--text);box-shadow:0 1px 4px rgba(30,41,59,.14)}
+.chart-body{display:flex;flex-direction:column;align-items:stretch;gap:14px}
+.donut-wrap{position:relative;width:158px;height:158px;flex:none;margin:0 auto}
+.donut-wrap svg{width:100%;height:100%;display:block}
+.seg-arc{cursor:pointer;transition:opacity .2s}
+.donut-center{
+  position:absolute;inset:32px;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  text-align:center;pointer-events:none;
+}
+.dc-val{font-size:17px;font-weight:800;line-height:1.15;white-space:nowrap}
+.dc-cap{
+  font-size:11px;font-weight:700;color:var(--muted);margin-top:2px;max-width:78px;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+.legend{display:flex;flex-direction:column;gap:2px}
+.legend-row{
+  display:flex;align-items:center;gap:8px;padding:7px 8px;border:none;background:none;
+  border-radius:10px;cursor:pointer;text-align:left;width:100%;transition:opacity .2s;
+}
+.legend-row.sel{background:var(--bg)}
+.legend-row.dim{opacity:.4}
+.legend-row .dot{width:10px;height:10px;border-radius:4px;flex:none}
+.legend-row .lname{flex:1;min-width:0;font-size:13px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.legend-row .lval{font-size:13px;font-weight:800;white-space:nowrap}
+.legend-row .lpct{font-size:12px;font-weight:700;color:var(--muted);width:36px;text-align:right;flex:none}
+.legend-empty{font-size:13px;color:var(--muted);padding:6px 8px}
 
 /* ---------- store cards ---------- */
 .store-card{
@@ -276,9 +342,10 @@ input,select{font-family:inherit}
 .action-item:active{background:var(--line)}
 .action-item .ic{
   width:38px;height:38px;flex:none;border-radius:12px;background:#fff;box-shadow:var(--shadow);
-  display:flex;align-items:center;justify-content:center;font-size:17px;
+  display:flex;align-items:center;justify-content:center;color:#475569;
 }
 .action-item.danger{color:var(--red)}
+.action-item.danger .ic{color:var(--red)}
 .action-item small{display:block;font-size:12px;font-weight:600;color:var(--muted);margin-top:1px}
 
 /* lists sheet */
@@ -292,8 +359,9 @@ input,select{font-family:inherit}
 .list-row .mt{font-size:12.5px;color:var(--muted);margin-top:2px}
 .list-row .mini{
   width:40px;height:40px;flex:none;border:none;border-radius:12px;background:#fff;box-shadow:var(--shadow);
-  cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:15px;
+  cursor:pointer;display:flex;align-items:center;justify-content:center;color:#475569;
 }
+.list-row .mini.danger{color:var(--red)}
 
 /* snackbar */
 .snackbar{
@@ -309,6 +377,51 @@ input,select{font-family:inherit}
 .sheet .about p{color:var(--muted);font-size:14.5px;line-height:1.6;margin:0 0 12px}
 .sheet .about b{color:var(--text)}
 input[type=file]{display:none}
+
+/* ---------- desktop ---------- */
+@media(hover:hover){
+  .icon-btn:hover{transform:translateY(-1px);box-shadow:0 4px 14px rgba(30,41,59,.10)}
+  .list-switch:hover{background:rgba(99,102,241,.08)}
+  .item-row:hover{background:#FAFBFE}
+  .check:hover .box{border-color:var(--accent)}
+  .store-more:hover{background:var(--bg);color:var(--accent)}
+  .add-item-row:hover{background:var(--accent-soft)}
+  .add-store-btn:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-soft)}
+  .btn-primary:hover{filter:brightness(1.06)}
+  .btn-ghost:hover{background:var(--line)}
+  .btn-danger-ghost:hover{background:#FDDDE3}
+  .action-item:hover{background:var(--line)}
+  .legend-row:hover{background:var(--bg)}
+  .pay-row:hover .pname{color:var(--accent)}
+  .list-row:hover{border-color:#D6DCE8}
+  .list-row.current:hover{border-color:var(--accent)}
+  .mini:hover{color:var(--accent)}
+  .seg button:hover{color:var(--text)}
+  .fab:hover{transform:translateY(-2px);box-shadow:0 14px 32px rgba(99,102,241,.5)}
+  .suggest button:hover{background:#DDE0FD}
+  .stepper button:hover{background:#DDE0FD}
+}
+@media(min-width:920px){
+  .app{max-width:1140px;padding:0 32px 80px}
+  .topbar{padding:18px 4px 16px}
+  .layout{display:grid;grid-template-columns:410px minmax(0,1fr);gap:26px;align-items:start}
+  .side{position:sticky;top:96px}
+  .main #stores .store-card:first-child{margin-top:6px}
+  .empty-state{padding-top:80px}
+  .sheet{
+    left:50%;right:auto;bottom:auto;top:50%;width:480px;max-width:92vw;
+    border-radius:26px;padding:26px 28px 28px;max-height:86vh;
+    transform:translate(-50%,-45%);opacity:0;
+    transition:transform .25s cubic-bezier(.22,1,.36,1),opacity .22s;
+    box-shadow:0 30px 80px rgba(15,23,42,.25);
+  }
+  .sheet-wrap.open .sheet{transform:translate(-50%,-50%);opacity:1}
+  .grab{display:none}
+  .fab{right:40px;bottom:40px}
+  .snackbar{bottom:44px}
+  .donut-wrap{width:170px;height:170px}
+  .donut-center{inset:35px}
+}
 </style>
 </head>
 <body>
@@ -329,6 +442,8 @@ input[type=file]{display:none}
     </button>
   </header>
 
+  <div class="layout">
+  <div class="side">
   <section class="budget-card">
     <div class="budget-top">
       <div>
@@ -350,9 +465,40 @@ input[type=file]{display:none}
       <div class="stat"><div class="k">Куплено</div><div class="v" id="boughtVal">0 из 0</div></div>
     </div>
     <div class="over-note" id="overNote"></div>
-    <div class="done-note" id="doneNote">🎉 Всё куплено! Отличная работа</div>
+    <div class="done-note" id="doneNote">Всё куплено — отличная работа</div>
   </section>
 
+  <section class="pay-card" id="payCard">
+    <div class="pay-head">
+      <div class="pay-title"><span class="pdot"></span>Ближайшие платежи</div>
+      <div class="pay-total" id="payTotal">0 ₽</div>
+    </div>
+    <div class="pay-sub">В течение 7 дней</div>
+    <div id="payRows"></div>
+  </section>
+
+  <section class="chart-card" id="chartCard" style="display:none">
+    <div class="chart-head">
+      <div class="chart-title">Структура расходов</div>
+      <div class="seg">
+        <button id="segPlan" class="on" onclick="setChartMode('plan')">План</button>
+        <button id="segSpent" onclick="setChartMode('spent')">Куплено</button>
+      </div>
+    </div>
+    <div class="chart-body">
+      <div class="donut-wrap">
+        <svg id="donutSvg" viewBox="0 0 200 200"></svg>
+        <div class="donut-center">
+          <div class="dc-val" id="dcVal">0 ₽</div>
+          <div class="dc-cap" id="dcCap">План</div>
+        </div>
+      </div>
+      <div class="legend" id="chartLegend"></div>
+    </div>
+  </section>
+  </div><!-- /side -->
+
+  <div class="main">
   <div id="stores"></div>
 
   <button class="add-store-btn" id="addStoreBtn" onclick="openStoreSheet()">
@@ -376,6 +522,8 @@ input[type=file]{display:none}
     <h2>Список пока пуст</h2>
     <p>Задайте бюджет и добавьте первый магазин.<br>Покупки удобно группировать по местам.</p>
   </div>
+  </div><!-- /main -->
+  </div><!-- /layout -->
 </div>
 
 <button class="fab" onclick="openFabSheet()" aria-label="Добавить">
@@ -389,8 +537,8 @@ input[type=file]{display:none}
   <div class="sheet">
     <div class="grab"></div>
     <div class="action-list">
-      <button class="action-item" onclick="closeSheet('fabSheet');quickAddItem()"><span class="ic">🛒</span><span>Добавить товар</span></button>
-      <button class="action-item" onclick="closeSheet('fabSheet');openStoreSheet()"><span class="ic">🏪</span><span>Добавить магазин</span></button>
+      <button class="action-item" onclick="closeSheet('fabSheet');quickAddItem()"><span class="ic" data-icon="cart"></span><span>Добавить товар</span></button>
+      <button class="action-item" onclick="closeSheet('fabSheet');openStoreSheet()"><span class="ic" data-icon="store"></span><span>Добавить магазин</span></button>
     </div>
   </div>
 </div>
@@ -492,11 +640,12 @@ input[type=file]{display:none}
     <div class="grab"></div>
     <h2>Меню</h2>
     <div class="action-list">
-      <button class="action-item" onclick="exportData()"><span class="ic">📤</span><span>Экспорт данных<small>Скачать резервную копию (JSON)</small></span></button>
-      <button class="action-item" onclick="document.getElementById('importFile').click()"><span class="ic">📥</span><span>Импорт данных<small>Восстановить из файла</small></span></button>
-      <button class="action-item" onclick="closeSheet('menuSheet');openSheet('installSheet')"><span class="ic">📱</span><span>Установить на телефон</span></button>
-      <a class="action-item" href="https://karatmarket.ru/kivimarket" target="_blank" rel="noopener"><span class="ic">🛍️</span><span>КИВИ Маркет</span></a>
-      <button class="action-item" onclick="closeSheet('menuSheet');openSheet('aboutSheet')"><span class="ic">💡</span><span>О приложении</span></button>
+      <button class="action-item" onclick="shareList()"><span class="ic" data-icon="share"></span><span>Поделиться списком<small>Отправить текстом</small></span></button>
+      <button class="action-item" onclick="exportData()"><span class="ic" data-icon="export"></span><span>Экспорт данных<small>Скачать резервную копию (JSON)</small></span></button>
+      <button class="action-item" onclick="document.getElementById('importFile').click()"><span class="ic" data-icon="import"></span><span>Импорт данных<small>Восстановить из файла</small></span></button>
+      <button class="action-item" onclick="closeSheet('menuSheet');openSheet('installSheet')"><span class="ic" data-icon="phone"></span><span>Установить на телефон</span></button>
+      <a class="action-item" href="https://karatmarket.ru/kivimarket" target="_blank" rel="noopener"><span class="ic" data-icon="link"></span><span>КИВИ Маркет</span></a>
+      <button class="action-item" onclick="closeSheet('menuSheet');openSheet('aboutSheet')"><span class="ic" data-icon="info"></span><span>О приложении</span></button>
     </div>
     <input type="file" id="importFile" accept="application/json,.json" onchange="importData(this)">
   </div>
@@ -551,7 +700,7 @@ function save() {
     localStorage.setItem(KEY, json);
     localStorage.setItem(BAK, json);
   } catch (e) {
-    toast('⚠️ Не удалось сохранить данные');
+    toast('Не удалось сохранить данные');
   }
 }
 
@@ -628,9 +777,32 @@ function daysLeft(day) {
 
 function vibrate(ms) { if (navigator.vibrate) { try { navigator.vibrate(ms); } catch (e) {} } }
 
+/* ---------- icon set (strict line icons, no emoji) ---------- */
+const ICONS = {
+  cart: '<circle cx="9" cy="20" r="1.4"/><circle cx="17" cy="20" r="1.4"/><path d="M3 4h2l2.3 11h10.4l2-8H6.2"/>',
+  store: '<path d="M4 9.5 5.5 4h13L20 9.5M5 10v10h14V10M9.5 20v-5.5h5V20"/>',
+  share: '<circle cx="6" cy="12" r="2.5"/><circle cx="17" cy="6" r="2.5"/><circle cx="17" cy="18" r="2.5"/><path d="M8.4 10.9l6.2-3.7M8.4 13.1l6.2 3.7"/>',
+  export: '<path d="M12 15V4M8 7.5 12 3.5l4 4M5 15v4.5h14V15"/>',
+  import: '<path d="M12 4v11M8 11.5l4 4 4-4M5 15v4.5h14V15"/>',
+  phone: '<rect x="7" y="2.5" width="10" height="19" rx="2.8"/><path d="M10.8 18.5h2.4"/>',
+  link: '<path d="M13.5 4.5H19.5v6M19.5 4.5 11 13M19.5 13.5V18a1.8 1.8 0 0 1-1.8 1.8H6A1.8 1.8 0 0 1 4.2 18V6.3A1.8 1.8 0 0 1 6 4.5h4.5"/>',
+  info: '<circle cx="12" cy="12" r="8.6"/><path d="M12 11.2v5.2M12 7.9h.01"/>',
+  pencil: '<path d="M4.5 19.5h4L19.7 8.3a2 2 0 0 0-2.8-2.8L5.7 16.7l-1.2 2.8zM13.8 6.6l2.8 2.8"/>',
+  copy: '<rect x="9" y="9" width="11" height="11" rx="2.2"/><path d="M5.5 15H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v.5"/>',
+  check2: '<path d="M2.5 12.5l4.5 4.5L15.5 8M11.5 15.5l2 2L22 9"/>',
+  undo: '<path d="M4 9.5h10.5a5 5 0 0 1 0 10H9M4 9.5 8 5.5M4 9.5l4 4"/>',
+  trash: '<path d="M4.5 6.5h15M9.5 6.5V5a1.5 1.5 0 0 1 1.5-1.5h2A1.5 1.5 0 0 1 14.5 5v1.5M6.5 6.5 7.5 20h9l1-13.5M10 10.5v6M14 10.5v6"/>',
+  plus: '<path d="M12 5.5v13M5.5 12h13"/>'
+};
+function ic(name, size) {
+  return `<svg width="${size || 19}" height="${size || 19}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${ICONS[name] || ''}</svg>`;
+}
+
 /* ================= render ================= */
 function render() {
   renderSummary();
+  renderPayments();
+  renderChart();
   renderStores();
   document.getElementById('listName').textContent = list().name;
 }
@@ -665,11 +837,111 @@ function renderSummary() {
   const over = document.getElementById('overNote');
   if (budget > 0 && planned > budget) {
     over.style.display = 'block';
-    over.textContent = '⚠️ План превышает бюджет на ' + money(planned - budget);
+    over.textContent = 'План превышает бюджет на ' + money(planned - budget);
   } else over.style.display = 'none';
 
   document.getElementById('doneNote').style.display =
     (total > 0 && bought === total) ? 'block' : 'none';
+}
+
+/* ---------- upcoming payments (next 7 days) ---------- */
+function renderPayments() {
+  const card = document.getElementById('payCard');
+  const rows = [];
+  data().stores.forEach(s => s.items.forEach(it => {
+    if (!it.day || it.bought) return;
+    const dl = daysLeft(+it.day);
+    if (dl <= 7) rows.push({ sid: s.id, id: it.id, name: it.name, sum: (+it.qty || 0) * (+it.price || 0), dl });
+  }));
+  if (!rows.length) { card.style.display = 'none'; return; }
+  rows.sort((a, b) => a.dl - b.dl);
+  card.style.display = 'block';
+  document.getElementById('payTotal').textContent = money(rows.reduce((t, r) => t + r.sum, 0));
+  const shown = rows.slice(0, 4);
+  const rest = rows.slice(4);
+  document.getElementById('payRows').innerHTML = shown.map(r => `
+    <button class="pay-row" onclick="openItemSheet('${r.sid}','${r.id}')">
+      <span class="pname">${esc(r.name)}</span>
+      <span class="pwhen ${r.dl <= 0 ? 'today' : ''}">${r.dl <= 0 ? 'сегодня' : r.dl === 1 ? 'завтра' : 'через ' + r.dl + ' дн.'}</span>
+      <span class="psum">${money(r.sum)}</span>
+    </button>`).join('') +
+    (rest.length ? `<div class="pay-more">и ещё ${rest.length} на ${money(rest.reduce((t, r) => t + r.sum, 0))}</div>` : '');
+}
+
+/* ---------- spending structure donut ---------- */
+const CHART_COLORS = ['#6366F1', '#14B8A6', '#F59E0B', '#EC4899', '#0EA5E9'];
+const OTHER_COLOR = '#94A3B8';
+let chartMode = 'plan', chartSel = null;
+
+function arcPath(cx, cy, r, a0, a1) {
+  const x0 = cx + r * Math.cos(a0), y0 = cy + r * Math.sin(a0);
+  const x1 = cx + r * Math.cos(a1), y1 = cy + r * Math.sin(a1);
+  return `M ${x0.toFixed(2)} ${y0.toFixed(2)} A ${r} ${r} 0 ${(a1 - a0) > Math.PI ? 1 : 0} 1 ${x1.toFixed(2)} ${y1.toFixed(2)}`;
+}
+
+function renderChart() {
+  const card = document.getElementById('chartCard');
+  const stores = data().stores;
+  const anyPlanned = stores.some(s => s.items.some(it => (+it.qty || 0) * (+it.price || 0) > 0));
+  if (!anyPlanned) { card.style.display = 'none'; return; }
+  card.style.display = 'block';
+
+  // color follows the store's stable position in the list, not its size
+  const rows = []; let other = 0;
+  stores.forEach((s, i) => {
+    const val = s.items.reduce((t, it) => {
+      const sum = (+it.qty || 0) * (+it.price || 0);
+      return (chartMode === 'spent' && !it.bought) ? t : t + sum;
+    }, 0);
+    if (val <= 0) return;
+    if (i < CHART_COLORS.length) rows.push({ id: s.id, name: s.name, val, color: CHART_COLORS[i] });
+    else other += val;
+  });
+  if (other > 0) rows.push({ id: '__other', name: 'Прочее', val: other, color: OTHER_COLOR });
+  const total = rows.reduce((t, r) => t + r.val, 0);
+  if (chartSel && !rows.some(r => r.id === chartSel)) chartSel = null;
+
+  const R = 76, C = 100, W = 26;
+  let svgHtml = '';
+  if (total <= 0) {
+    svgHtml = `<circle cx="${C}" cy="${C}" r="${R}" fill="none" stroke="#EEF1F6" stroke-width="${W}"/>`;
+  } else if (rows.length === 1) {
+    svgHtml = `<circle cx="${C}" cy="${C}" r="${R}" fill="none" stroke="${rows[0].color}" stroke-width="${W}" class="seg-arc" data-seg="${rows[0].id}"/>`;
+  } else {
+    const gap = 3 / R; // ~3px surface gap between segments
+    let a = -Math.PI / 2;
+    rows.forEach(r => {
+      const span = r.val / total * Math.PI * 2;
+      const a0 = a + gap / 2, a1 = a + span - gap / 2;
+      if (a1 > a0) svgHtml += `<path d="${arcPath(C, C, R, a0, a1)}" fill="none" stroke="${r.color}" stroke-width="${W}" class="seg-arc" data-seg="${r.id}" style="opacity:${chartSel && chartSel !== r.id ? .3 : 1}"/>`;
+      a += span;
+    });
+  }
+  document.getElementById('donutSvg').innerHTML = svgHtml;
+
+  const sel = rows.find(r => r.id === chartSel);
+  const dcVal = document.getElementById('dcVal');
+  const valTxt = money(sel ? sel.val : total);
+  dcVal.textContent = valTxt;
+  dcVal.style.fontSize = valTxt.length > 9 ? '13.5px' : '17px';
+  document.getElementById('dcCap').textContent = sel ? sel.name : (chartMode === 'plan' ? 'План' : 'Куплено');
+
+  document.getElementById('chartLegend').innerHTML = total <= 0
+    ? '<div class="legend-empty">Пока ничего не куплено</div>'
+    : rows.map(r => `
+      <button class="legend-row ${chartSel === r.id ? 'sel' : ''} ${chartSel && chartSel !== r.id ? 'dim' : ''}" onclick="selectChartSeg('${r.id}')">
+        <span class="dot" style="background:${r.color}"></span>
+        <span class="lname">${esc(r.name)}</span>
+        <span class="lval">${money(r.val)}</span>
+        <span class="lpct">${Math.round(r.val / total * 100)}%</span>
+      </button>`).join('');
+}
+function selectChartSeg(id) { chartSel = chartSel === id ? null : id; renderChart(); }
+function setChartMode(m) {
+  chartMode = m; chartSel = null;
+  document.getElementById('segPlan').classList.toggle('on', m === 'plan');
+  document.getElementById('segSpent').classList.toggle('on', m === 'spent');
+  renderChart();
 }
 
 function renderStores() {
@@ -770,11 +1042,11 @@ function openStoreMenu(sid) {
   const s = findStore(sid); if (!s) return;
   document.getElementById('storeMenuTitle').textContent = s.name;
   document.getElementById('storeMenuActions').innerHTML = `
-    <button class="action-item" onclick="closeSheet('storeMenuSheet');openItemSheet('${sid}')"><span class="ic">🛒</span><span>Добавить товар</span></button>
-    <button class="action-item" onclick="closeSheet('storeMenuSheet');openStoreSheet('${sid}')"><span class="ic">✏️</span><span>Переименовать</span></button>
-    <button class="action-item" onclick="checkAll('${sid}',true)"><span class="ic">✅</span><span>Отметить всё купленным</span></button>
-    <button class="action-item" onclick="checkAll('${sid}',false)"><span class="ic">↩️</span><span>Снять все отметки</span></button>
-    <button class="action-item danger" onclick="deleteStore('${sid}')"><span class="ic">🗑️</span><span>Удалить магазин</span></button>`;
+    <button class="action-item" onclick="closeSheet('storeMenuSheet');openItemSheet('${sid}')"><span class="ic">${ic('plus')}</span><span>Добавить товар</span></button>
+    <button class="action-item" onclick="closeSheet('storeMenuSheet');openStoreSheet('${sid}')"><span class="ic">${ic('pencil')}</span><span>Переименовать</span></button>
+    <button class="action-item" onclick="checkAll('${sid}',true)"><span class="ic">${ic('check2')}</span><span>Отметить всё купленным</span></button>
+    <button class="action-item" onclick="checkAll('${sid}',false)"><span class="ic">${ic('undo')}</span><span>Снять все отметки</span></button>
+    <button class="action-item danger" onclick="deleteStore('${sid}')"><span class="ic">${ic('trash')}</span><span>Удалить магазин</span></button>`;
   openSheet('storeMenuSheet');
 }
 function checkAll(sid, val) {
@@ -925,8 +1197,9 @@ function openListsSheet() {
         <div class="nm">${esc(l.name)}</div>
         <div class="mt">${items} тов. · ${money(sum)} · ${l.date || ''}</div>
       </div>
-      <button class="mini" onclick="event.stopPropagation();openRenameList('${l.id}')" aria-label="Переименовать">✏️</button>
-      ${state.lists.length > 1 ? `<button class="mini" onclick="event.stopPropagation();deleteListById('${l.id}')" aria-label="Удалить">🗑️</button>` : ''}
+      <button class="mini" onclick="event.stopPropagation();openRenameList('${l.id}')" aria-label="Переименовать">${ic('pencil', 16)}</button>
+      <button class="mini" onclick="event.stopPropagation();duplicateListById('${l.id}')" aria-label="Дублировать">${ic('copy', 16)}</button>
+      ${state.lists.length > 1 ? `<button class="mini danger" onclick="event.stopPropagation();deleteListById('${l.id}')" aria-label="Удалить">${ic('trash', 16)}</button>` : ''}
     </div>`;
   }).join('');
   openSheet('listsSheet');
@@ -948,6 +1221,23 @@ function deleteListById(id) {
       save(); render();
     });
   });
+}
+
+function duplicateListById(id) {
+  const src = state.lists.find(l => l.id === id);
+  const copy = JSON.parse(JSON.stringify(src));
+  copy.id = uid();
+  copy.name = src.name + ' (копия)';
+  copy.date = today();
+  copy.data.stores.forEach(s => {
+    s.id = uid();
+    s.items.forEach(it => { it.id = uid(); it.bought = false; });
+  });
+  const idx = state.lists.findIndex(l => l.id === id);
+  state.lists.splice(idx + 1, 0, copy);
+  state.currentId = copy.id;
+  save(); render(); closeSheet('listsSheet');
+  toast('Копия создана — отметки покупок сброшены');
 }
 
 let listNameEditId = null;
@@ -1006,6 +1296,34 @@ function snackbar(msg, undoCb) {
 }
 function toast(msg) { snackbar(msg, null); }
 
+/* ---------- share as text ---------- */
+function shareList() {
+  const l = list(), d = l.data;
+  let planned = 0;
+  const lines = ['«' + l.name + '» — BDG', ''];
+  d.stores.forEach(s => {
+    const sub = s.items.reduce((t, it) => t + (+it.qty || 0) * (+it.price || 0), 0);
+    planned += sub;
+    if (!s.items.length) return;
+    lines.push(s.name + ' — ' + money(sub));
+    s.items.forEach(it => {
+      const sum = (+it.qty || 0) * (+it.price || 0);
+      lines.push((it.bought ? '  ✓ ' : '  – ') + it.name +
+        ((+it.qty || 1) !== 1 ? ' ' + fmt(it.qty) + ' × ' + fmt(it.price) + ' ₽' : '') +
+        ' — ' + money(sum) + (it.day ? ' (платёж ' + it.day + '-го)' : ''));
+    });
+    lines.push('');
+  });
+  if (+d.budget) lines.push('Бюджет: ' + money(d.budget) + ' · План: ' + money(planned));
+  const text = lines.join('\n').trim();
+  closeSheet('menuSheet');
+  if (navigator.share) {
+    navigator.share({ text }).catch(() => {});
+  } else if (navigator.clipboard) {
+    navigator.clipboard.writeText(text).then(() => toast('Список скопирован в буфер обмена'));
+  } else toast('Не удалось поделиться');
+}
+
 /* ---------- export / import ---------- */
 function exportData() {
   const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
@@ -1025,11 +1343,11 @@ function importData(input) {
   reader.onload = () => {
     let s = tryParse(reader.result);
     if (s && Array.isArray(s.lists) && !s.version) s = migrateOld(s);
-    if (!s || !Array.isArray(s.lists) || !s.lists.length) { toast('⚠️ Файл не похож на копию BDG'); return; }
+    if (!s || !Array.isArray(s.lists) || !s.lists.length) { toast('Файл не похож на копию BDG'); return; }
     state = s;
     if (!state.lists.some(l => l.id === state.currentId)) state.currentId = state.lists[0].id;
     save(); render(); closeSheet('menuSheet');
-    toast('Данные восстановлены ✅');
+    toast('Данные восстановлены');
   };
   reader.readAsText(file);
 }
@@ -1127,6 +1445,15 @@ setInterval(() => { if (!drag) render(); }, 60 * 60 * 1000);
 if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {
   navigator.serviceWorker.register('sw.js').catch(() => {});
 }
+
+// fill static icon placeholders
+document.querySelectorAll('.ic[data-icon]').forEach(el => { el.innerHTML = ic(el.dataset.icon); });
+
+// donut segment taps
+document.getElementById('donutSvg').addEventListener('click', e => {
+  const t = e.target.closest('[data-seg]');
+  if (t) selectChartSeg(t.getAttribute('data-seg'));
+});
 
 load();
 render();
