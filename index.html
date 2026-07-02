@@ -1,153 +1,1135 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>КИВИ BDG — Планировщик закупок</title>
-    <link rel="icon" type="image/png" href="https://cdn.abacus.ai/images/9def1789-3a84-47d1-8403-586336c53bdd.png">
-    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
-    <style>
-        body{background:#ff3ebf;margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;min-height:100vh}
-        .container{max-width:500px;margin:32px auto;background:#fff;border-radius:18px;box-shadow:0 2px 16px rgba(0,0,0,.1);overflow:hidden;padding-bottom:24px}
-        .header{background:#ff3ebf;color:#fff;padding:28px 24px 18px 24px;display:flex;justify-content:space-between}
-        .logo-block{display:flex;flex-direction:column}
-        .bdg-logo{font-size:2.2rem;font-weight:900;letter-spacing:.12em;display:flex;align-items:center;gap:10px}
-        .bdg-logo img{width:32px;height:32px}
-        .subtitle{font-size:.92rem;opacity:.85;margin-left:2px}
-        .header-buttons{display:flex;flex-direction:column;gap:8px}
-        .download-btn,.telegram-btn{background:#fff;border:none;border-radius:8px;padding:6px 12px;font-size:.9rem;font-weight:600;display:flex;align-items:center;gap:6px;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.07);transition:.2s}
-        .download-btn{color:#ff3ebf}
-        .download-btn:hover{background:#ffe0f4;color:#d6007a}
-        .telegram-btn{color:#179cde;text-decoration:none;justify-content:center}
-        .telegram-btn:hover{background:#e5f5fb;color:#0f6fa0}
-        .controls{display:flex;gap:8px;justify-content:center;margin:16px 24px 0 24px;flex-wrap:wrap}
-        .controls button{background:#fff6fb;color:#ff3ebf;border:none;border-radius:8px;padding:6px 12px;font-size:.85rem;font-weight:600;cursor:pointer;box-shadow:0 2px 6px rgba(0,0,0,.06);transition:.2s}
-        .controls button:hover{background:#ffe0f4;color:#d6007a}
-        .budget-block{display:flex;justify-content:space-between;align-items:center;margin:18px 24px 0 24px;gap:16px}
-        .budget-input input{width:120px;padding:10px;border:2px solid #ffb6e6;border-radius:8px;font-size:1.1rem;font-weight:bold;color:#ff3ebf;background:#fff6fb}
-        .budget-input input:focus{outline:none;border-color:#ff3ebf}
-        .summary{text-align:right;font-size:1rem;color:#ff3ebf}
-        .summary .list-caption{font-size:.85rem;color:#d6007a;margin-bottom:4px}
-        .spent{font-weight:bold}
-        .remaining{font-weight:bold;color:#34C759}
-        .warning{background:#ffe0f4;color:#d6007a;padding:10px;border-radius:6px;margin:18px 24px 0 24px;text-align:center;font-weight:bold;display:none}
-        .stores-list{margin:24px 24px 0 24px}
-        .store{border:1px solid #ffe0f4;border-radius:8px;margin-bottom:20px}
-        .store-header{background:#fff6fb;padding:10px 15px;display:flex;align-items:center;gap:8px}
-        .store-name{flex:1;font-weight:bold;color:#ff3ebf;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-        .store-subtotal{color:#d6007a;font-weight:bold}
-        .store-delete{background:none;border:none;color:#d6007a;font-size:1.3rem;cursor:pointer}
-        .items-list{padding:0}
-        .item{display:flex;align-items:center;padding:12px 15px;border-bottom:1px solid #fff6fb}
-        .item:last-child{border-bottom:none}
-        .item input[type=checkbox]{margin-right:12px;transform:scale(1.2)}
-        .item-details{flex:1}
-        .item-name{font-weight:500;color:#333;cursor:grab;user-select:none}
-        .item-calc{font-size:.95rem;color:#666}
-        .item-total{font-weight:bold;color:#ff3ebf;margin-left:8px}
-        .item-edit{background:none;border:none;color:#d6007a;font-size:1.2rem;cursor:pointer;margin-left:8px}
-        .item-delete{background:none;border:none;color:#d6007a;font-size:1.2rem;cursor:pointer;margin-left:8px}
-        .item.checked{opacity:.6}
-        .item.checked .item-details{text-decoration:line-through}
-        .item-daysleft{font-size:.85em;color:#888;margin-top:2px;display:inline-block;font-weight:bold;background-color:yellow;padding:2px 4px;border-radius:4px}
-        .add-buttons{margin:24px 24px 0 24px;display:flex;gap:10px;flex-wrap:wrap}
-        .btn-primary{background:#ff3ebf;color:#fff;border:none;border-radius:6px;padding:10px 15px;font-size:1rem;cursor:pointer}
-        .btn-secondary{background:#fff6fb;color:#ff3ebf;border:none;border-radius:6px;padding:10px 15px;font-size:1rem;cursor:pointer}
-        .btn-primary:hover{background:#d6007a}
-        .btn-secondary:hover{background:#ffe0f4}
-        .modal-overlay{position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,.3);display:none;align-items:center;justify-content:center;z-index:2000}
-        .modal{background:#fff;border-radius:14px;padding:24px;max-width:400px;width:92vw;max-height:82vh;overflow-y:auto}
-        .modal h2{color:#ff3ebf;margin-top:0;font-size:1.2rem}
-        .modal-buttons{display:flex;gap:10px;justify-content:flex-end;margin-top:14px}
-        .autocomplete-list{position:absolute;top:100%;left:0;width:100%;background:#fff;border:1px solid #ddd;border-radius:6px;box-shadow:0 2px 8px rgba(0,0,0,.1);z-index:10;list-style:none;margin:0;padding:0}
-        .autocomplete-list li{padding:10px;cursor:pointer}
-        .autocomplete-list li:hover{background:#ffe0f4}
-        @media(max-width:600px){.container{max-width:calc(100vw - 16px);margin:8px}}
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#F5F7FB">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="BDG">
+<title>BDG — Планировщик закупок</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%236366F1'/%3E%3Cstop offset='1' stop-color='%238B5CF6'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='64' height='64' rx='16' fill='url(%23g)'/%3E%3Ctext x='32' y='43' font-family='Arial,sans-serif' font-size='30' font-weight='900' fill='%23fff' text-anchor='middle'%3E%E2%82%BD%3C/text%3E%3C/svg%3E">
+<style>
+:root{
+  --bg:#F5F7FB;
+  --card:#FFFFFF;
+  --text:#1E293B;
+  --muted:#64748B;
+  --line:#EEF1F6;
+  --accent:#6366F1;
+  --accent2:#8B5CF6;
+  --accent-soft:#EEF0FE;
+  --green:#10B981;
+  --green-soft:#E7F8F1;
+  --red:#F43F5E;
+  --red-soft:#FEECEF;
+  --amber:#B45309;
+  --amber-soft:#FEF3C7;
+  --shadow:0 1px 2px rgba(30,41,59,.04),0 8px 24px rgba(30,41,59,.06);
+  --radius:20px;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html{scroll-behavior:smooth}
+body{
+  margin:0;background:var(--bg);color:var(--text);
+  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;
+  min-height:100vh;overscroll-behavior-y:contain;
+}
+button{font-family:inherit;color:inherit}
+input,select{font-family:inherit}
+
+/* ---------- layout ---------- */
+.app{max-width:520px;margin:0 auto;padding:0 16px calc(120px + env(safe-area-inset-bottom))}
+
+/* ---------- top bar ---------- */
+.topbar{
+  position:sticky;top:0;z-index:50;
+  display:flex;align-items:center;justify-content:space-between;gap:8px;
+  padding:calc(10px + env(safe-area-inset-top)) 4px 10px;
+  background:rgba(245,247,251,.85);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+}
+.brand{display:flex;align-items:center;gap:10px;min-width:0}
+.brand-badge{
+  width:38px;height:38px;border-radius:12px;flex:none;
+  background:linear-gradient(135deg,var(--accent),var(--accent2));
+  display:flex;align-items:center;justify-content:center;color:#fff;font-weight:900;font-size:17px;
+  box-shadow:0 4px 12px rgba(99,102,241,.35);
+}
+.list-switch{
+  display:flex;flex-direction:column;align-items:flex-start;gap:1px;min-width:0;
+  background:none;border:none;padding:4px 6px;border-radius:12px;cursor:pointer;text-align:left;
+}
+.list-switch:active{background:rgba(99,102,241,.08)}
+.list-switch .app-name{font-size:11px;font-weight:700;letter-spacing:.08em;color:var(--muted);text-transform:uppercase}
+.list-switch .list-name{
+  display:flex;align-items:center;gap:5px;font-size:17px;font-weight:800;max-width:56vw;
+}
+.list-switch .list-name span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.icon-btn{
+  width:44px;height:44px;border-radius:14px;border:none;background:var(--card);
+  box-shadow:var(--shadow);display:flex;align-items:center;justify-content:center;cursor:pointer;flex:none;
+  transition:transform .12s;
+}
+.icon-btn:active{transform:scale(.92)}
+
+/* ---------- budget card ---------- */
+.budget-card{
+  background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);
+  padding:18px 18px 16px;margin-top:6px;
+}
+.budget-top{display:flex;align-items:flex-end;justify-content:space-between;gap:12px}
+.budget-label{font-size:12px;font-weight:700;color:var(--muted);letter-spacing:.06em;text-transform:uppercase;margin-bottom:4px}
+.budget-input-wrap{display:flex;align-items:center;gap:6px}
+.budget-input-wrap input{
+  width:150px;border:none;background:transparent;font-size:30px;font-weight:800;color:var(--text);
+  padding:0;outline:none;
+}
+.budget-input-wrap input::placeholder{color:#CBD5E1}
+.budget-input-wrap .rub{font-size:22px;font-weight:800;color:var(--muted)}
+.remaining-block{text-align:right}
+.remaining-block .cap{font-size:12px;font-weight:700;color:var(--muted);letter-spacing:.06em;text-transform:uppercase;margin-bottom:4px}
+.remaining-block .val{font-size:24px;font-weight:800;color:var(--green);white-space:nowrap}
+.remaining-block .val.neg{color:var(--red)}
+.progress{height:10px;background:var(--line);border-radius:99px;margin:16px 0 14px;overflow:hidden}
+.progress-fill{
+  height:100%;width:0%;border-radius:99px;
+  background:linear-gradient(90deg,var(--accent),var(--accent2));
+  transition:width .5s cubic-bezier(.22,1,.36,1),background .3s;
+}
+.progress-fill.over{background:linear-gradient(90deg,#FB7185,var(--red))}
+.stats{display:flex;gap:8px}
+.stat{
+  flex:1;background:var(--bg);border-radius:14px;padding:10px 12px;min-width:0;
+}
+.stat .k{font-size:11px;font-weight:700;color:var(--muted);letter-spacing:.04em;text-transform:uppercase}
+.stat .v{font-size:15px;font-weight:800;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.over-note{
+  display:none;margin-top:12px;padding:10px 14px;border-radius:14px;
+  background:var(--red-soft);color:var(--red);font-size:13.5px;font-weight:700;
+}
+.done-note{
+  display:none;margin-top:12px;padding:12px 14px;border-radius:14px;text-align:center;
+  background:var(--green-soft);color:#047857;font-size:14px;font-weight:800;
+}
+
+/* ---------- store cards ---------- */
+.store-card{
+  background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);
+  margin-top:14px;overflow:hidden;
+}
+.store-head{
+  display:flex;align-items:center;gap:10px;padding:14px 8px 14px 18px;cursor:pointer;user-select:none;
+}
+.store-title{flex:1;min-width:0;display:flex;align-items:center;gap:8px}
+.store-title .name{font-size:16.5px;font-weight:800;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.store-title .count{
+  flex:none;font-size:11.5px;font-weight:800;color:var(--accent);background:var(--accent-soft);
+  padding:3px 8px;border-radius:99px;
+}
+.store-title .count.full{color:#047857;background:var(--green-soft)}
+.store-sub{font-size:14.5px;font-weight:800;color:var(--muted);white-space:nowrap}
+.store-more{
+  width:42px;height:42px;border:none;background:none;border-radius:12px;cursor:pointer;flex:none;
+  display:flex;align-items:center;justify-content:center;color:var(--muted);
+}
+.store-more:active{background:var(--bg)}
+.chev{transition:transform .25s;color:#CBD5E1;flex:none;margin-right:10px}
+.store-card.collapsed .chev{transform:rotate(-90deg)}
+.items{border-top:1px solid var(--line)}
+.store-card.collapsed .items{display:none}
+
+.item-row{
+  display:flex;align-items:center;gap:4px;padding:4px 8px 4px 8px;
+  border-bottom:1px solid var(--line);transition:background .2s;
+}
+.item-row:last-of-type{border-bottom:none}
+.item-row.dragging{opacity:.35}
+.check{
+  width:48px;height:52px;border:none;background:none;cursor:pointer;flex:none;
+  display:flex;align-items:center;justify-content:center;
+}
+.check .box{
+  width:26px;height:26px;border-radius:9px;border:2px solid #CBD5E1;background:#fff;
+  display:flex;align-items:center;justify-content:center;transition:all .18s;
+}
+.check .box svg{opacity:0;transform:scale(.4);transition:all .18s}
+.item-row.done .check .box{background:var(--green);border-color:var(--green)}
+.item-row.done .check .box svg{opacity:1;transform:scale(1)}
+.item-body{flex:1;min-width:0;padding:10px 4px;cursor:pointer}
+.item-name{font-size:15.5px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;transition:color .2s}
+.item-meta{font-size:12.5px;color:var(--muted);margin-top:2px;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.day-badge{
+  font-size:11px;font-weight:800;color:var(--amber);background:var(--amber-soft);
+  padding:2px 7px;border-radius:99px;
+}
+.day-badge.today{color:var(--red);background:var(--red-soft)}
+.item-row.done .item-name{color:var(--muted);text-decoration:line-through}
+.item-row.done .item-total{color:#CBD5E1;text-decoration:line-through}
+.item-total{font-size:15px;font-weight:800;white-space:nowrap;flex:none}
+.drag-handle{
+  width:40px;height:52px;border:none;background:none;cursor:grab;flex:none;touch-action:none;
+  display:flex;align-items:center;justify-content:center;color:#CBD5E1;
+}
+.drag-handle:active{cursor:grabbing;color:var(--accent)}
+.add-item-row{
+  display:flex;align-items:center;justify-content:center;gap:8px;width:100%;
+  padding:14px;border:none;background:none;cursor:pointer;
+  color:var(--accent);font-size:14.5px;font-weight:800;border-top:1px dashed var(--line);
+}
+.add-item-row:active{background:var(--accent-soft)}
+.empty-items{padding:18px;text-align:center;color:var(--muted);font-size:13.5px}
+
+.ghost{
+  position:fixed;z-index:300;pointer-events:none;background:var(--card);border-radius:16px;
+  box-shadow:0 16px 40px rgba(30,41,59,.25);opacity:.97;display:flex;align-items:center;gap:4px;
+  transform:scale(1.02);
+}
+
+/* ---------- add store ---------- */
+.add-store-btn{
+  display:flex;align-items:center;justify-content:center;gap:8px;width:100%;
+  margin-top:14px;padding:16px;border-radius:var(--radius);cursor:pointer;
+  border:2px dashed #D6DCE8;background:none;color:var(--muted);font-size:15px;font-weight:700;
+}
+.add-store-btn:active{border-color:var(--accent);color:var(--accent);background:var(--accent-soft)}
+
+/* ---------- empty state ---------- */
+.empty-state{display:none;text-align:center;padding:44px 20px 10px}
+.empty-state .art{margin-bottom:14px}
+.empty-state h2{font-size:19px;font-weight:800;margin:0 0 6px}
+.empty-state p{color:var(--muted);font-size:14.5px;margin:0;line-height:1.5}
+
+/* ---------- FAB ---------- */
+.fab{
+  position:fixed;right:max(18px,calc(50% - 242px));bottom:calc(22px + env(safe-area-inset-bottom));z-index:60;
+  width:60px;height:60px;border-radius:20px;border:none;cursor:pointer;
+  background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;
+  box-shadow:0 10px 26px rgba(99,102,241,.45);
+  display:flex;align-items:center;justify-content:center;
+  transition:transform .15s;
+}
+.fab:active{transform:scale(.9)}
+
+/* ---------- sheets ---------- */
+.sheet-wrap{position:fixed;inset:0;z-index:100;visibility:hidden}
+.sheet-wrap.open{visibility:visible}
+.backdrop{
+  position:absolute;inset:0;background:rgba(15,23,42,.4);opacity:0;transition:opacity .28s;
+}
+.sheet-wrap.open .backdrop{opacity:1}
+.sheet{
+  position:absolute;left:0;right:0;bottom:0;max-width:520px;margin:0 auto;
+  background:var(--card);border-radius:26px 26px 0 0;
+  padding:8px 20px calc(24px + env(safe-area-inset-bottom));
+  max-height:88vh;overflow-y:auto;overscroll-behavior:contain;
+  transform:translateY(105%);transition:transform .32s cubic-bezier(.22,1,.36,1);
+}
+.sheet-wrap.open .sheet{transform:translateY(0)}
+.grab{width:40px;height:4.5px;border-radius:99px;background:#E2E8F0;margin:6px auto 14px}
+.sheet h2{font-size:19px;font-weight:800;margin:0 0 16px}
+
+.field{margin-bottom:14px}
+.field label{display:block;font-size:12.5px;font-weight:700;color:var(--muted);margin-bottom:6px}
+.field input,.field select{
+  width:100%;padding:14px 16px;border:2px solid var(--line);border-radius:16px;
+  font-size:16px;font-weight:600;color:var(--text);background:var(--bg);outline:none;
+  transition:border-color .2s;appearance:none;-webkit-appearance:none;
+}
+.field input:focus,.field select:focus{border-color:var(--accent);background:#fff}
+.field-row{display:flex;gap:10px}
+.field-row .field{flex:1;min-width:0}
+
+.stepper{display:flex;align-items:center;gap:8px}
+.stepper button{
+  width:50px;height:50px;flex:none;border:none;border-radius:16px;background:var(--accent-soft);
+  color:var(--accent);font-size:22px;font-weight:800;cursor:pointer;
+}
+.stepper button:active{background:#DDE0FD}
+.stepper input{text-align:center;padding:14px 6px !important}
+
+.suggest{display:flex;gap:8px;flex-wrap:wrap;margin:-4px 0 14px}
+.suggest button{
+  border:none;background:var(--accent-soft);color:var(--accent);font-size:13.5px;font-weight:700;
+  padding:9px 14px;border-radius:99px;cursor:pointer;max-width:100%;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+.suggest button:active{background:#DDE0FD}
+
+.btn{
+  display:flex;align-items:center;justify-content:center;gap:8px;width:100%;
+  padding:16px;border:none;border-radius:18px;font-size:16px;font-weight:800;cursor:pointer;
+  transition:transform .12s;
+}
+.btn:active{transform:scale(.98)}
+.btn-primary{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;box-shadow:0 6px 18px rgba(99,102,241,.35)}
+.btn-ghost{background:var(--bg);color:var(--text)}
+.btn-danger-ghost{background:var(--red-soft);color:var(--red)}
+.btn+.btn{margin-top:10px}
+
+.action-list{display:flex;flex-direction:column;gap:8px}
+.action-item{
+  display:flex;align-items:center;gap:14px;width:100%;padding:15px 16px;border:none;cursor:pointer;
+  background:var(--bg);border-radius:16px;font-size:15.5px;font-weight:700;text-align:left;
+  color:var(--text);text-decoration:none;
+}
+.action-item:active{background:var(--line)}
+.action-item .ic{
+  width:38px;height:38px;flex:none;border-radius:12px;background:#fff;box-shadow:var(--shadow);
+  display:flex;align-items:center;justify-content:center;font-size:17px;
+}
+.action-item.danger{color:var(--red)}
+.action-item small{display:block;font-size:12px;font-weight:600;color:var(--muted);margin-top:1px}
+
+/* lists sheet */
+.list-row{
+  display:flex;align-items:center;gap:10px;padding:13px 14px;border-radius:16px;background:var(--bg);
+  margin-bottom:8px;cursor:pointer;border:2px solid transparent;
+}
+.list-row.current{border-color:var(--accent);background:var(--accent-soft)}
+.list-row .info{flex:1;min-width:0}
+.list-row .nm{font-size:15.5px;font-weight:800;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.list-row .mt{font-size:12.5px;color:var(--muted);margin-top:2px}
+.list-row .mini{
+  width:40px;height:40px;flex:none;border:none;border-radius:12px;background:#fff;box-shadow:var(--shadow);
+  cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:15px;
+}
+
+/* snackbar */
+.snackbar{
+  position:fixed;left:50%;bottom:calc(96px + env(safe-area-inset-bottom));transform:translate(-50%,20px);
+  z-index:200;background:#1E293B;color:#fff;border-radius:16px;padding:13px 18px;
+  display:flex;align-items:center;gap:16px;box-shadow:0 12px 30px rgba(15,23,42,.35);
+  font-size:14px;font-weight:600;opacity:0;pointer-events:none;transition:all .3s;white-space:nowrap;max-width:92vw;
+}
+.snackbar.show{opacity:1;transform:translate(-50%,0);pointer-events:auto}
+.snackbar button{background:none;border:none;color:#A5B4FC;font-size:14px;font-weight:800;cursor:pointer;padding:4px}
+.snackbar .msg{overflow:hidden;text-overflow:ellipsis}
+
+.sheet .about p{color:var(--muted);font-size:14.5px;line-height:1.6;margin:0 0 12px}
+.sheet .about b{color:var(--text)}
+input[type=file]{display:none}
+</style>
 </head>
 <body>
-<div class="container">
-    <div class="header">
-        <div class="logo-block">
-            <div class="bdg-logo"><img src="https://cdn.abacus.ai/images/9def1789-3a84-47d1-8403-586336c53bdd.png" alt="🛒">BDG</div>
-            <div class="subtitle">Продукт КИВИ Маркет</div>
-        </div>
-        <div class="header-buttons">
-            <button class="download-btn" onclick="showDownloadInfo()">📥 СКАЧАТЬ</button>
-            <a class="telegram-btn" href="https://t.me/ondreeff" target="_blank">КИВИ Маркет</a>
-        </div>
-    </div>
-    <div class="controls">
-        <button onclick="showListsModal()">📋 Списки</button>
-        <button onclick="saveCurrentList()">💾 Сохранить</button>
-        <button onclick="createNewList()">➕ Создать</button>
-    </div>
-    <div class="budget-block">
-        <div class="budget-input"><input id="budgetInput" type="number" placeholder="Бюджет" min="0"></div>
-        <div class="summary">
-            <div class="list-caption">Список: <span id="currentListName"></span></div>
-            <div>Потрачено: <span class="spent" id="spentAmount">0</span> руб</div>
-            <div>Остаток: <span class="remaining" id="remainingAmount">0</span> руб</div>
-        </div>
-    </div>
-    <div id="warningMessage" class="warning">⚠️ Превышение бюджета на <span id="overBudgetAmount">0</span> руб.</div>
-    <div id="storesList" class="stores-list"></div>
-    <div class="add-buttons">
-        <button class="btn-primary" onclick="openAddStoreModal()">+ Добавить магазин</button>
-        <button class="btn-secondary" onclick="showAboutModal()">О приложении</button>
-    </div>
-</div>
-<div id="downloadPopup" class="modal-overlay"><div class="modal"><h2>Как установить на телефон?</h2><p><b>Android:</b> Chrome → «Добавить на главный экран».</p><p><b>iPhone:</b> Safari → Поделиться → «На экран \"Домой\"».</p><div class="modal-buttons"><button class="btn-secondary" onclick="closeDownloadInfo()">Закрыть</button></div></div></div>
-<div id="listsModal" class="modal-overlay"><div class="modal"><h2>Мои списки</h2><ul id="listsList" style="list-style:none;padding:0"></ul><div class="modal-buttons"><button class="btn-primary" onclick="createNewList();closeListsModal()">+ Создать новый</button><button class="btn-secondary" onclick="closeListsModal()">Закрыть</button></div></div></div>
-<div id="storeModal" class="modal-overlay"><div class="modal"><h2>Добавить магазин</h2><input id="storeName" type="text" placeholder="Название магазина" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:6px;font-size:1rem;margin-bottom:14px"><div class="modal-buttons"><button class="btn-secondary" onclick="closeStoreModal()">Отмена</button><button class="btn-primary" onclick="addStore()">Добавить</button></div></div></div>
-<div id="itemModal" class="modal-overlay"><div class="modal"><h2 id="itemModalTitle">Добавить товар</h2><div style="position:relative;margin-bottom:12px"><input id="itemName" type="text" placeholder="Название товара" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:6px;font-size:1rem" oninput="showAutocomplete()"><ul id="autocompleteList" class="autocomplete-list" style="display:none"></ul></div><input id="itemQuantity" type="number" min="0.01" step="0.01" placeholder="Количество" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:6px;font-size:1rem;margin-bottom:12px"><input id="itemPrice" type="number" min="0" step="0.01" placeholder="Цена" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:6px;font-size:1rem;margin-bottom:12px"><input id="itemDay" type="number" min="1" max="31" placeholder="День месяца (опционально)" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:6px;font-size:1rem;margin-bottom:12px"><div class="modal-buttons"><button class="btn-secondary" onclick="closeItemModal()">Отмена</button><button class="btn-primary" id="itemModalSaveBtn" onclick="addOrEditItem()">Добавить</button></div></div></div>
-<div id="aboutModal" class="modal-overlay"><div class="modal"><h2>О приложении</h2><p>Планируйте покупки, контролируйте бюджет, создавайте несколько списков и отслеживайте регулярные платежи. Все данные сохраняются автоматически и надёжно в вашем браузере.</p><ul><li>Неограниченное количество списков</li><li>Поддержка дробного количества</li><li>Drag & Drop товаров</li><li>Автодополнение названий</li><li>Отслеживание регулярных платежей</li><li>Работает офлайн</li></ul><div class="modal-buttons"><button class="btn-secondary" onclick="closeAboutModal()">Закрыть</button></div></div></div>
-<script>
-const STORAGE_KEY = 'shoppingAppAllLists_v3';
-const BACKUP_KEY = 'shoppingAppBackup_v3';
-let allLists = [];
-let currentListIndex = 0;
-let appData = {budget:0,stores:[],allItems:[]};
-let currentStoreIndex=-1,editItemIndex=-1;
 
-function saveAll(){const payload={version:3,lists:allLists};localStorage.setItem(STORAGE_KEY,JSON.stringify(payload));localStorage.setItem(BACKUP_KEY,JSON.stringify(payload));}
-function loadAll(){let payload=null;try{payload=JSON.parse(localStorage.getItem(STORAGE_KEY));}catch(e){}
- if(!payload||!payload.lists){try{payload=JSON.parse(localStorage.getItem(BACKUP_KEY));}catch(e){}}
- if(!payload||!payload.lists){createDefault();return;}
- allLists=payload.lists;}
-function createDefault(){allLists=[{name:'Мой список',date:new Date().toISOString().slice(0,10),data:{budget:0,stores:[],allItems:[]}}];saveAll();}
-function loadCurrent(){appData=JSON.parse(JSON.stringify(allLists[currentListIndex].data));if(!appData.allItems)appData.allItems=[];updateCurrentListName();}
-function updateCurrentListName(){document.getElementById('currentListName').textContent=allLists[currentListIndex].name;}
-function showListsModal(){const ul=document.getElementById('listsList');ul.innerHTML='';allLists.forEach((l,idx)=>{const li=document.createElement('li');li.style.padding='8px 0';li.innerHTML=`<strong>${l.name}</strong> <small style="color:#888">${l.date}</small> ${idx===currentListIndex?'<span style="color:#ff3ebf;font-weight:bold">(текущий)</span>':`<span style="color:#ff3ebf;font-weight:bold;cursor:pointer" onclick="selectList(${idx})">Открыть</span>`} ${allLists.length>1?`<button onclick="deleteList(${idx})">×</button>`:''}`;ul.appendChild(li);});document.getElementById('listsModal').style.display='flex';}
-function closeListsModal(){document.getElementById('listsModal').style.display='none';}
-function selectList(i){currentListIndex=i;loadCurrent();renderApp();closeListsModal();}
-function deleteList(i){if(allLists.length===1||!confirm('Удалить список?'))return;allLists.splice(i,1);if(currentListIndex>=allLists.length)currentListIndex=allLists.length-1;saveAll();loadCurrent();renderApp();showListsModal();}
-function createNewList(){const n=prompt('Название нового списка:','Список '+new Date().toLocaleDateString());if(n===null)return;allLists.push({name:(n.trim()||'Без названия'),date:new Date().toISOString().slice(0,10),data:{budget:0,stores:[],allItems:[]}});currentListIndex=allLists.length-1;saveAll();loadCurrent();renderApp();}
-function saveCurrentList(){const newName=prompt('Сохранить как:',allLists[currentListIndex].name);if(newName!==null){allLists[currentListIndex].name=(newName.trim()||allLists[currentListIndex].name);allLists[currentListIndex].date=new Date().toISOString().slice(0,10);}allLists[currentListIndex].data=JSON.parse(JSON.stringify(appData));saveAll();updateCurrentListName();alert('Сохранено!');}
-window.addEventListener('load',()=>{loadAll();loadCurrent();renderApp();document.getElementById('budgetInput').addEventListener('input',e=>{appData.budget=parseFloat(e.target.value)||0;updateSummary();allLists[currentListIndex].data=appData;saveAll();});setInterval(()=>{renderApp();},60*60*1000);});
-function renderApp(){document.getElementById('budgetInput').value=appData.budget||'';renderStores();updateSummary();initDnD();}
-function renderStores(){const cont=document.getElementById('storesList');cont.innerHTML='';appData.stores.forEach((s,si)=>{const subtotal=s.items.reduce((t,it)=>t+it.quantity*it.price,0);const div=document.createElement('div');div.className='store';div.innerHTML=`<div class="store-header"><input type="checkbox" onchange="toggleAll(${si})"><div class="store-name">${s.name}</div><div class="store-subtotal">${Math.round(subtotal)} руб</div><button class="store-delete" onclick="deleteStore(${si})">×</button></div><ul class="items-list" id="items-${si}"></ul><div class="add-buttons"><button class="btn-secondary" onclick="openAddItemModal(${si})">+ Товар</button></div>`;cont.appendChild(div);renderItems(si);});}
-function renderItems(si){const ul=document.getElementById('items-'+si);ul.innerHTML='';appData.stores[si].items.forEach((it,ii)=>{const li=document.createElement('li');li.className='item'+(it.bought?' checked':'');li.dataset.storeIndex=si;li.dataset.itemIndex=ii;li.innerHTML=`<input type="checkbox" onclick="toggleItem(${si},${ii})" ${it.bought?'checked':''}><div class="item-details"><div class="item-name">${it.name}</div>${renderDaysLeft(it)}<div class="item-calc">${it.quantity} × ${it.price}</div></div><div class="item-total">${Math.round(it.quantity*it.price)} руб</div><button class="item-edit" onclick="openEditItemModal(${si},${ii})">✏️</button><button class="item-delete" onclick="deleteItem(${si},${ii})">×</button>`;ul.appendChild(li);});}
-function renderDaysLeft(it){if(!it.day||it.bought)return'';const days=calcDaysLeft(it.day);return `<div class="item-daysleft">Ост: ${String(days).padStart(2,'0')} дн.</div>`;}
-function calcDaysLeft(day){const now=new Date();const today=now.getDate();const month=now.getMonth();const year=now.getFullYear();let target=new Date(year,month,day);if(today>day){target=new Date(year,month+1,day);}const diff=Math.ceil((target-now)/(1000*60*60*24));return diff;}
-function updateSummary(){const spent=appData.stores.reduce((tot,s)=>tot+s.items.filter(i=>i.bought).reduce((t,it)=>t+it.quantity*it.price,0),0);const totalCost=appData.stores.reduce((tot,s)=>tot+s.items.reduce((t,it)=>t+it.quantity*it.price,0),0);document.getElementById('spentAmount').textContent=Math.round(spent);const rem=appData.budget-spent;document.getElementById('remainingAmount').textContent=Math.round(rem);const warn=document.getElementById('warningMessage');warn.style.display=totalCost>appData.budget&&appData.budget>0?'block':'none';document.getElementById('overBudgetAmount').textContent=Math.abs(Math.round(appData.budget-totalCost));allLists[currentListIndex].data=appData;saveAll();}
-function openAddStoreModal(){document.getElementById('storeName').value='';document.getElementById('storeModal').style.display='flex';}
-function closeStoreModal(){document.getElementById('storeModal').style.display='none';}
-function addStore(){const name=document.getElementById('storeName').value.trim();if(!name)return;appData.stores.push({name,items:[]});closeStoreModal();renderApp();}
-function deleteStore(i){if(confirm('Удалить магазин?')){appData.stores.splice(i,1);renderApp();}}
-function openAddItemModal(si){currentStoreIndex=si;editItemIndex=-1;document.getElementById('itemModalTitle').textContent='Добавить товар';document.getElementById('itemModalSaveBtn').textContent='Добавить';document.getElementById('itemName').value='';document.getElementById('itemQuantity').value='1';document.getElementById('itemPrice').value='';document.getElementById('itemDay').value='';document.getElementById('itemModal').style.display='flex';}
-function openEditItemModal(si,ii){currentStoreIndex=si;editItemIndex=ii;const it=appData.stores[si].items[ii];document.getElementById('itemModalTitle').textContent='Редактировать товар';document.getElementById('itemModalSaveBtn').textContent='Сохранить';document.getElementById('itemName').value=it.name;document.getElementById('itemQuantity').value=it.quantity;document.getElementById('itemPrice').value=it.price;document.getElementById('itemDay').value=it.day||'';document.getElementById('itemModal').style.display='flex';}
-function closeItemModal(){document.getElementById('itemModal').style.display='none';}
-function addOrEditItem(){const name=document.getElementById('itemName').value.trim();const qty=parseFloat(document.getElementById('itemQuantity').value);const price=parseFloat(document.getElementById('itemPrice').value);const day=parseInt(document.getElementById('itemDay').value)||null;if(!name||isNaN(qty)||isNaN(price))return;if(editItemIndex===-1){appData.stores[currentStoreIndex].items.push({name,quantity:qty,price,bought:false,day});if(!appData.allItems.find(i=>i.name===name))appData.allItems.push({name,quantity:qty,price,day});}else{const it=appData.stores[currentStoreIndex].items[editItemIndex];it.name=name;it.quantity=qty;it.price=price;it.day=day;}closeItemModal();renderApp();updateSummary();}
-function deleteItem(si,ii){if(confirm('Удалить товар?')){appData.stores[si].items.splice(ii,1);renderApp();updateSummary();}}
-function toggleItem(si,ii){const it=appData.stores[si].items[ii];it.bought=!it.bought;updateSummary();renderItems(si);}
-function toggleAll(si){const chk=document.querySelector('#items-'+si).parentElement.querySelector('input[type=checkbox]');appData.stores[si].items.forEach(it=>it.bought=chk.checked);updateSummary();renderItems(si);}
-function showAutocomplete(){const inp=document.getElementById('itemName');const list=document.getElementById('autocompleteList');const v=inp.value.toLowerCase();list.innerHTML='';if(v.length<2){list.style.display='none';return;}const sugg=appData.allItems.map(i=>i.name).filter(n=>n.toLowerCase().startsWith(v)).slice(0,5);if(!sugg.length){list.style.display='none';return;}sugg.forEach(s=>{const li=document.createElement('li');li.textContent=s;li.onclick=()=>{inp.value=s;list.style.display='none';};list.appendChild(li);});list.style.display='block';}
-function initDnD(){appData.stores.forEach((s,si)=>{const ul=document.getElementById('items-'+si);new Sortable(ul,{group:'shared',handle:'.item-name',animation:150,onAdd:evt=>{const fromStoreIndex=parseInt(evt.from.id.split('-')[1]);const toStoreIndex=si;const item=appData.stores[fromStoreIndex].items.splice(evt.oldIndex,1)[0];appData.stores[toStoreIndex].items.splice(evt.newIndex,0,item);renderApp();updateSummary();}});});}
-function showAboutModal(){document.getElementById('aboutModal').style.display='flex';}
-function closeAboutModal(){document.getElementById('aboutModal').style.display='none';}
-function showDownloadInfo(){document.getElementById('downloadPopup').style.display='flex';}
-function closeDownloadInfo(){document.getElementById('downloadPopup').style.display='none';}
+<div class="app">
+  <header class="topbar">
+    <div class="brand">
+      <div class="brand-badge">₽</div>
+      <button class="list-switch" onclick="openListsSheet()">
+        <span class="app-name">BDG · закупки</span>
+        <span class="list-name"><span id="listName">Мой список</span>
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#94A3B8" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+        </span>
+      </button>
+    </div>
+    <button class="icon-btn" onclick="openSheet('menuSheet')" aria-label="Меню">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#475569" stroke-width="2.6" stroke-linecap="round"><circle cx="12" cy="5" r="1.1" fill="#475569"/><circle cx="12" cy="12" r="1.1" fill="#475569"/><circle cx="12" cy="19" r="1.1" fill="#475569"/></svg>
+    </button>
+  </header>
+
+  <section class="budget-card">
+    <div class="budget-top">
+      <div>
+        <div class="budget-label">Бюджет</div>
+        <div class="budget-input-wrap">
+          <input id="budgetInput" type="number" inputmode="decimal" min="0" placeholder="0">
+          <span class="rub">₽</span>
+        </div>
+      </div>
+      <div class="remaining-block">
+        <div class="cap">Остаток</div>
+        <div class="val" id="remainingVal">0 ₽</div>
+      </div>
+    </div>
+    <div class="progress"><div class="progress-fill" id="progressFill"></div></div>
+    <div class="stats">
+      <div class="stat"><div class="k">Потрачено</div><div class="v" id="spentVal">0 ₽</div></div>
+      <div class="stat"><div class="k">План</div><div class="v" id="plannedVal">0 ₽</div></div>
+      <div class="stat"><div class="k">Куплено</div><div class="v" id="boughtVal">0 из 0</div></div>
+    </div>
+    <div class="over-note" id="overNote"></div>
+    <div class="done-note" id="doneNote">🎉 Всё куплено! Отличная работа</div>
+  </section>
+
+  <div id="stores"></div>
+
+  <button class="add-store-btn" id="addStoreBtn" onclick="openStoreSheet()">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+    Добавить магазин
+  </button>
+
+  <div class="empty-state" id="emptyState">
+    <div class="art">
+      <svg width="150" height="120" viewBox="0 0 150 120" fill="none">
+        <ellipse cx="75" cy="104" rx="52" ry="9" fill="#EEF1F6"/>
+        <rect x="42" y="26" width="66" height="66" rx="16" fill="#EEF0FE"/>
+        <rect x="52" y="40" width="30" height="7" rx="3.5" fill="#C7CBFB"/>
+        <rect x="52" y="55" width="46" height="7" rx="3.5" fill="#DDE0FD"/>
+        <rect x="52" y="70" width="38" height="7" rx="3.5" fill="#DDE0FD"/>
+        <circle cx="104" cy="82" r="20" fill="url(#eg)"/>
+        <path d="M104 74v16M96 82h16" stroke="#fff" stroke-width="4" stroke-linecap="round"/>
+        <defs><linearGradient id="eg" x1="84" y1="62" x2="124" y2="102"><stop stop-color="#6366F1"/><stop offset="1" stop-color="#8B5CF6"/></linearGradient></defs>
+      </svg>
+    </div>
+    <h2>Список пока пуст</h2>
+    <p>Задайте бюджет и добавьте первый магазин.<br>Покупки удобно группировать по местам.</p>
+  </div>
+</div>
+
+<button class="fab" onclick="openFabSheet()" aria-label="Добавить">
+  <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.8" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+</button>
+
+<div class="snackbar" id="snackbar"><span class="msg" id="snackMsg"></span><button id="snackBtn">Отменить</button></div>
+
+<!-- ======= sheets ======= -->
+<div class="sheet-wrap" id="fabSheet"><div class="backdrop" onclick="closeSheet('fabSheet')"></div>
+  <div class="sheet">
+    <div class="grab"></div>
+    <div class="action-list">
+      <button class="action-item" onclick="closeSheet('fabSheet');quickAddItem()"><span class="ic">🛒</span><span>Добавить товар</span></button>
+      <button class="action-item" onclick="closeSheet('fabSheet');openStoreSheet()"><span class="ic">🏪</span><span>Добавить магазин</span></button>
+    </div>
+  </div>
+</div>
+
+<div class="sheet-wrap" id="storeSheet"><div class="backdrop" onclick="closeSheet('storeSheet')"></div>
+  <div class="sheet">
+    <div class="grab"></div>
+    <h2 id="storeSheetTitle">Новый магазин</h2>
+    <div class="field">
+      <label>Название</label>
+      <input id="storeNameInput" type="text" placeholder="Например: Пятёрочка" autocomplete="off" enterkeyhint="done">
+    </div>
+    <button class="btn btn-primary" id="storeSaveBtn" onclick="saveStoreSheet()">Добавить</button>
+  </div>
+</div>
+
+<div class="sheet-wrap" id="itemSheet"><div class="backdrop" onclick="closeSheet('itemSheet')"></div>
+  <div class="sheet">
+    <div class="grab"></div>
+    <h2 id="itemSheetTitle">Новый товар</h2>
+    <div class="field">
+      <label>Название</label>
+      <input id="itemNameInput" type="text" placeholder="Например: Молоко" autocomplete="off" oninput="renderSuggest()" enterkeyhint="next">
+    </div>
+    <div class="suggest" id="suggestBox"></div>
+    <div class="field-row">
+      <div class="field">
+        <label>Количество</label>
+        <div class="stepper">
+          <button type="button" onclick="stepQty(-1)">−</button>
+          <input id="itemQtyInput" type="number" inputmode="decimal" min="0" step="any" value="1">
+          <button type="button" onclick="stepQty(1)">+</button>
+        </div>
+      </div>
+    </div>
+    <div class="field-row">
+      <div class="field">
+        <label>Цена, ₽</label>
+        <input id="itemPriceInput" type="number" inputmode="decimal" min="0" step="any" placeholder="0">
+      </div>
+      <div class="field">
+        <label>День месяца</label>
+        <input id="itemDayInput" type="number" inputmode="numeric" min="1" max="31" placeholder="—">
+      </div>
+    </div>
+    <div class="field">
+      <label>Магазин</label>
+      <select id="itemStoreSelect"></select>
+    </div>
+    <button class="btn btn-primary" id="itemSaveBtn" onclick="saveItemSheet()">Добавить</button>
+    <button class="btn btn-danger-ghost" id="itemDeleteBtn" onclick="deleteItemFromSheet()" style="display:none">Удалить товар</button>
+  </div>
+</div>
+
+<div class="sheet-wrap" id="storeMenuSheet"><div class="backdrop" onclick="closeSheet('storeMenuSheet')"></div>
+  <div class="sheet">
+    <div class="grab"></div>
+    <h2 id="storeMenuTitle">Магазин</h2>
+    <div class="action-list" id="storeMenuActions"></div>
+  </div>
+</div>
+
+<div class="sheet-wrap" id="listsSheet"><div class="backdrop" onclick="closeSheet('listsSheet')"></div>
+  <div class="sheet">
+    <div class="grab"></div>
+    <h2>Мои списки</h2>
+    <div id="listsBox"></div>
+    <button class="btn btn-primary" onclick="closeSheet('listsSheet');openNewListSheet()">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.8" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+      Создать список
+    </button>
+  </div>
+</div>
+
+<div class="sheet-wrap" id="listNameSheet"><div class="backdrop" onclick="closeSheet('listNameSheet')"></div>
+  <div class="sheet">
+    <div class="grab"></div>
+    <h2 id="listNameTitle">Новый список</h2>
+    <div class="field">
+      <label>Название</label>
+      <input id="listNameInput" type="text" placeholder="Например: Продукты на неделю" autocomplete="off" enterkeyhint="done">
+    </div>
+    <button class="btn btn-primary" id="listNameSaveBtn" onclick="saveListNameSheet()">Создать</button>
+  </div>
+</div>
+
+<div class="sheet-wrap" id="confirmSheet"><div class="backdrop" onclick="closeSheet('confirmSheet')"></div>
+  <div class="sheet">
+    <div class="grab"></div>
+    <h2 id="confirmTitle">Подтвердите</h2>
+    <p id="confirmText" style="color:var(--muted);font-size:14.5px;margin:0 0 18px;line-height:1.5"></p>
+    <button class="btn btn-danger-ghost" id="confirmBtn">Удалить</button>
+    <button class="btn btn-ghost" onclick="closeSheet('confirmSheet')">Отмена</button>
+  </div>
+</div>
+
+<div class="sheet-wrap" id="menuSheet"><div class="backdrop" onclick="closeSheet('menuSheet')"></div>
+  <div class="sheet">
+    <div class="grab"></div>
+    <h2>Меню</h2>
+    <div class="action-list">
+      <button class="action-item" onclick="exportData()"><span class="ic">📤</span><span>Экспорт данных<small>Скачать резервную копию (JSON)</small></span></button>
+      <button class="action-item" onclick="document.getElementById('importFile').click()"><span class="ic">📥</span><span>Импорт данных<small>Восстановить из файла</small></span></button>
+      <button class="action-item" onclick="closeSheet('menuSheet');openSheet('installSheet')"><span class="ic">📱</span><span>Установить на телефон</span></button>
+      <a class="action-item" href="https://t.me/ondreeff" target="_blank" rel="noopener"><span class="ic">✈️</span><span>КИВИ Маркет в Telegram</span></a>
+      <button class="action-item" onclick="closeSheet('menuSheet');openSheet('aboutSheet')"><span class="ic">💡</span><span>О приложении</span></button>
+    </div>
+    <input type="file" id="importFile" accept="application/json,.json" onchange="importData(this)">
+  </div>
+</div>
+
+<div class="sheet-wrap" id="installSheet"><div class="backdrop" onclick="closeSheet('installSheet')"></div>
+  <div class="sheet">
+    <div class="grab"></div>
+    <h2>Установить на телефон</h2>
+    <div class="about">
+      <p><b>Android (Chrome):</b> меню&nbsp;⋮ → «Добавить на главный экран».</p>
+      <p><b>iPhone (Safari):</b> кнопка «Поделиться» → «На экран "Домой"».</p>
+      <p>Приложение будет работать как обычное — с иконкой и офлайн-режимом.</p>
+    </div>
+    <button class="btn btn-ghost" onclick="closeSheet('installSheet')">Понятно</button>
+  </div>
+</div>
+
+<div class="sheet-wrap" id="aboutSheet"><div class="backdrop" onclick="closeSheet('aboutSheet')"></div>
+  <div class="sheet">
+    <div class="grab"></div>
+    <h2>О приложении</h2>
+    <div class="about">
+      <p><b>BDG</b> — планировщик закупок и бюджета от КИВИ Маркет.</p>
+      <p>Задайте бюджет, добавьте магазины и товары — приложение посчитает траты и остаток. Отмечайте купленное одним касанием, следите за регулярными платежами по дню месяца.</p>
+      <p>Все данные хранятся только в вашем браузере и сохраняются автоматически при каждом изменении. Для надёжности делайте экспорт-копию в меню.</p>
+    </div>
+    <button class="btn btn-ghost" onclick="closeSheet('aboutSheet')">Закрыть</button>
+  </div>
+</div>
+
+<script>
+'use strict';
+/* ================= storage ================= */
+const KEY = 'bdgData_v4';
+const BAK = 'bdgBackup_v4';
+const OLD_KEYS = ['shoppingAppAllLists_v3', 'shoppingAppBackup_v3'];
+
+let state = null;
+
+const uid = () => Math.random().toString(36).slice(2, 9) + Date.now().toString(36);
+const today = () => new Date().toISOString().slice(0, 10);
+
+function blankList(name) {
+  return { id: uid(), name: name || 'Мой список', date: today(),
+    data: { budget: 0, stores: [], catalog: [] } };
+}
+
+function save() {
+  try {
+    const json = JSON.stringify(state);
+    localStorage.setItem(KEY, json);
+    localStorage.setItem(BAK, json);
+  } catch (e) {
+    toast('⚠️ Не удалось сохранить данные');
+  }
+}
+
+function tryParse(raw) { try { return JSON.parse(raw); } catch (e) { return null; } }
+
+function migrateOld(payload) {
+  return {
+    version: 4,
+    currentId: null,
+    lists: (payload.lists || []).map(l => ({
+      id: uid(), name: l.name || 'Список', date: l.date || today(),
+      data: {
+        budget: +(l.data && l.data.budget) || 0,
+        stores: ((l.data && l.data.stores) || []).map(s => ({
+          id: uid(), name: s.name || 'Магазин', collapsed: false,
+          items: (s.items || []).map(it => ({
+            id: uid(), name: it.name || '', qty: +it.quantity || 1,
+            price: +it.price || 0, day: it.day || null, bought: !!it.bought
+          }))
+        })),
+        catalog: ((l.data && l.data.allItems) || []).map(i => ({
+          name: i.name, qty: +i.quantity || 1, price: +i.price || 0, day: i.day || null
+        }))
+      }
+    }))
+  };
+}
+
+function load() {
+  let s = tryParse(localStorage.getItem(KEY)) || tryParse(localStorage.getItem(BAK));
+  if (!s || !Array.isArray(s.lists) || !s.lists.length) {
+    // migrate from the old app version
+    for (const k of OLD_KEYS) {
+      const old = tryParse(localStorage.getItem(k));
+      if (old && Array.isArray(old.lists) && old.lists.length) { s = migrateOld(old); break; }
+    }
+  }
+  if (!s || !Array.isArray(s.lists) || !s.lists.length) {
+    s = { version: 4, currentId: null, lists: [blankList('Мой список')] };
+  }
+  // sanitize
+  s.lists.forEach(l => {
+    l.id = l.id || uid();
+    l.data = l.data || { budget: 0, stores: [], catalog: [] };
+    l.data.stores = l.data.stores || [];
+    l.data.catalog = l.data.catalog || [];
+    l.data.stores.forEach(st => { st.id = st.id || uid(); st.items = st.items || []; });
+  });
+  if (!s.lists.some(l => l.id === s.currentId)) s.currentId = s.lists[0].id;
+  state = s;
+  save();
+}
+
+const list = () => state.lists.find(l => l.id === state.currentId);
+const data = () => list().data;
+const findStore = id => data().stores.find(s => s.id === id);
+
+/* ================= helpers ================= */
+const esc = s => String(s).replace(/[&<>"']/g, c =>
+  ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+function fmt(n) {
+  const r = Math.round((+n || 0) * 100) / 100;
+  return r.toLocaleString('ru-RU', { maximumFractionDigits: 2 });
+}
+const money = n => fmt(n) + ' ₽';
+
+function daysLeft(day) {
+  const now = new Date();
+  let target = new Date(now.getFullYear(), now.getMonth(), day);
+  if (now.getDate() > day) target = new Date(now.getFullYear(), now.getMonth() + 1, day);
+  return Math.ceil((target - new Date(now.getFullYear(), now.getMonth(), now.getDate())) / 864e5);
+}
+
+function vibrate(ms) { if (navigator.vibrate) { try { navigator.vibrate(ms); } catch (e) {} } }
+
+/* ================= render ================= */
+function render() {
+  renderSummary();
+  renderStores();
+  document.getElementById('listName').textContent = list().name;
+}
+
+function renderSummary() {
+  const d = data();
+  let spent = 0, planned = 0, bought = 0, total = 0;
+  d.stores.forEach(s => s.items.forEach(it => {
+    const sum = (+it.qty || 0) * (+it.price || 0);
+    planned += sum; total++;
+    if (it.bought) { spent += sum; bought++; }
+  }));
+  const budget = +d.budget || 0;
+  const remaining = budget - spent;
+
+  const bi = document.getElementById('budgetInput');
+  if (document.activeElement !== bi) bi.value = budget || '';
+
+  const rv = document.getElementById('remainingVal');
+  rv.textContent = money(remaining);
+  rv.classList.toggle('neg', remaining < 0);
+
+  document.getElementById('spentVal').textContent = money(spent);
+  document.getElementById('plannedVal').textContent = money(planned);
+  document.getElementById('boughtVal').textContent = bought + ' из ' + total;
+
+  const fill = document.getElementById('progressFill');
+  const pct = budget > 0 ? Math.min(100, spent / budget * 100) : 0;
+  fill.style.width = pct + '%';
+  fill.classList.toggle('over', budget > 0 && spent > budget);
+
+  const over = document.getElementById('overNote');
+  if (budget > 0 && planned > budget) {
+    over.style.display = 'block';
+    over.textContent = '⚠️ План превышает бюджет на ' + money(planned - budget);
+  } else over.style.display = 'none';
+
+  document.getElementById('doneNote').style.display =
+    (total > 0 && bought === total) ? 'block' : 'none';
+}
+
+function renderStores() {
+  const d = data();
+  const cont = document.getElementById('stores');
+  const hasStores = d.stores.length > 0;
+  document.getElementById('emptyState').style.display = hasStores ? 'none' : 'block';
+  document.getElementById('addStoreBtn').style.display = hasStores ? 'flex' : 'none';
+
+  cont.innerHTML = d.stores.map(s => {
+    const subtotal = s.items.reduce((t, it) => t + (+it.qty || 0) * (+it.price || 0), 0);
+    const bought = s.items.filter(i => i.bought).length;
+    const rows = s.items.map(it => itemRowHTML(s.id, it)).join('');
+    return `
+    <section class="store-card ${s.collapsed ? 'collapsed' : ''}" data-store-card="${s.id}">
+      <div class="store-head" onclick="toggleCollapse('${s.id}')">
+        <div class="store-title">
+          <span class="name">${esc(s.name)}</span>
+          <span class="count ${s.items.length && bought === s.items.length ? 'full' : ''}">${bought}/${s.items.length}</span>
+        </div>
+        <span class="store-sub">${money(subtotal)}</span>
+        <button class="store-more" onclick="event.stopPropagation();openStoreMenu('${s.id}')" aria-label="Действия">
+          <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="5" cy="12" r="1" fill="currentColor"/><circle cx="12" cy="12" r="1" fill="currentColor"/><circle cx="19" cy="12" r="1" fill="currentColor"/></svg>
+        </button>
+        <svg class="chev" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+      </div>
+      <div class="items" data-store="${s.id}">
+        ${rows || '<div class="empty-items">Пока пусто — добавьте товар</div>'}
+        <button class="add-item-row" onclick="openItemSheet('${s.id}')">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+          Товар
+        </button>
+      </div>
+    </section>`;
+  }).join('');
+}
+
+function itemRowHTML(sid, it) {
+  const sum = (+it.qty || 0) * (+it.price || 0);
+  let badge = '';
+  if (it.day && !it.bought) {
+    const dl = daysLeft(+it.day);
+    badge = dl <= 0
+      ? '<span class="day-badge today">сегодня</span>'
+      : `<span class="day-badge">через ${dl} дн.</span>`;
+  }
+  return `
+  <div class="item-row ${it.bought ? 'done' : ''}" data-id="${it.id}">
+    <button class="check" onclick="toggleItem('${sid}','${it.id}')" aria-label="Куплено">
+      <span class="box"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 12.5l5 5 10-11"/></svg></span>
+    </button>
+    <div class="item-body" onclick="openItemSheet('${sid}','${it.id}')">
+      <div class="item-name">${esc(it.name)}</div>
+      <div class="item-meta"><span>${fmt(it.qty)} × ${fmt(it.price)} ₽</span>${badge}</div>
+    </div>
+    <span class="item-total">${money(sum)}</span>
+    <button class="drag-handle" aria-label="Перетащить">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor"><circle cx="9" cy="6" r="1.7"/><circle cx="15" cy="6" r="1.7"/><circle cx="9" cy="12" r="1.7"/><circle cx="15" cy="12" r="1.7"/><circle cx="9" cy="18" r="1.7"/><circle cx="15" cy="18" r="1.7"/></svg>
+    </button>
+  </div>`;
+}
+
+/* ================= sheets ================= */
+function openSheet(id) {
+  document.getElementById(id).classList.add('open');
+}
+function closeSheet(id) {
+  document.getElementById(id).classList.remove('open');
+}
+function openFabSheet() {
+  if (!data().stores.length) { openStoreSheet(); return; }
+  openSheet('fabSheet');
+}
+
+/* ---------- store add / rename ---------- */
+let storeSheetEditId = null;
+function openStoreSheet(editId) {
+  storeSheetEditId = editId || null;
+  document.getElementById('storeSheetTitle').textContent = editId ? 'Переименовать магазин' : 'Новый магазин';
+  document.getElementById('storeSaveBtn').textContent = editId ? 'Сохранить' : 'Добавить';
+  document.getElementById('storeNameInput').value = editId ? findStore(editId).name : '';
+  openSheet('storeSheet');
+  setTimeout(() => document.getElementById('storeNameInput').focus(), 320);
+}
+function saveStoreSheet() {
+  const name = document.getElementById('storeNameInput').value.trim();
+  if (!name) return;
+  if (storeSheetEditId) {
+    findStore(storeSheetEditId).name = name;
+  } else {
+    data().stores.push({ id: uid(), name, collapsed: false, items: [] });
+  }
+  save(); render(); closeSheet('storeSheet'); vibrate(10);
+}
+
+/* ---------- store menu ---------- */
+function openStoreMenu(sid) {
+  const s = findStore(sid); if (!s) return;
+  document.getElementById('storeMenuTitle').textContent = s.name;
+  document.getElementById('storeMenuActions').innerHTML = `
+    <button class="action-item" onclick="closeSheet('storeMenuSheet');openItemSheet('${sid}')"><span class="ic">🛒</span><span>Добавить товар</span></button>
+    <button class="action-item" onclick="closeSheet('storeMenuSheet');openStoreSheet('${sid}')"><span class="ic">✏️</span><span>Переименовать</span></button>
+    <button class="action-item" onclick="checkAll('${sid}',true)"><span class="ic">✅</span><span>Отметить всё купленным</span></button>
+    <button class="action-item" onclick="checkAll('${sid}',false)"><span class="ic">↩️</span><span>Снять все отметки</span></button>
+    <button class="action-item danger" onclick="deleteStore('${sid}')"><span class="ic">🗑️</span><span>Удалить магазин</span></button>`;
+  openSheet('storeMenuSheet');
+}
+function checkAll(sid, val) {
+  findStore(sid).items.forEach(it => it.bought = val);
+  save(); render(); closeSheet('storeMenuSheet'); vibrate(10);
+}
+function deleteStore(sid) {
+  closeSheet('storeMenuSheet');
+  const s = findStore(sid);
+  confirmAction('Удалить магазин?', `«${s.name}» и все его товары (${s.items.length} шт.) будут удалены.`, () => {
+    const idx = data().stores.findIndex(x => x.id === sid);
+    const removed = data().stores.splice(idx, 1)[0];
+    save(); render();
+    snackbar(`Магазин «${removed.name}» удалён`, () => {
+      data().stores.splice(Math.min(idx, data().stores.length), 0, removed);
+      save(); render();
+    });
+  });
+}
+function toggleCollapse(sid) {
+  const s = findStore(sid);
+  s.collapsed = !s.collapsed;
+  save();
+  document.querySelector(`[data-store-card="${sid}"]`).classList.toggle('collapsed', s.collapsed);
+}
+
+/* ---------- items ---------- */
+let itemSheetStore = null, itemSheetEditId = null;
+
+function quickAddItem() { openItemSheet(data().stores[0].id); }
+
+function openItemSheet(sid, itemId) {
+  itemSheetStore = sid;
+  itemSheetEditId = itemId || null;
+  const editing = !!itemId;
+  const it = editing ? findStore(sid).items.find(i => i.id === itemId) : null;
+
+  document.getElementById('itemSheetTitle').textContent = editing ? 'Редактировать товар' : 'Новый товар';
+  document.getElementById('itemSaveBtn').textContent = editing ? 'Сохранить' : 'Добавить';
+  document.getElementById('itemDeleteBtn').style.display = editing ? 'flex' : 'none';
+  document.getElementById('itemNameInput').value = it ? it.name : '';
+  document.getElementById('itemQtyInput').value = it ? it.qty : 1;
+  document.getElementById('itemPriceInput').value = it ? (it.price || '') : '';
+  document.getElementById('itemDayInput').value = it && it.day ? it.day : '';
+
+  const sel = document.getElementById('itemStoreSelect');
+  sel.innerHTML = data().stores.map(s =>
+    `<option value="${s.id}" ${s.id === sid ? 'selected' : ''}>${esc(s.name)}</option>`).join('');
+
+  renderSuggest();
+  openSheet('itemSheet');
+  if (!editing) setTimeout(() => document.getElementById('itemNameInput').focus(), 320);
+}
+
+function stepQty(dir) {
+  const inp = document.getElementById('itemQtyInput');
+  let v = parseFloat(inp.value) || 0;
+  v = Math.max(dir < 0 ? 0.01 : 1, v + dir);
+  // keep fractional values intact when stepping
+  inp.value = Math.round(v * 100) / 100;
+}
+
+function renderSuggest() {
+  const box = document.getElementById('suggestBox');
+  const v = document.getElementById('itemNameInput').value.trim().toLowerCase();
+  if (v.length < 1) { box.innerHTML = ''; return; }
+  const seen = new Set();
+  const sugg = data().catalog.filter(c => {
+    const n = (c.name || '').toLowerCase();
+    if (!n.includes(v) || n === v || seen.has(n)) return false;
+    seen.add(n); return true;
+  }).slice(0, 6);
+  box.innerHTML = sugg.map((c, i) =>
+    `<button type="button" onclick="applySuggest(${i})">${esc(c.name)} · ${fmt(c.price)} ₽</button>`).join('');
+  box._sugg = sugg;
+}
+function applySuggest(i) {
+  const c = document.getElementById('suggestBox')._sugg[i];
+  if (!c) return;
+  document.getElementById('itemNameInput').value = c.name;
+  document.getElementById('itemPriceInput').value = c.price || '';
+  document.getElementById('itemQtyInput').value = c.qty || 1;
+  if (c.day) document.getElementById('itemDayInput').value = c.day;
+  document.getElementById('suggestBox').innerHTML = '';
+}
+
+function saveItemSheet() {
+  const name = document.getElementById('itemNameInput').value.trim();
+  const qty = parseFloat(document.getElementById('itemQtyInput').value);
+  const price = parseFloat(document.getElementById('itemPriceInput').value) || 0;
+  let day = parseInt(document.getElementById('itemDayInput').value) || null;
+  if (day && (day < 1 || day > 31)) day = null;
+  const targetSid = document.getElementById('itemStoreSelect').value || itemSheetStore;
+  if (!name || isNaN(qty) || qty <= 0) {
+    document.getElementById(!name ? 'itemNameInput' : 'itemQtyInput').focus();
+    return;
+  }
+  if (itemSheetEditId) {
+    const fromStore = findStore(itemSheetStore);
+    const idx = fromStore.items.findIndex(i => i.id === itemSheetEditId);
+    const it = fromStore.items[idx];
+    Object.assign(it, { name, qty, price, day });
+    if (targetSid !== itemSheetStore) {
+      fromStore.items.splice(idx, 1);
+      findStore(targetSid).items.push(it);
+    }
+  } else {
+    findStore(targetSid).items.push({ id: uid(), name, qty, price, day, bought: false });
+  }
+  // catalog upsert
+  const cat = data().catalog;
+  const existing = cat.find(c => (c.name || '').toLowerCase() === name.toLowerCase());
+  if (existing) Object.assign(existing, { name, qty, price, day });
+  else cat.push({ name, qty, price, day });
+  if (cat.length > 300) cat.splice(0, cat.length - 300);
+
+  save(); render(); closeSheet('itemSheet'); vibrate(10);
+}
+
+function deleteItemFromSheet() {
+  const s = findStore(itemSheetStore);
+  const idx = s.items.findIndex(i => i.id === itemSheetEditId);
+  if (idx === -1) { closeSheet('itemSheet'); return; }
+  const removed = s.items.splice(idx, 1)[0];
+  save(); render(); closeSheet('itemSheet');
+  snackbar(`«${removed.name}» удалён`, () => {
+    s.items.splice(Math.min(idx, s.items.length), 0, removed);
+    save(); render();
+  });
+}
+
+function toggleItem(sid, id) {
+  const it = findStore(sid).items.find(i => i.id === id);
+  it.bought = !it.bought;
+  save(); render(); vibrate(15);
+}
+
+/* ---------- lists ---------- */
+function openListsSheet() {
+  const box = document.getElementById('listsBox');
+  box.innerHTML = state.lists.map(l => {
+    const items = l.data.stores.reduce((t, s) => t + s.items.length, 0);
+    const sum = l.data.stores.reduce((t, s) => t + s.items.reduce((x, i) => x + (+i.qty || 0) * (+i.price || 0), 0), 0);
+    const cur = l.id === state.currentId;
+    return `
+    <div class="list-row ${cur ? 'current' : ''}" onclick="selectListById('${l.id}')">
+      <div class="info">
+        <div class="nm">${esc(l.name)}</div>
+        <div class="mt">${items} тов. · ${money(sum)} · ${l.date || ''}</div>
+      </div>
+      <button class="mini" onclick="event.stopPropagation();openRenameList('${l.id}')" aria-label="Переименовать">✏️</button>
+      ${state.lists.length > 1 ? `<button class="mini" onclick="event.stopPropagation();deleteListById('${l.id}')" aria-label="Удалить">🗑️</button>` : ''}
+    </div>`;
+  }).join('');
+  openSheet('listsSheet');
+}
+function selectListById(id) {
+  state.currentId = id;
+  save(); render(); closeSheet('listsSheet');
+}
+function deleteListById(id) {
+  const l = state.lists.find(x => x.id === id);
+  closeSheet('listsSheet');
+  confirmAction('Удалить список?', `«${l.name}» будет удалён безвозвратно.`, () => {
+    const idx = state.lists.findIndex(x => x.id === id);
+    const removed = state.lists.splice(idx, 1)[0];
+    if (state.currentId === id) state.currentId = state.lists[0].id;
+    save(); render();
+    snackbar(`Список «${removed.name}» удалён`, () => {
+      state.lists.splice(Math.min(idx, state.lists.length), 0, removed);
+      save(); render();
+    });
+  });
+}
+
+let listNameEditId = null;
+function openNewListSheet() {
+  listNameEditId = null;
+  document.getElementById('listNameTitle').textContent = 'Новый список';
+  document.getElementById('listNameSaveBtn').textContent = 'Создать';
+  document.getElementById('listNameInput').value = '';
+  openSheet('listNameSheet');
+  setTimeout(() => document.getElementById('listNameInput').focus(), 320);
+}
+function openRenameList(id) {
+  listNameEditId = id;
+  closeSheet('listsSheet');
+  document.getElementById('listNameTitle').textContent = 'Переименовать список';
+  document.getElementById('listNameSaveBtn').textContent = 'Сохранить';
+  document.getElementById('listNameInput').value = state.lists.find(l => l.id === id).name;
+  openSheet('listNameSheet');
+  setTimeout(() => document.getElementById('listNameInput').focus(), 320);
+}
+function saveListNameSheet() {
+  const name = document.getElementById('listNameInput').value.trim();
+  if (!name) return;
+  if (listNameEditId) {
+    state.lists.find(l => l.id === listNameEditId).name = name;
+  } else {
+    const l = blankList(name);
+    state.lists.push(l);
+    state.currentId = l.id;
+  }
+  save(); render(); closeSheet('listNameSheet'); vibrate(10);
+}
+
+/* ---------- confirm ---------- */
+function confirmAction(title, text, cb) {
+  document.getElementById('confirmTitle').textContent = title;
+  document.getElementById('confirmText').textContent = text;
+  const btn = document.getElementById('confirmBtn');
+  const clone = btn.cloneNode(true);
+  btn.parentNode.replaceChild(clone, btn);
+  clone.onclick = () => { closeSheet('confirmSheet'); cb(); };
+  openSheet('confirmSheet');
+}
+
+/* ---------- snackbar ---------- */
+let snackTimer = null;
+function snackbar(msg, undoCb) {
+  const el = document.getElementById('snackbar');
+  document.getElementById('snackMsg').textContent = msg;
+  const btn = document.getElementById('snackBtn');
+  btn.style.display = undoCb ? 'block' : 'none';
+  btn.onclick = () => { el.classList.remove('show'); if (undoCb) undoCb(); };
+  el.classList.add('show');
+  clearTimeout(snackTimer);
+  snackTimer = setTimeout(() => el.classList.remove('show'), 5000);
+}
+function toast(msg) { snackbar(msg, null); }
+
+/* ---------- export / import ---------- */
+function exportData() {
+  const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'bdg-backup-' + today() + '.json';
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 3000);
+  closeSheet('menuSheet');
+  toast('Резервная копия скачана');
+}
+function importData(input) {
+  const file = input.files[0];
+  input.value = '';
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    let s = tryParse(reader.result);
+    if (s && Array.isArray(s.lists) && !s.version) s = migrateOld(s);
+    if (!s || !Array.isArray(s.lists) || !s.lists.length) { toast('⚠️ Файл не похож на копию BDG'); return; }
+    state = s;
+    if (!state.lists.some(l => l.id === state.currentId)) state.currentId = state.lists[0].id;
+    save(); render(); closeSheet('menuSheet');
+    toast('Данные восстановлены ✅');
+  };
+  reader.readAsText(file);
+}
+
+/* ================= drag & drop ================= */
+let drag = null;
+
+document.addEventListener('pointerdown', e => {
+  const handle = e.target.closest('.drag-handle');
+  if (!handle) return;
+  const row = handle.closest('.item-row');
+  if (!row) return;
+  e.preventDefault();
+  const rect = row.getBoundingClientRect();
+  const ghost = row.cloneNode(true);
+  ghost.classList.add('ghost');
+  ghost.style.width = rect.width + 'px';
+  ghost.style.left = rect.left + 'px';
+  ghost.style.top = rect.top + 'px';
+  document.body.appendChild(ghost);
+  row.classList.add('dragging');
+  drag = { row, ghost, offY: e.clientY - rect.top, offX: e.clientX - rect.left, moved: false };
+  try { handle.setPointerCapture(e.pointerId); } catch (err) {}
+  vibrate(20);
+});
+
+document.addEventListener('pointermove', e => {
+  if (!drag) return;
+  e.preventDefault();
+  drag.moved = true;
+  drag.ghost.style.top = (e.clientY - drag.offY) + 'px';
+  drag.ghost.style.left = (e.clientX - drag.offX) + 'px';
+
+  // autoscroll near screen edges
+  if (e.clientY < 90) window.scrollBy(0, -10);
+  else if (e.clientY > innerHeight - 90) window.scrollBy(0, 10);
+
+  const el = document.elementFromPoint(e.clientX, e.clientY);
+  if (!el) return;
+  const overRow = el.closest('.item-row');
+  if (overRow && overRow !== drag.row) {
+    const r = overRow.getBoundingClientRect();
+    if (e.clientY < r.top + r.height / 2) overRow.before(drag.row);
+    else overRow.after(drag.row);
+    return;
+  }
+  const overList = el.closest('.items');
+  if (overList && !overList.contains(drag.row)) {
+    const addBtn = overList.querySelector('.add-item-row');
+    overList.insertBefore(drag.row, addBtn);
+  }
+}, { passive: false });
+
+function endDrag() {
+  if (!drag) return;
+  drag.ghost.remove();
+  drag.row.classList.remove('dragging');
+  const moved = drag.moved;
+  drag = null;
+  if (moved) rebuildOrderFromDOM();
+}
+document.addEventListener('pointerup', endDrag);
+document.addEventListener('pointercancel', endDrag);
+
+function rebuildOrderFromDOM() {
+  const d = data();
+  const byId = {};
+  d.stores.forEach(s => s.items.forEach(it => byId[it.id] = it));
+  document.querySelectorAll('.items[data-store]').forEach(listEl => {
+    const store = findStore(listEl.dataset.store);
+    if (!store) return;
+    store.items = [...listEl.querySelectorAll('.item-row')]
+      .map(r => byId[r.dataset.id]).filter(Boolean);
+  });
+  save(); render(); vibrate(10);
+}
+
+/* ================= init ================= */
+document.getElementById('budgetInput').addEventListener('input', e => {
+  data().budget = parseFloat(e.target.value) || 0;
+  save(); renderSummary();
+});
+
+// Enter closes single-input sheets
+document.getElementById('storeNameInput').addEventListener('keydown', e => { if (e.key === 'Enter') saveStoreSheet(); });
+document.getElementById('listNameInput').addEventListener('keydown', e => { if (e.key === 'Enter') saveListNameSheet(); });
+
+// save on leaving the page, just in case
+window.addEventListener('pagehide', save);
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') save(); });
+
+// refresh "days left" badges hourly
+setInterval(() => { if (!drag) render(); }, 60 * 60 * 1000);
+
+if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {
+  navigator.serviceWorker.register('sw.js').catch(() => {});
+}
+
+load();
+render();
 </script>
 </body>
 </html>
