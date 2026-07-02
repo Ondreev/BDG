@@ -179,6 +179,42 @@ input,select{font-family:inherit}
 .legend-row .lpct{font-size:12px;font-weight:700;color:var(--muted);width:36px;text-align:right;flex:none}
 .legend-empty{font-size:13px;color:var(--muted);padding:6px 8px}
 
+/* ---------- catalog ---------- */
+.search-wrap{position:relative;margin-bottom:12px}
+.search-wrap input{
+  width:100%;padding:13px 16px 13px 44px;border:2px solid var(--line);border-radius:16px;
+  font-size:16px;font-weight:600;color:var(--text);background:var(--bg);outline:none;transition:border-color .2s;
+}
+.search-wrap input:focus{border-color:var(--accent);background:#fff}
+.search-wrap .sic{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--muted);display:flex;pointer-events:none}
+.chips{display:flex;gap:8px;overflow-x:auto;padding-bottom:6px;margin-bottom:8px;scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.chip{
+  flex:none;border:none;background:var(--bg);color:var(--muted);font-size:13px;font-weight:700;
+  padding:9px 14px;border-radius:99px;cursor:pointer;display:flex;align-items:center;gap:7px;
+}
+.chip.on{background:var(--accent);color:#fff}
+.chip .chip-edit{display:flex;align-items:center;opacity:.85}
+.cat-list{max-height:42vh;overflow-y:auto;overscroll-behavior:contain;margin-bottom:14px}
+.cat-row{display:flex;align-items:center;gap:10px;padding:9px 2px;border-bottom:1px solid var(--line)}
+.cat-row:last-child{border-bottom:none}
+.cat-info{flex:1;min-width:0;cursor:pointer;padding:3px 0}
+.cat-name{font-size:15px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cat-meta{font-size:12px;color:var(--muted);margin-top:2px}
+.cat-price{font-size:14.5px;font-weight:800;white-space:nowrap;flex:none}
+.cat-add{
+  width:42px;height:42px;flex:none;border:none;border-radius:13px;background:var(--accent-soft);
+  color:var(--accent);cursor:pointer;display:flex;align-items:center;justify-content:center;
+}
+.cat-add:active{background:#DDE0FD}
+.cat-empty{text-align:center;color:var(--muted);font-size:13.5px;padding:26px 0}
+@media(hover:hover){
+  .cat-add:hover{background:#DDE0FD}
+  .chip:hover{color:var(--text)}
+  .chip.on:hover{color:#fff}
+  .cat-info:hover .cat-name{color:var(--accent)}
+}
+
 /* ---------- store cards ---------- */
 .store-card{
   background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);
@@ -233,6 +269,7 @@ input,select{font-family:inherit}
 .item-row.done .item-name{color:var(--muted);text-decoration:line-through}
 .item-row.done .item-total{color:#CBD5E1;text-decoration:line-through}
 .item-total{font-size:15px;font-weight:800;white-space:nowrap;flex:none}
+.item-total.neg{color:var(--red)}
 .drag-handle{
   width:40px;height:52px;border:none;background:none;cursor:grab;flex:none;touch-action:none;
   display:flex;align-items:center;justify-content:center;color:#CBD5E1;
@@ -438,9 +475,14 @@ input[type=file]{display:none}
         </span>
       </button>
     </div>
-    <button class="icon-btn" onclick="openSheet('menuSheet')" aria-label="Меню">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#475569" stroke-width="2.6" stroke-linecap="round"><circle cx="12" cy="5" r="1.1" fill="#475569"/><circle cx="12" cy="12" r="1.1" fill="#475569"/><circle cx="12" cy="19" r="1.1" fill="#475569"/></svg>
-    </button>
+    <div style="display:flex;gap:8px">
+      <button class="icon-btn" onclick="openCatalogSheet()" aria-label="Каталог товаров">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#475569" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.2 13.6 13.6 20.2a1.9 1.9 0 0 1-2.7 0L4 13.3V4h9.3l6.9 6.9a1.9 1.9 0 0 1 0 2.7z"/><circle cx="8.7" cy="8.7" r="1.3"/></svg>
+      </button>
+      <button class="icon-btn" onclick="openSheet('menuSheet')" aria-label="Меню">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#475569" stroke-width="2.6" stroke-linecap="round"><circle cx="12" cy="5" r="1.1" fill="#475569"/><circle cx="12" cy="12" r="1.1" fill="#475569"/><circle cx="12" cy="19" r="1.1" fill="#475569"/></svg>
+      </button>
+    </div>
   </header>
 
   <div class="layout">
@@ -540,6 +582,7 @@ input[type=file]{display:none}
     <div class="grab"></div>
     <div class="action-list">
       <button class="action-item" onclick="closeSheet('fabSheet');quickAddItem()"><span class="ic" data-icon="cart"></span><span>Добавить товар</span></button>
+      <button class="action-item" onclick="closeSheet('fabSheet');openCatalogSheet()"><span class="ic" data-icon="tag"></span><span>Выбрать из каталога</span></button>
       <button class="action-item" onclick="closeSheet('fabSheet');openStoreSheet()"><span class="ic" data-icon="store"></span><span>Добавить магазин</span></button>
     </div>
   </div>
@@ -578,8 +621,8 @@ input[type=file]{display:none}
     </div>
     <div class="field-row">
       <div class="field">
-        <label>Цена, ₽</label>
-        <input id="itemPriceInput" type="number" inputmode="decimal" min="0" step="any" placeholder="0">
+        <label>Цена, ₽ (минус — долг)</label>
+        <input id="itemPriceInput" type="number" inputmode="decimal" step="any" placeholder="0 или −500">
       </div>
       <div class="field">
         <label>День месяца</label>
@@ -679,6 +722,107 @@ input[type=file]{display:none}
   </div>
 </div>
 
+<div class="sheet-wrap" id="catalogSheet"><div class="backdrop" onclick="closeSheet('catalogSheet')"></div>
+  <div class="sheet">
+    <div class="grab"></div>
+    <h2>Каталог товаров</h2>
+    <div class="search-wrap">
+      <span class="sic"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="6.5"/><path d="M20.2 20.2l-4.6-4.6"/></svg></span>
+      <input id="catSearch" type="text" placeholder="Название, цена или категория" autocomplete="off" oninput="renderCatalog()">
+    </div>
+    <div class="chips" id="catChips"></div>
+    <div class="cat-list" id="catList"></div>
+    <button class="btn btn-primary" onclick="openCatProductSheet()">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.8" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+      Товар в каталог
+    </button>
+    <button class="btn btn-ghost" onclick="openSheetImport()">Загрузить из Google Таблицы</button>
+  </div>
+</div>
+
+<div class="sheet-wrap" id="catProductSheet"><div class="backdrop" onclick="closeSheet('catProductSheet')"></div>
+  <div class="sheet">
+    <div class="grab"></div>
+    <h2 id="catProductTitle">Товар каталога</h2>
+    <div class="field">
+      <label>Название</label>
+      <input id="catProdName" type="text" placeholder="Например: Молоко 3,2%" autocomplete="off">
+    </div>
+    <div class="field-row">
+      <div class="field">
+        <label>Цена закупки, ₽</label>
+        <input id="catProdPrice" type="number" inputmode="decimal" min="0" step="any" placeholder="0">
+      </div>
+      <div class="field">
+        <label>Категория</label>
+        <select id="catProdCategory" onchange="onCatProdCategoryChange()"></select>
+      </div>
+    </div>
+    <div class="field" id="catProdNewCatField" style="display:none">
+      <label>Название новой категории</label>
+      <input id="catProdNewCat" type="text" placeholder="Например: Молочка" autocomplete="off">
+    </div>
+    <button class="btn btn-primary" id="catProdSaveBtn" onclick="saveCatProduct()">Добавить</button>
+    <button class="btn btn-danger-ghost" id="catProdDeleteBtn" onclick="deleteCatProduct()" style="display:none">Удалить из каталога</button>
+  </div>
+</div>
+
+<div class="sheet-wrap" id="catAddSheet"><div class="backdrop" onclick="closeSheet('catAddSheet')"></div>
+  <div class="sheet">
+    <div class="grab"></div>
+    <h2 id="catAddTitle">В список</h2>
+    <div class="field-row">
+      <div class="field">
+        <label>Количество</label>
+        <div class="stepper">
+          <button type="button" onclick="stepCatQty(-1)">−</button>
+          <input id="catAddQty" type="number" inputmode="decimal" min="0" step="any" value="1">
+          <button type="button" onclick="stepCatQty(1)">+</button>
+        </div>
+      </div>
+    </div>
+    <div class="field-row">
+      <div class="field">
+        <label>Цена, ₽ (минус — долг)</label>
+        <input id="catAddPrice" type="number" inputmode="decimal" step="any" placeholder="0">
+      </div>
+      <div class="field">
+        <label>Магазин</label>
+        <select id="catAddStore"></select>
+      </div>
+    </div>
+    <button class="btn btn-primary" onclick="saveCatAdd()">Добавить в список</button>
+  </div>
+</div>
+
+<div class="sheet-wrap" id="catCategorySheet"><div class="backdrop" onclick="closeSheet('catCategorySheet')"></div>
+  <div class="sheet">
+    <div class="grab"></div>
+    <h2 id="catCategoryTitle">Новая категория</h2>
+    <div class="field">
+      <label>Название</label>
+      <input id="catCategoryName" type="text" placeholder="Например: Молочка" autocomplete="off" enterkeyhint="done">
+    </div>
+    <button class="btn btn-primary" id="catCategorySaveBtn" onclick="saveCatCategory()">Создать</button>
+    <button class="btn btn-danger-ghost" id="catCategoryDeleteBtn" onclick="deleteCatCategory()" style="display:none">Удалить категорию</button>
+  </div>
+</div>
+
+<div class="sheet-wrap" id="sheetImportSheet"><div class="backdrop" onclick="closeSheet('sheetImportSheet')"></div>
+  <div class="sheet">
+    <div class="grab"></div>
+    <h2>Из Google Таблицы</h2>
+    <div class="about">
+      <p>В таблице заполните колонки: <b>Название</b>, <b>Цена</b>, <b>Категория</b> (первая строка — заголовки). Затем откройте доступ: «Настройки доступа» → «Все, у кого есть ссылка» → «Читатель», и вставьте ссылку сюда.</p>
+    </div>
+    <div class="field">
+      <label>Ссылка на таблицу</label>
+      <input id="sheetUrlInput" type="url" placeholder="https://docs.google.com/spreadsheets/…" autocomplete="off">
+    </div>
+    <button class="btn btn-primary" id="sheetImportBtn" onclick="importFromSheet()">Загрузить каталог</button>
+  </div>
+</div>
+
 <script>
 'use strict';
 /* ================= storage ================= */
@@ -752,8 +896,17 @@ function load() {
     l.data.stores.forEach(st => { st.id = st.id || uid(); st.items = st.items || []; });
   });
   if (!s.lists.some(l => l.id === s.currentId)) s.currentId = s.lists[0].id;
+  sanitizeCatalogDB(s);
   state = s;
   save();
+}
+
+function sanitizeCatalogDB(s) {
+  s.catalogDB = s.catalogDB || {};
+  s.catalogDB.categories = Array.isArray(s.catalogDB.categories) ? s.catalogDB.categories : [];
+  s.catalogDB.products = Array.isArray(s.catalogDB.products) ? s.catalogDB.products : [];
+  s.catalogDB.categories.forEach(c => { c.id = c.id || uid(); c.name = c.name || 'Категория'; });
+  s.catalogDB.products.forEach(p => { p.id = p.id || uid(); p.price = +p.price || 0; p.categoryId = p.categoryId || null; });
 }
 
 const list = () => state.lists.find(l => l.id === state.currentId);
@@ -779,6 +932,20 @@ function daysLeft(day) {
 
 function vibrate(ms) { if (navigator.vibrate) { try { navigator.vibrate(ms); } catch (e) {} } }
 
+/* ---------- smart text matching: cyrillic, translit, wrong keyboard layout ---------- */
+const RU2LAT = { а:'a',б:'b',в:'v',г:'g',д:'d',е:'e',ё:'e',ж:'zh',з:'z',и:'i',й:'y',к:'k',л:'l',м:'m',н:'n',о:'o',п:'p',р:'r',с:'s',т:'t',у:'u',ф:'f',х:'h',ц:'c',ч:'ch',ш:'sh',щ:'sch',ъ:'',ы:'y',ь:'',э:'e',ю:'yu',я:'ya' };
+const KBD_EN2RU = { q:'й',w:'ц',e:'у',r:'к',t:'е',y:'н',u:'г',i:'ш',o:'щ',p:'з','[':'х',']':'ъ',a:'ф',s:'ы',d:'в',f:'а',g:'п',h:'р',j:'о',k:'л',l:'д',';':'ж',"'":'э',z:'я',x:'ч',c:'с',v:'м',b:'и',n:'т',m:'ь',',':'б','.':'ю' };
+function trLat(s) { return s.toLowerCase().replace(/[а-яё]/g, c => RU2LAT[c] ?? c); }
+function trKbd(s) { return s.toLowerCase().replace(/[a-z\[\];',\.]/g, c => KBD_EN2RU[c] ?? c); }
+// phonetic canon so "кола" matches "Cola": c→k, w→v, x→ks, q→k
+function phon(s) { return s.replace(/c(?!h)/g, 'k').replace(/w/g, 'v').replace(/x/g, 'ks').replace(/q/g, 'k'); }
+function textMatch(hay, q) {
+  if (!q) return true;
+  const h = String(hay).toLowerCase(), hl = phon(trLat(h)), ql = q.toLowerCase();
+  const variants = [ql, trKbd(ql)];
+  return variants.some(x => x && (h.includes(x) || hl.includes(phon(trLat(x)))));
+}
+
 /* ---------- icon set (strict line icons, no emoji) ---------- */
 const ICONS = {
   cart: '<circle cx="9" cy="20" r="1.4"/><circle cx="17" cy="20" r="1.4"/><path d="M3 4h2l2.3 11h10.4l2-8H6.2"/>',
@@ -794,7 +961,8 @@ const ICONS = {
   check2: '<path d="M2.5 12.5l4.5 4.5L15.5 8M11.5 15.5l2 2L22 9"/>',
   undo: '<path d="M4 9.5h10.5a5 5 0 0 1 0 10H9M4 9.5 8 5.5M4 9.5l4 4"/>',
   trash: '<path d="M4.5 6.5h15M9.5 6.5V5a1.5 1.5 0 0 1 1.5-1.5h2A1.5 1.5 0 0 1 14.5 5v1.5M6.5 6.5 7.5 20h9l1-13.5M10 10.5v6M14 10.5v6"/>',
-  plus: '<path d="M12 5.5v13M5.5 12h13"/>'
+  plus: '<path d="M12 5.5v13M5.5 12h13"/>',
+  tag: '<path d="M20.2 13.6 13.6 20.2a1.9 1.9 0 0 1-2.7 0L4 13.3V4h9.3l6.9 6.9a1.9 1.9 0 0 1 0 2.7z"/><circle cx="8.7" cy="8.7" r="1.3"/>'
 };
 function ic(name, size) {
   return `<svg width="${size || 19}" height="${size || 19}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${ICONS[name] || ''}</svg>`;
@@ -832,7 +1000,7 @@ function renderSummary() {
   document.getElementById('boughtVal').textContent = bought + ' из ' + total;
 
   const fill = document.getElementById('progressFill');
-  const pct = budget > 0 ? Math.min(100, spent / budget * 100) : 0;
+  const pct = budget > 0 ? Math.max(0, Math.min(100, spent / budget * 100)) : 0;
   fill.style.width = pct + '%';
   fill.classList.toggle('over', budget > 0 && spent > budget);
 
@@ -999,7 +1167,7 @@ function itemRowHTML(sid, it) {
       <div class="item-name">${esc(it.name)}</div>
       <div class="item-meta"><span>${fmt(it.qty)} × ${fmt(it.price)} ₽</span>${badge}</div>
     </div>
-    <span class="item-total">${money(sum)}</span>
+    <span class="item-total ${sum < 0 ? 'neg' : ''}">${money(sum)}</span>
     <button class="drag-handle" aria-label="Перетащить">
       <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor"><circle cx="9" cy="6" r="1.7"/><circle cx="15" cy="6" r="1.7"/><circle cx="9" cy="12" r="1.7"/><circle cx="15" cy="12" r="1.7"/><circle cx="9" cy="18" r="1.7"/><circle cx="15" cy="18" r="1.7"/></svg>
     </button>
@@ -1113,14 +1281,15 @@ function stepQty(dir) {
 
 function renderSuggest() {
   const box = document.getElementById('suggestBox');
-  const v = document.getElementById('itemNameInput').value.trim().toLowerCase();
+  const v = document.getElementById('itemNameInput').value.trim();
   if (v.length < 1) { box.innerHTML = ''; return; }
-  const seen = new Set();
-  const sugg = data().catalog.filter(c => {
-    const n = (c.name || '').toLowerCase();
-    if (!n.includes(v) || n === v || seen.has(n)) return false;
-    seen.add(n); return true;
-  }).slice(0, 6);
+  // catalog products first, then per-list history; dedupe by name
+  const map = new Map();
+  state.catalogDB.products.forEach(p => map.set(p.name.toLowerCase(), { name: p.name, price: p.price, qty: 1, day: null }));
+  data().catalog.forEach(c => { const k = (c.name || '').toLowerCase(); if (!map.has(k)) map.set(k, c); });
+  const sugg = [...map.values()]
+    .filter(c => c.name.toLowerCase() !== v.toLowerCase() && textMatch(c.name, v))
+    .slice(0, 6);
   box.innerHTML = sugg.map((c, i) =>
     `<button type="button" onclick="applySuggest(${i})">${esc(c.name)} · ${fmt(c.price)} ₽</button>`).join('');
   box._sugg = sugg;
@@ -1158,12 +1327,14 @@ function saveItemSheet() {
   } else {
     findStore(targetSid).items.push({ id: uid(), name, qty, price, day, bought: false });
   }
-  // catalog upsert
+  // history upsert (per-list autocomplete)
   const cat = data().catalog;
   const existing = cat.find(c => (c.name || '').toLowerCase() === name.toLowerCase());
   if (existing) Object.assign(existing, { name, qty, price, day });
   else cat.push({ name, qty, price, day });
   if (cat.length > 300) cat.splice(0, cat.length - 300);
+  // global catalog upsert — the catalog builds itself as you add items
+  upsertCatalogProduct(name, price, null);
 
   save(); render(); closeSheet('itemSheet'); vibrate(10);
 }
@@ -1346,12 +1517,273 @@ function importData(input) {
     let s = tryParse(reader.result);
     if (s && Array.isArray(s.lists) && !s.version) s = migrateOld(s);
     if (!s || !Array.isArray(s.lists) || !s.lists.length) { toast('Файл не похож на копию BDG'); return; }
+    sanitizeCatalogDB(s);
     state = s;
     if (!state.lists.some(l => l.id === state.currentId)) state.currentId = state.lists[0].id;
     save(); render(); closeSheet('menuSheet');
     toast('Данные восстановлены');
   };
   reader.readAsText(file);
+}
+
+/* ================= catalog ================= */
+let catFilter = null, catEditProductId = null, catAddProductId = null, catEditCategoryId = null;
+
+const catById = id => state.catalogDB.categories.find(c => c.id === id);
+const prodById = id => state.catalogDB.products.find(p => p.id === id);
+
+function upsertCatalogProduct(name, price, categoryId) {
+  const p = state.catalogDB.products.find(x => x.name.toLowerCase() === name.toLowerCase());
+  if (p) {
+    if (price) p.price = price;
+    if (categoryId) p.categoryId = categoryId;
+  } else {
+    state.catalogDB.products.push({ id: uid(), name, price: +price || 0, categoryId: categoryId || null });
+  }
+}
+
+function openCatalogSheet() {
+  catFilter = null;
+  document.getElementById('catSearch').value = '';
+  renderCatalog();
+  openSheet('catalogSheet');
+}
+
+function productMatches(p, q) {
+  if (!q) return true;
+  if (textMatch(p.name, q)) return true;
+  const cat = catById(p.categoryId);
+  if (cat && textMatch(cat.name, q)) return true;
+  const qn = q.replace(',', '.').replace(/\s/g, '');
+  if (/^\d+(\.\d+)?$/.test(qn) && String(p.price).includes(qn)) return true;
+  return false;
+}
+
+function renderCatalog() {
+  const db = state.catalogDB;
+  const q = document.getElementById('catSearch').value.trim();
+  if (catFilter && !catById(catFilter)) catFilter = null;
+
+  // category chips
+  document.getElementById('catChips').innerHTML =
+    `<button class="chip ${!catFilter ? 'on' : ''}" onclick="setCatFilter(null)">Все</button>` +
+    db.categories.map(c => `
+      <button class="chip ${catFilter === c.id ? 'on' : ''}" onclick="setCatFilter('${c.id}')">
+        ${esc(c.name)}
+        ${catFilter === c.id ? `<span class="chip-edit" onclick="event.stopPropagation();openCatCategorySheet('${c.id}')">${ic('pencil', 13)}</span>` : ''}
+      </button>`).join('') +
+    `<button class="chip" onclick="openCatCategorySheet()">${ic('plus', 14)} Категория</button>`;
+
+  // product rows
+  const prods = db.products
+    .filter(p => (!catFilter || p.categoryId === catFilter) && productMatches(p, q))
+    .sort((a, b) => a.name.localeCompare(b.name, 'ru'));
+  document.getElementById('catList').innerHTML = prods.length ? prods.map(p => {
+    const cat = catById(p.categoryId);
+    return `
+    <div class="cat-row">
+      <div class="cat-info" onclick="openCatProductSheet('${p.id}')">
+        <div class="cat-name">${esc(p.name)}</div>
+        <div class="cat-meta">${cat ? esc(cat.name) : 'Без категории'}</div>
+      </div>
+      <span class="cat-price">${money(p.price)}</span>
+      <button class="cat-add" onclick="openCatAddSheet('${p.id}')" aria-label="Добавить в список">${ic('plus', 18)}</button>
+    </div>`;
+  }).join('') : `<div class="cat-empty">${db.products.length ? 'Ничего не найдено' : 'Каталог пуст — добавьте товары вручную или загрузите из Google Таблицы'}</div>`;
+}
+function setCatFilter(id) { catFilter = id === catFilter ? null : id; renderCatalog(); }
+
+/* ---------- catalog product add / edit ---------- */
+function openCatProductSheet(id) {
+  catEditProductId = id || null;
+  const p = id ? prodById(id) : null;
+  document.getElementById('catProductTitle').textContent = p ? 'Редактировать товар' : 'Товар каталога';
+  document.getElementById('catProdSaveBtn').textContent = p ? 'Сохранить' : 'Добавить';
+  document.getElementById('catProdDeleteBtn').style.display = p ? 'flex' : 'none';
+  document.getElementById('catProdName').value = p ? p.name : '';
+  document.getElementById('catProdPrice').value = p ? (p.price || '') : '';
+  const sel = document.getElementById('catProdCategory');
+  sel.innerHTML = `<option value="">Без категории</option>` +
+    state.catalogDB.categories.map(c =>
+      `<option value="${c.id}" ${p && p.categoryId === c.id ? 'selected' : ''}>${esc(c.name)}</option>`).join('') +
+    `<option value="__new">+ Новая категория…</option>`;
+  if (!p && catFilter) sel.value = catFilter;
+  onCatProdCategoryChange();
+  openSheet('catProductSheet');
+  if (!p) setTimeout(() => document.getElementById('catProdName').focus(), 320);
+}
+function onCatProdCategoryChange() {
+  const isNew = document.getElementById('catProdCategory').value === '__new';
+  document.getElementById('catProdNewCatField').style.display = isNew ? 'block' : 'none';
+}
+function saveCatProduct() {
+  const name = document.getElementById('catProdName').value.trim();
+  if (!name) { document.getElementById('catProdName').focus(); return; }
+  const price = parseFloat(document.getElementById('catProdPrice').value) || 0;
+  let categoryId = document.getElementById('catProdCategory').value || null;
+  if (categoryId === '__new') {
+    const catName = document.getElementById('catProdNewCat').value.trim();
+    if (!catName) { document.getElementById('catProdNewCat').focus(); return; }
+    let cat = state.catalogDB.categories.find(c => c.name.toLowerCase() === catName.toLowerCase());
+    if (!cat) { cat = { id: uid(), name: catName }; state.catalogDB.categories.push(cat); }
+    categoryId = cat.id;
+  }
+  if (catEditProductId) {
+    Object.assign(prodById(catEditProductId), { name, price, categoryId });
+  } else {
+    state.catalogDB.products.push({ id: uid(), name, price, categoryId });
+  }
+  save(); renderCatalog(); closeSheet('catProductSheet'); vibrate(10);
+}
+function deleteCatProduct() {
+  const idx = state.catalogDB.products.findIndex(p => p.id === catEditProductId);
+  if (idx === -1) { closeSheet('catProductSheet'); return; }
+  const removed = state.catalogDB.products.splice(idx, 1)[0];
+  save(); renderCatalog(); closeSheet('catProductSheet');
+  snackbar(`«${removed.name}» удалён из каталога`, () => {
+    state.catalogDB.products.splice(Math.min(idx, state.catalogDB.products.length), 0, removed);
+    save(); renderCatalog();
+  });
+}
+
+/* ---------- add catalog product to the current list ---------- */
+function openCatAddSheet(pid) {
+  const p = prodById(pid); if (!p) return;
+  if (!data().stores.length) {
+    closeSheet('catalogSheet');
+    toast('Сначала добавьте магазин в список');
+    openStoreSheet();
+    return;
+  }
+  catAddProductId = pid;
+  document.getElementById('catAddTitle').textContent = p.name;
+  document.getElementById('catAddQty').value = 1;
+  document.getElementById('catAddPrice').value = p.price || '';
+  document.getElementById('catAddStore').innerHTML = data().stores.map((s, i) =>
+    `<option value="${s.id}" ${i === 0 ? 'selected' : ''}>${esc(s.name)}</option>`).join('');
+  openSheet('catAddSheet');
+}
+function stepCatQty(dir) {
+  const inp = document.getElementById('catAddQty');
+  let v = parseFloat(inp.value) || 0;
+  v = Math.max(dir < 0 ? 0.01 : 1, v + dir);
+  inp.value = Math.round(v * 100) / 100;
+}
+function saveCatAdd() {
+  const p = prodById(catAddProductId); if (!p) { closeSheet('catAddSheet'); return; }
+  const qty = parseFloat(document.getElementById('catAddQty').value);
+  const price = parseFloat(document.getElementById('catAddPrice').value) || 0;
+  const store = findStore(document.getElementById('catAddStore').value);
+  if (!store || isNaN(qty) || qty <= 0) return;
+  store.items.push({ id: uid(), name: p.name, qty, price, day: null, bought: false });
+  save(); render(); closeSheet('catAddSheet'); vibrate(10);
+  toast(`«${p.name}» — в списке`);
+}
+
+/* ---------- categories ---------- */
+function openCatCategorySheet(id) {
+  catEditCategoryId = id || null;
+  const c = id ? catById(id) : null;
+  document.getElementById('catCategoryTitle').textContent = c ? 'Категория' : 'Новая категория';
+  document.getElementById('catCategorySaveBtn').textContent = c ? 'Сохранить' : 'Создать';
+  document.getElementById('catCategoryDeleteBtn').style.display = c ? 'flex' : 'none';
+  document.getElementById('catCategoryName').value = c ? c.name : '';
+  openSheet('catCategorySheet');
+  if (!c) setTimeout(() => document.getElementById('catCategoryName').focus(), 320);
+}
+function saveCatCategory() {
+  const name = document.getElementById('catCategoryName').value.trim();
+  if (!name) { document.getElementById('catCategoryName').focus(); return; }
+  if (catEditCategoryId) catById(catEditCategoryId).name = name;
+  else state.catalogDB.categories.push({ id: uid(), name });
+  save(); renderCatalog(); closeSheet('catCategorySheet'); vibrate(10);
+}
+function deleteCatCategory() {
+  const idx = state.catalogDB.categories.findIndex(c => c.id === catEditCategoryId);
+  if (idx === -1) { closeSheet('catCategorySheet'); return; }
+  const removed = state.catalogDB.categories.splice(idx, 1)[0];
+  state.catalogDB.products.forEach(p => { if (p.categoryId === removed.id) p.categoryId = null; });
+  if (catFilter === removed.id) catFilter = null;
+  save(); renderCatalog(); closeSheet('catCategorySheet');
+  toast(`Категория «${removed.name}» удалена — товары остались в каталоге`);
+}
+
+/* ---------- import catalog from a Google Sheet ---------- */
+function sheetCsvUrl(url) {
+  let m = url.match(/\/spreadsheets\/d\/e\/([^\/?#]+)/);
+  if (m) return `https://docs.google.com/spreadsheets/d/e/${m[1]}/pub?output=csv`;
+  m = url.match(/\/spreadsheets\/d\/([^\/?#]+)/);
+  if (m) {
+    const g = url.match(/[#&?]gid=(\d+)/);
+    return `https://docs.google.com/spreadsheets/d/${m[1]}/gviz/tq?tqx=out:csv${g ? '&gid=' + g[1] : ''}`;
+  }
+  return null;
+}
+function parseCSV(text) {
+  const rows = []; let row = [], cur = '', q = false;
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i];
+    if (q) {
+      if (c === '"') { if (text[i + 1] === '"') { cur += '"'; i++; } else q = false; }
+      else cur += c;
+    }
+    else if (c === '"') q = true;
+    else if (c === ',') { row.push(cur); cur = ''; }
+    else if (c === '\n') { row.push(cur); rows.push(row); row = []; cur = ''; }
+    else if (c !== '\r') cur += c;
+  }
+  if (cur !== '' || row.length) { row.push(cur); rows.push(row); }
+  return rows.filter(r => r.some(c => c.trim() !== ''));
+}
+function importSheetRows(rows) {
+  if (!rows.length) return 0;
+  let ni = 0, pi = 1, ci = 2, start = 0;
+  const head = rows[0].map(c => c.toLowerCase());
+  const find = re => head.findIndex(c => re.test(c));
+  const hn = find(/назв|товар|наимен|name|product/), hp = find(/цен|стоим|закуп|price|cost/), hc = find(/катег|групп|раздел|categ|group/);
+  if (hn !== -1 || hp !== -1) { start = 1; if (hn !== -1) ni = hn; if (hp !== -1) pi = hp; ci = hc; }
+  else if (rows[0].length < 3) ci = -1;
+  let count = 0;
+  for (let r = start; r < rows.length; r++) {
+    const cells = rows[r];
+    const name = (cells[ni] || '').trim();
+    if (!name) continue;
+    const price = parseFloat(String(cells[pi] || '').replace(/\s|₽/g, '').replace(',', '.')) || 0;
+    const catName = ci >= 0 ? (cells[ci] || '').trim() : '';
+    let categoryId = null;
+    if (catName) {
+      let cat = state.catalogDB.categories.find(c => c.name.toLowerCase() === catName.toLowerCase());
+      if (!cat) { cat = { id: uid(), name: catName }; state.catalogDB.categories.push(cat); }
+      categoryId = cat.id;
+    }
+    upsertCatalogProduct(name, price, categoryId);
+    count++;
+  }
+  return count;
+}
+const DEFAULT_SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRuE1Rghz2UcFRYJ5AR7jfGmqC-ImNbwDESGB-FyAwLpw1oz7Z1NGpm8QGGK1lus3GjBt07dqOUstQZ/pubhtml';
+function openSheetImport() {
+  document.getElementById('sheetUrlInput').value = state.sheetUrl || DEFAULT_SHEET_URL;
+  openSheet('sheetImportSheet');
+}
+function importFromSheet() {
+  const url = document.getElementById('sheetUrlInput').value.trim();
+  const csvUrl = sheetCsvUrl(url);
+  if (!csvUrl) { toast('Это не похоже на ссылку Google Таблицы'); return; }
+  const btn = document.getElementById('sheetImportBtn');
+  btn.textContent = 'Загружаю…'; btn.disabled = true;
+  fetch(csvUrl)
+    .then(r => { if (!r.ok) throw new Error(r.status); return r.text(); })
+    .then(text => {
+      if (/<html/i.test(text)) throw new Error('html');
+      const n = importSheetRows(parseCSV(text));
+      if (!n) { toast('В таблице не нашлось товаров'); return; }
+      state.sheetUrl = url;
+      save(); renderCatalog(); closeSheet('sheetImportSheet');
+      toast(`Загружено товаров: ${n}`);
+    })
+    .catch(() => toast('Не удалось загрузить — проверьте доступ «Все, у кого есть ссылка»'))
+    .finally(() => { btn.textContent = 'Загрузить каталог'; btn.disabled = false; });
 }
 
 /* ================= drag & drop ================= */
