@@ -691,6 +691,7 @@ input[type=file]{display:none}
       <button class="action-item" onclick="exportData()"><span class="ic" data-icon="export"></span><span>Экспорт данных<small>Скачать резервную копию (JSON)</small></span></button>
       <button class="action-item" onclick="document.getElementById('importFile').click()"><span class="ic" data-icon="import"></span><span>Импорт данных<small>Восстановить из файла</small></span></button>
       <button class="action-item" onclick="closeSheet('menuSheet');openSheet('installSheet')"><span class="ic" data-icon="phone"></span><span>Установить на телефон</span></button>
+      <button class="action-item" onclick="shareApp()"><span class="ic" data-icon="megaphone"></span><span>Поделиться приложением BDG<small>Отправить ссылку друзьям</small></span></button>
       <a class="action-item" href="https://karatmarket.ru/kivimarket" target="_blank" rel="noopener"><span class="ic" data-icon="link"></span><span>КИВИ Маркет</span></a>
       <button class="action-item" onclick="closeSheet('menuSheet');openSheet('aboutSheet')"><span class="ic" data-icon="info"></span><span>О приложении</span></button>
     </div>
@@ -988,7 +989,8 @@ const ICONS = {
   trash: '<path d="M4.5 6.5h15M9.5 6.5V5a1.5 1.5 0 0 1 1.5-1.5h2A1.5 1.5 0 0 1 14.5 5v1.5M6.5 6.5 7.5 20h9l1-13.5M10 10.5v6M14 10.5v6"/>',
   plus: '<path d="M12 5.5v13M5.5 12h13"/>',
   tag: '<path d="M20.2 13.6 13.6 20.2a1.9 1.9 0 0 1-2.7 0L4 13.3V4h9.3l6.9 6.9a1.9 1.9 0 0 1 0 2.7z"/><circle cx="8.7" cy="8.7" r="1.3"/>',
-  cloud: '<path d="M7.2 18.5h9.6a3.7 3.7 0 0 0 .7-7.3 5.4 5.4 0 0 0-10.5-1.2 4.2 4.2 0 0 0 .2 8.5z"/>'
+  cloud: '<path d="M7.2 18.5h9.6a3.7 3.7 0 0 0 .7-7.3 5.4 5.4 0 0 0-10.5-1.2 4.2 4.2 0 0 0 .2 8.5z"/>',
+  megaphone: '<path d="M3 10.5v3a1.5 1.5 0 0 0 1.5 1.5H7l7 4.5v-15L7 9H4.5A1.5 1.5 0 0 0 3 10.5z"/><path d="M17.5 9.5a4 4 0 0 1 0 5"/>'
 };
 function ic(name, size) {
   return `<svg width="${size || 19}" height="${size || 19}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${ICONS[name] || ''}</svg>`;
@@ -1521,6 +1523,18 @@ function shareList() {
   } else if (navigator.clipboard) {
     navigator.clipboard.writeText(text).then(() => toast('Список скопирован в буфер обмена'));
   } else toast('Не удалось поделиться');
+}
+
+/* ---------- share the app itself ---------- */
+const APP_URL = 'https://ondreev.github.io/BDG/';
+function shareApp() {
+  closeSheet('menuSheet');
+  const text = 'BDG — планировщик закупок и бюджета от КИВИ Маркет. Бесплатно, работает офлайн, ставится на телефон: ' + APP_URL;
+  if (navigator.share) {
+    navigator.share({ title: 'BDG — планировщик закупок', text, url: APP_URL }).catch(() => {});
+  } else if (navigator.clipboard) {
+    navigator.clipboard.writeText(text).then(() => toast('Ссылка на приложение скопирована'));
+  } else toast(APP_URL);
 }
 
 /* ---------- export / import ---------- */
