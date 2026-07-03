@@ -536,8 +536,8 @@ input[type=file]{display:none}
   body>*{display:none !important}
   body>.print-sheet{display:block !important}
   body::before{display:none}
-  @page{size:A4 landscape;margin:10mm}
 }
+.slot-chip.ovr{text-decoration:underline dotted;text-underline-offset:3px}
 
 /* ---------- desktop ---------- */
 @media(hover:hover){
@@ -745,9 +745,15 @@ input[type=file]{display:none}
   </div>
 
   <div class="view" id="view-inv">
-    <div class="seg seg-wide">
-      <button id="isegInv" class="on" onclick="setInvMode('inv')">Инвентаризация</button>
-      <button id="isegBuy" onclick="setInvMode('buy')">Закупка</button>
+    <div class="sched-bar" style="margin-top:14px">
+      <div class="seg" style="flex:1">
+        <button id="isegInv" class="on" style="flex:1" onclick="setInvMode('inv')">Инвентаризация</button>
+        <button id="isegBuy" style="flex:1" onclick="setInvMode('buy')">Закупка</button>
+      </div>
+      <button class="print-btn" onclick="printInventory()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V3.5h12V9M6 17H4.5A1.5 1.5 0 0 1 3 15.5v-5A1.5 1.5 0 0 1 4.5 9h15A1.5 1.5 0 0 1 21 10.5v5a1.5 1.5 0 0 1-1.5 1.5H18M6 14h12v6.5H6z"/></svg>
+        Печать A4
+      </button>
     </div>
     <section class="budget-card" style="margin-top:14px">
       <div class="stats" id="invStats"></div>
@@ -1141,6 +1147,11 @@ input[type=file]{display:none}
   <div class="sheet">
     <div class="grab"></div>
     <h2 id="slotSheetTitle">Смена</h2>
+    <div class="seg seg-wide" style="margin:0 0 6px">
+      <button id="slotSegAll" class="on" onclick="setSlotScope('all')">Постоянный график</button>
+      <button id="slotSegWeek" onclick="setSlotScope('week')">Только эта неделя</button>
+    </div>
+    <p style="color:var(--muted);font-size:12.5px;font-weight:600;margin:0 0 14px" id="slotScopeHint">Смена будет повторяться в этот день каждую неделю</p>
     <div class="field-row">
       <div class="field">
         <label>Начало</label>
@@ -1185,6 +1196,7 @@ input[type=file]{display:none}
 </div>
 
 <div class="print-sheet" id="printSheet"></div>
+<style id="printPageStyle">@media print{@page{size:A4 landscape;margin:10mm}}</style>
 
 <script>
 'use strict';
@@ -1277,9 +1289,15 @@ function sanitizeCatalogDB(s) {
   s.staff = s.staff || {};
   s.staff.employees = Array.isArray(s.staff.employees) ? s.staff.employees : [];
   s.staff.shifts = s.staff.shifts || {};
+  s.staff.overrides = s.staff.overrides || {}; // 'empId|YYYY-MM-DD' -> {f,t} | null (разовая смена/выходной)
   s.staff.penalties = Array.isArray(s.staff.penalties) ? s.staff.penalties : [];
   s.staff.payouts = Array.isArray(s.staff.payouts) ? s.staff.payouts : [];
-  s.staff.employees.forEach(e => { e.id = e.id || uid(); e.rate = +e.rate || 0; });
+  const curWk = weekKeyOf(new Date());
+  s.staff.employees.forEach(e => { e.id = e.id || uid(); e.rate = +e.rate || 0; e.start = e.start || curWk; });
+  // миграция старых месячных записей на недели
+  [...s.staff.penalties, ...s.staff.payouts].forEach(p => {
+    if (!p.wk) p.wk = p.ym ? weekKeyOf(new Date(p.ym + '-01T00:00:00')) : curWk;
+  });
   s.inventory = Array.isArray(s.inventory) ? s.inventory : [];
 }
 
@@ -1305,6 +1323,13 @@ function daysLeft(day) {
 }
 
 function vibrate(ms) { if (navigator.vibrate) { try { navigator.vibrate(ms); } catch (e) {} } }
+
+const isoDate = d => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+function weekKeyOf(d) {
+  const x = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  x.setDate(x.getDate() - (x.getDay() + 6) % 7);
+  return isoDate(x);
+}
 
 /* ---------- smart text matching: cyrillic, translit, wrong keyboard layout ---------- */
 const RU2LAT = { а:'a',б:'b',в:'v',г:'g',д:'d',е:'e',ё:'e',ж:'zh',з:'z',и:'i',й:'y',к:'k',л:'l',м:'m',н:'n',о:'o',п:'p',р:'r',с:'s',т:'t',у:'u',ф:'f',х:'h',ц:'c',ч:'ch',ш:'sh',щ:'sch',ъ:'',ы:'y',ь:'',э:'e',ю:'yu',я:'ya' };
@@ -2539,20 +2564,51 @@ function empShifts(id) {
   if (!state.staff.shifts[id]) state.staff.shifts[id] = [null, null, null, null, null, null, null];
   return state.staff.shifts[id];
 }
-function monthStats(empId, y, m) {
-  const sh = empShifts(empId);
+// эффективная смена на конкретную дату: разовое переопределение или постоянный шаблон
+function effSlot(empId, dateObj) {
+  const key = empId + '|' + isoDate(dateObj);
+  if (key in state.staff.overrides) return state.staff.overrides[key];
+  return empShifts(empId)[(dateObj.getDay() + 6) % 7];
+}
+function hasOverride(empId, dateObj) {
+  return (empId + '|' + isoDate(dateObj)) in state.staff.overrides;
+}
+/* --- недельный расчёт ЗП --- */
+function weekStats(empId, mondayIso) {
   const emp = state.staff.employees.find(e => e.id === empId);
+  const mon = new Date(mondayIso + 'T00:00:00');
+  let hours = 0;
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(mon); d.setDate(d.getDate() + i);
+    const s = effSlot(empId, d);
+    if (s) hours += slotHours(s);
+  }
+  const pen = state.staff.penalties.filter(p => p.empId === empId && p.wk === mondayIso).reduce((t, p) => t + p.sum, 0);
+  const paid = state.staff.payouts.filter(p => p.empId === empId && p.wk === mondayIso).reduce((t, p) => t + p.sum, 0);
+  const salary = Math.round(hours * (+emp.rate || 0) * 100) / 100;
+  return { hours: Math.round(hours * 10) / 10, salary, pen, paid, net: salary - pen - paid };
+}
+// непогашенный долг за все недели ДО указанной (переносится вперёд)
+function carryDebt(empId, mondayIso) {
+  const emp = state.staff.employees.find(e => e.id === empId);
+  if (!emp) return 0;
+  let wk = new Date((emp.start || mondayIso) + 'T00:00:00');
+  const end = new Date(mondayIso + 'T00:00:00');
+  let sum = 0, guard = 0;
+  while (wk < end && guard++ < 520) {
+    sum += weekStats(empId, isoDate(wk)).net;
+    wk.setDate(wk.getDate() + 7);
+  }
+  return Math.round(sum * 100) / 100;
+}
+function monthHours(empId, y, m) {
   let hours = 0;
   const days = new Date(y, m + 1, 0).getDate();
   for (let d = 1; d <= days; d++) {
-    const s = sh[(new Date(y, m, d).getDay() + 6) % 7];
+    const s = effSlot(empId, new Date(y, m, d));
     if (s) hours += slotHours(s);
   }
-  const ym = y + '-' + String(m + 1).padStart(2, '0');
-  const pen = state.staff.penalties.filter(p => p.empId === empId && p.ym === ym).reduce((t, p) => t + p.sum, 0);
-  const paid = state.staff.payouts.filter(p => p.empId === empId && p.ym === ym).reduce((t, p) => t + p.sum, 0);
-  const salary = Math.round(hours * (+emp.rate || 0) * 100) / 100;
-  return { hours: Math.round(hours * 10) / 10, salary, pen, paid, debt: salary - pen - paid, ym };
+  return Math.round(hours * 10) / 10;
 }
 function setSchedMode(m) {
   schedMode = m;
@@ -2579,6 +2635,7 @@ function renderSched() {
 }
 function renderSchedWeek() {
   const ws = weekStart(schedRef);
+  const monIso = isoDate(ws);
   const days = [...Array(7)].map((_, i) => { const d = new Date(ws); d.setDate(d.getDate() + i); return d; });
   document.getElementById('schedLabel').textContent =
     days[0].toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' }) + ' – ' +
@@ -2586,21 +2643,21 @@ function renderSchedWeek() {
   const todayStr = new Date().toDateString();
   let html = '<table class="sched-table"><tr><th class="emp-col">Сотрудник</th>' +
     days.map((d, i) => `<th class="${d.toDateString() === todayStr ? 'today-col' : ''}">${WD[i]}<span class="dnum">${d.getDate()}</span></th>`).join('') +
-    '<th>Часы</th></tr>';
+    '<th>Неделя</th></tr>';
   state.staff.employees.forEach((e, ei) => {
-    const sh = empShifts(e.id);
-    let week = 0;
     const cells = days.map((d, i) => {
-      const s = sh[i];
-      if (s) week += slotHours(s);
-      return `<td><button class="slot-chip ${s ? '' : 'off'}" style="${s ? `background:${empColor(ei)}22;color:${empColor(ei)}` : ''}" onclick="openSlotSheet('${e.id}',${i})">${s ? `${s.f}<small>${s.t}</small>` : '+'}</button></td>`;
+      const s = effSlot(e.id, d);
+      const ovr = hasOverride(e.id, d);
+      return `<td><button class="slot-chip ${s ? '' : 'off'} ${ovr ? 'ovr' : ''}" title="${ovr ? 'разовая смена' : ''}" style="${s ? `background:${empColor(ei)}22;color:${empColor(ei)}` : ''}" onclick="openSlotSheet('${e.id}',${i},'${isoDate(d)}')">${s ? `${s.f}<small>${s.t}</small>` : '+'}</button></td>`;
     }).join('');
+    const st = weekStats(e.id, monIso);
+    const total = carryDebt(e.id, monIso) + st.net;
     html += `<tr>
       <td class="emp-cell" onclick="openEmpSheet('${e.id}')">
         <div class="emp-name">${esc(e.name)}</div>
         ${e.role ? `<span class="emp-role" style="background:${empColor(ei)}22;color:${empColor(ei)}">${esc(e.role)}</span>` : ''}
       </td>${cells}
-      <td class="hours-cell">${Math.round(week * 10) / 10} ч${e.rate ? `<br><span class="msum">${money(week * e.rate)}</span>` : ''}</td>
+      <td class="hours-cell">${st.hours} ч${e.rate ? `<br><span class="msum">${money(st.salary)}</span><br><span class="sal-badge ${total <= 0.01 ? 'ok' : 'due'}">${total <= 0.01 ? 'выплачено' : 'долг ' + money(total)}</span>` : ''}</td>
     </tr>`;
   });
   document.getElementById('schedGrid').innerHTML = html + '</table>';
@@ -2617,12 +2674,17 @@ function renderSchedMonth() {
     html += `<th class="${isToday ? 'today-col' : ''}" style="padding:10px 2px"><span class="dnum">${d}</span></th>`;
   }
   html += '<th>Итог</th></tr>';
+  // долг считается по неделям и переносится: берём срез на конец месяца
+  const afterMonth = new Date(y, m + 1, 1);
+  afterMonth.setDate(afterMonth.getDate() + 7);
+  const cutIso = weekKeyOf(afterMonth);
   state.staff.employees.forEach((e, ei) => {
-    const sh = empShifts(e.id);
-    const st = monthStats(e.id, y, m);
+    const hrs = monthHours(e.id, y, m);
+    const salary = Math.round(hrs * (+e.rate || 0) * 100) / 100;
+    const debt = carryDebt(e.id, cutIso);
     let cells = '';
     for (let d = 1; d <= days; d++) {
-      const s = sh[(new Date(y, m, d).getDay() + 6) % 7];
+      const s = effSlot(e.id, new Date(y, m, d));
       cells += `<td style="padding:6px 2px"><div class="mcell" style="background:${s ? empColor(ei) : 'var(--line)'};opacity:${s ? .85 : .6};height:${s ? 10 + Math.min(16, slotHours(s) * 1.6) : 8}px"></div></td>`;
     }
     html += `<tr>
@@ -2631,9 +2693,8 @@ function renderSchedMonth() {
         ${e.role ? `<span class="emp-role" style="background:${empColor(ei)}22;color:${empColor(ei)}">${esc(e.role)}</span>` : ''}
       </td>${cells}
       <td class="hours-cell" style="text-align:left;padding-right:14px">
-        ${st.hours} ч · ${money(st.salary)}<br>
-        <span class="msum">${st.pen ? 'штрафы ' + money(st.pen) + ' · ' : ''}выплачено ${money(st.paid)}</span><br>
-        <span class="sal-badge ${st.debt <= 0.01 ? 'ok' : 'due'}">${st.debt <= 0.01 ? 'ЗП погашена' : 'долг ' + money(st.debt)}</span>
+        ${hrs} ч · ${money(salary)}<br>
+        <span class="sal-badge ${debt <= 0.01 ? 'ok' : 'due'}">${debt <= 0.01 ? 'ЗП погашена' : 'долг ' + money(debt)}</span>
       </td>
     </tr>`;
   });
@@ -2656,19 +2717,24 @@ function openEmpSheet(id) {
   if (!e) setTimeout(() => document.getElementById('empName').focus(), 320);
 }
 function renderEmpPay(id) {
-  const y = schedRef.getFullYear(), m = schedRef.getMonth();
-  const st = monthStats(id, y, m);
-  const mName = schedRef.toLocaleDateString('ru-RU', { month: 'long', year: 'numeric' }).replace(' г.', '');
+  const ws = weekStart(schedRef);
+  const monIso = isoDate(ws);
+  const we = new Date(ws); we.setDate(we.getDate() + 6);
+  const st = weekStats(id, monIso);
+  const carry = carryDebt(id, monIso);
+  const total = carry + st.net;
+  const range = ws.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' }) + ' – ' + we.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' });
   document.getElementById('empSummary').innerHTML = `
-    <div class="row"><span>Месяц</span><b style="text-transform:capitalize">${mName}</b></div>
+    <div class="row"><span>Неделя</span><b>${range}</b></div>
     <div class="row"><span>Отработано часов</span><b>${st.hours} ч</b></div>
     <div class="row"><span>Начислено</span><b>${money(st.salary)}</b></div>
     <div class="row"><span>Штрафы</span><b style="color:var(--red)">${st.pen ? '−' + money(st.pen) : '0 ₽'}</b></div>
     <div class="row"><span>Выплачено</span><b>${money(st.paid)}</b></div>
-    <div class="row total"><span>Долг по ЗП</span><b class="${st.debt <= 0.01 ? '' : ''}" style="color:${st.debt <= 0.01 ? 'var(--green)' : 'var(--red)'}">${st.debt <= 0.01 ? 'погашен' : money(st.debt)}</b></div>`;
+    ${Math.abs(carry) > 0.01 ? `<div class="row"><span>Перенос с прошлых недель</span><b style="color:${carry > 0 ? 'var(--red)' : 'var(--green)'}">${money(carry)}</b></div>` : ''}
+    <div class="row total"><span>Долг по ЗП</span><b style="color:${total <= 0.01 ? 'var(--green)' : 'var(--red)'}">${total <= 0.01 ? 'погашен' : money(total)}</b></div>`;
   const hist = [
-    ...state.staff.penalties.filter(p => p.empId === id && p.ym === st.ym).map(p => ({ ...p, kind: 'pen' })),
-    ...state.staff.payouts.filter(p => p.empId === id && p.ym === st.ym).map(p => ({ ...p, kind: 'pay' }))
+    ...state.staff.penalties.filter(p => p.empId === id && p.wk === monIso).map(p => ({ ...p, kind: 'pen' })),
+    ...state.staff.payouts.filter(p => p.empId === id && p.wk === monIso).map(p => ({ ...p, kind: 'pay' }))
   ];
   document.getElementById('empHistory').innerHTML = hist.map(h => `
     <div class="hist-row">
@@ -2680,16 +2746,14 @@ function renderEmpPay(id) {
 function addPenalty() {
   const sum = parseFloat(document.getElementById('penSum').value);
   if (!empEditId || !sum) return;
-  const y = schedRef.getFullYear(), m = schedRef.getMonth();
-  state.staff.penalties.push({ id: uid(), empId: empEditId, ym: y + '-' + String(m + 1).padStart(2, '0'), sum: Math.abs(sum), note: document.getElementById('penNote').value.trim() });
+  state.staff.penalties.push({ id: uid(), empId: empEditId, wk: isoDate(weekStart(schedRef)), sum: Math.abs(sum), note: document.getElementById('penNote').value.trim() });
   document.getElementById('penSum').value = ''; document.getElementById('penNote').value = '';
   save(); renderEmpPay(empEditId); renderSched(); vibrate(10);
 }
 function addPayout() {
   const sum = parseFloat(document.getElementById('paySum').value);
   if (!empEditId || !sum) return;
-  const y = schedRef.getFullYear(), m = schedRef.getMonth();
-  state.staff.payouts.push({ id: uid(), empId: empEditId, ym: y + '-' + String(m + 1).padStart(2, '0'), sum: Math.abs(sum) });
+  state.staff.payouts.push({ id: uid(), empId: empEditId, wk: isoDate(weekStart(schedRef)), sum: Math.abs(sum) });
   document.getElementById('paySum').value = '';
   save(); renderEmpPay(empEditId); renderSched(); vibrate(10);
 }
@@ -2714,6 +2778,7 @@ function deleteEmpFromSheet() {
   confirmAction('Удалить сотрудника?', `«${e.name}», его график, штрафы и выплаты будут удалены.`, () => {
     state.staff.employees = state.staff.employees.filter(x => x.id !== empEditId);
     delete state.staff.shifts[empEditId];
+    Object.keys(state.staff.overrides).forEach(k => { if (k.startsWith(empEditId + '|')) delete state.staff.overrides[k]; });
     state.staff.penalties = state.staff.penalties.filter(p => p.empId !== empEditId);
     state.staff.payouts = state.staff.payouts.filter(p => p.empId !== empEditId);
     save(); renderSched();
@@ -2721,27 +2786,70 @@ function deleteEmpFromSheet() {
 }
 
 /* ---------- slot sheet ---------- */
-function openSlotSheet(empId, wd) {
-  slotCtx = { empId, wd };
+let slotScope = 'all';
+function setSlotScope(sc) {
+  slotScope = sc;
+  document.getElementById('slotSegAll').classList.toggle('on', sc === 'all');
+  document.getElementById('slotSegWeek').classList.toggle('on', sc === 'week');
+  document.getElementById('slotScopeHint').textContent = sc === 'all'
+    ? 'Смена будет повторяться в этот день каждую неделю'
+    : 'Изменение только на ' + new Date(slotCtx.date + 'T00:00:00').toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' }) + ' — постоянный график не тронем';
+}
+function openSlotSheet(empId, wd, dateIso) {
+  slotCtx = { empId, wd, date: dateIso };
   const e = state.staff.employees.find(x => x.id === empId);
-  const s = empShifts(empId)[wd];
-  document.getElementById('slotSheetTitle').textContent = e.name + ' — ' + ['Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота', 'Воскресенье'][wd];
+  const d = new Date(dateIso + 'T00:00:00');
+  const s = effSlot(empId, d);
+  document.getElementById('slotSheetTitle').textContent =
+    e.name + ' — ' + ['Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота', 'Воскресенье'][wd] + ', ' +
+    d.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' });
   document.getElementById('slotFrom').value = s ? s.f : '09:00';
   document.getElementById('slotTo').value = s ? s.t : '18:00';
+  setSlotScope(hasOverride(empId, d) ? 'week' : 'all');
   openSheet('slotSheet');
 }
 function saveSlot() {
   const f = document.getElementById('slotFrom').value, t = document.getElementById('slotTo').value;
   if (!f || !t) return;
-  empShifts(slotCtx.empId)[slotCtx.wd] = { f, t };
+  const key = slotCtx.empId + '|' + slotCtx.date;
+  if (slotScope === 'all') {
+    empShifts(slotCtx.empId)[slotCtx.wd] = { f, t };
+    delete state.staff.overrides[key]; // постоянный график перекрывает разовое исключение этого дня
+  } else {
+    state.staff.overrides[key] = { f, t };
+  }
   save(); renderSched(); closeSheet('slotSheet'); vibrate(10);
 }
 function clearSlot() {
-  empShifts(slotCtx.empId)[slotCtx.wd] = null;
+  const key = slotCtx.empId + '|' + slotCtx.date;
+  if (slotScope === 'all') {
+    empShifts(slotCtx.empId)[slotCtx.wd] = null;
+    delete state.staff.overrides[key];
+  } else {
+    state.staff.overrides[key] = null; // выходной только в эту дату
+  }
   save(); renderSched(); closeSheet('slotSheet'); vibrate(10);
 }
 
-/* ---------- print week (A4) ---------- */
+/* ---------- print helpers ---------- */
+const PTH = 'border:1px solid #CBD5E1;background:#F1F5F9;padding:9px 8px;font-size:11px;text-transform:uppercase;letter-spacing:.05em';
+const PTD = 'border:1px solid #CBD5E1;padding:9px 8px;font-size:13px';
+function printDoc(orientation, title, subtitle, bodyHtml) {
+  document.getElementById('printPageStyle').textContent =
+    `@media print{@page{size:A4 ${orientation};margin:10mm}}`;
+  document.getElementById('printSheet').innerHTML = `
+    <div style="font-family:-apple-system,'Segoe UI',Roboto,Arial,sans-serif;color:#1E293B">
+      <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:14px">
+        <div style="font-size:22px;font-weight:900">${title}</div>
+        <div style="font-size:13px;font-weight:700;color:#64748B">BDG · ${subtitle}</div>
+      </div>
+      ${bodyHtml}
+      <div style="margin-top:12px;font-size:11px;color:#94A3B8;font-weight:600">Сформировано в BDG · ${new Date().toLocaleDateString('ru-RU')}</div>
+    </div>`;
+  window.print();
+}
+
+/* ---------- print week (A4, альбомная) ---------- */
 function printSchedule() {
   if (schedMode !== 'week') setSchedMode('week');
   const ws = weekStart(schedRef);
@@ -2749,38 +2857,29 @@ function printSchedule() {
   const range = days[0].toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' }) + ' — ' +
     days[6].toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' });
   let rows = '';
-  state.staff.employees.forEach((e, ei) => {
-    const sh = empShifts(e.id);
+  state.staff.employees.forEach(e => {
     let week = 0;
-    const cells = days.map((d, i) => {
-      const s = sh[i];
+    const cells = days.map(d => {
+      const s = effSlot(e.id, d);
       if (s) week += slotHours(s);
-      return `<td style="border:1px solid #CBD5E1;padding:10px 6px;text-align:center;font-size:13px;font-weight:${s ? 700 : 400};color:${s ? '#1E293B' : '#CBD5E1'}">${s ? s.f + ' – ' + s.t : '—'}</td>`;
+      return `<td style="${PTD};text-align:center;font-weight:${s ? 700 : 400};color:${s ? '#1E293B' : '#CBD5E1'}">${s ? s.f + ' – ' + s.t : '—'}</td>`;
     }).join('');
     rows += `<tr>
-      <td style="border:1px solid #CBD5E1;padding:10px 12px">
+      <td style="${PTD};padding:9px 12px">
         <div style="font-weight:800;font-size:14px">${esc(e.name)}</div>
         ${e.role ? `<div style="font-size:11px;color:#64748B;font-weight:700;text-transform:uppercase;letter-spacing:.04em">${esc(e.role)}</div>` : ''}
       </td>${cells}
-      <td style="border:1px solid #CBD5E1;padding:10px 6px;text-align:center;font-weight:800;font-size:13px">${Math.round(week * 10) / 10} ч</td>
+      <td style="${PTD};text-align:center;font-weight:800">${Math.round(week * 10) / 10} ч</td>
     </tr>`;
   });
-  document.getElementById('printSheet').innerHTML = `
-    <div style="font-family:-apple-system,'Segoe UI',Roboto,Arial,sans-serif;color:#1E293B">
-      <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:14px">
-        <div style="font-size:22px;font-weight:900">Расписание смен</div>
-        <div style="font-size:13px;font-weight:700;color:#64748B">BDG · ${range}</div>
-      </div>
-      <table style="border-collapse:collapse;width:100%">
-        <tr>
-          <th style="border:1px solid #CBD5E1;background:#F1F5F9;padding:9px 12px;text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.05em">Сотрудник</th>
-          ${days.map((d, i) => `<th style="border:1px solid #CBD5E1;background:#F1F5F9;padding:9px 6px;font-size:11px;text-transform:uppercase;letter-spacing:.05em">${WD[i]} ${d.getDate()}.${String(d.getMonth() + 1).padStart(2, '0')}</th>`).join('')}
-          <th style="border:1px solid #CBD5E1;background:#F1F5F9;padding:9px 6px;font-size:11px;text-transform:uppercase">Часы</th>
-        </tr>${rows}
-      </table>
-      <div style="margin-top:12px;font-size:11px;color:#94A3B8;font-weight:600">Сформировано в BDG · ${new Date().toLocaleDateString('ru-RU')}</div>
-    </div>`;
-  window.print();
+  printDoc('landscape', 'Расписание смен', range, `
+    <table style="border-collapse:collapse;width:100%">
+      <tr>
+        <th style="${PTH};text-align:left;padding-left:12px">Сотрудник</th>
+        ${days.map((d, i) => `<th style="${PTH}">${WD[i]} ${d.getDate()}.${String(d.getMonth() + 1).padStart(2, '0')}</th>`).join('')}
+        <th style="${PTH}">Часы</th>
+      </tr>${rows}
+    </table>`);
 }
 
 /* ================= inventory module ================= */
@@ -2802,7 +2901,7 @@ function renderInv() {
   const rows = state.inventory;
   document.getElementById('invCols').innerHTML = invMode === 'inv'
     ? '<span>Учёт</span><span>Факт</span><span class="sp">Разница</span>'
-    : '<span>Купить</span><span class="sp">Сумма</span>';
+    : '<span>Остаток</span><span>Купить</span><span class="sp">Сумма</span>';
   document.getElementById('invActionBtn').textContent = invMode === 'inv' ? 'Принять факт как учёт' : 'В список закупок';
 
   document.getElementById('invRows').innerHTML = rows.length ? rows.map(r => {
@@ -2818,6 +2917,7 @@ function renderInv() {
         <span class="inv-diff ${cls}" id="diff-${r.id}">${txt}</span>`;
     } else {
       right = `
+        <input class="inv-in" type="number" inputmode="decimal" step="any" value="${r.expected ?? ''}" placeholder="0" oninput="invInput('${r.id}','expected',this.value)">
         <input class="inv-in" type="number" inputmode="decimal" step="any" value="${r.buy || ''}" placeholder="0" oninput="invInput('${r.id}','buy',this.value)">
         <span class="inv-diff" id="buy-${r.id}">${r.buy ? money(r.buy * c.price) : '—'}</span>`;
     }
@@ -2865,6 +2965,12 @@ function invInput(id, field, val) {
   save();
   // обновляем только ячейку и итоги, чтобы не терять фокус ввода
   const c = invRowCalc(r);
+  if (invMode === 'buy') {
+    const el = document.getElementById('buy-' + id);
+    if (el) el.textContent = r.buy ? money(r.buy * c.price) : '—';
+    renderInvStats();
+    return;
+  }
   if (field !== 'buy') {
     const el = document.getElementById('diff-' + id);
     if (el) {
@@ -2919,6 +3025,62 @@ function invAction() {
     openSheet('invStoreSheet');
   }
 }
+/* ---------- print inventory (A4, портретная) ---------- */
+function printInventory() {
+  const rows = state.inventory.map(r => ({ r, c: invRowCalc(r) })).filter(x => x.c.p);
+  if (!rows.length) { toast('В инвентуре пока нет товаров'); return; }
+  const today = new Date().toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' });
+  if (invMode === 'inv') {
+    let shortage = 0, surplus = 0;
+    const body = rows.map(({ r, c }) => {
+      if (c.diff !== null) { if (c.diffSum < 0) shortage += c.diffSum; else surplus += c.diffSum; }
+      return `<tr>
+        <td style="${PTD}"><b>${esc(c.p.name)}</b>${c.p.loc ? `<span style="color:#64748B;font-size:11px"> · ${esc(c.p.loc)}</span>` : ''}</td>
+        <td style="${PTD};text-align:right">${money(c.price)}</td>
+        <td style="${PTD};text-align:center">${fmt(r.expected || 0)}</td>
+        <td style="${PTD};text-align:center">${c.diff === null ? '' : fmt(r.actual)}</td>
+        <td style="${PTD};text-align:center;font-weight:700;color:${c.diff === null ? '#CBD5E1' : c.diff < 0 ? '#DC2626' : c.diff > 0 ? '#059669' : '#1E293B'}">${c.diff === null ? '—' : (c.diff > 0 ? '+' : '') + fmt(c.diff)}</td>
+        <td style="${PTD};text-align:right;font-weight:700;color:${c.diffSum < 0 ? '#DC2626' : '#1E293B'}">${c.diff === null ? '—' : money(c.diffSum)}</td>
+      </tr>`;
+    }).join('');
+    printDoc('portrait', 'Инвентаризация', today, `
+      <table style="border-collapse:collapse;width:100%">
+        <tr>
+          <th style="${PTH};text-align:left">Товар</th><th style="${PTH}">Цена</th>
+          <th style="${PTH}">Учёт</th><th style="${PTH}">Факт</th>
+          <th style="${PTH}">Разница</th><th style="${PTH}">Сумма</th>
+        </tr>${body}
+      </table>
+      <div style="margin-top:12px;font-size:14px;font-weight:800">
+        Недостача: <span style="color:#DC2626">${money(shortage)}</span> · Излишек: <span style="color:#059669">${money(surplus)}</span>
+      </div>`);
+  } else {
+    const picks = rows.filter(({ r }) => +r.buy > 0);
+    const list = picks.length ? picks : rows;
+    let total = 0;
+    const body = list.map(({ r, c }) => {
+      const sum = (+r.buy || 0) * c.price;
+      total += sum;
+      return `<tr>
+        <td style="${PTD};width:26px;text-align:center;font-size:16px">☐</td>
+        <td style="${PTD}"><b>${esc(c.p.name)}</b>${c.p.loc ? `<span style="color:#64748B;font-size:11px"> · ${esc(c.p.loc)}</span>` : ''}</td>
+        <td style="${PTD};text-align:right">${money(c.price)}</td>
+        <td style="${PTD};text-align:center">${fmt(r.expected || 0)}</td>
+        <td style="${PTD};text-align:center;font-weight:800;font-size:15px">${+r.buy > 0 ? fmt(r.buy) : ''}</td>
+        <td style="${PTD};text-align:right;font-weight:700">${sum ? money(sum) : ''}</td>
+      </tr>`;
+    }).join('');
+    printDoc('portrait', 'Список закупки', today, `
+      <table style="border-collapse:collapse;width:100%">
+        <tr>
+          <th style="${PTH}"></th><th style="${PTH};text-align:left">Товар</th><th style="${PTH}">Цена</th>
+          <th style="${PTH}">Остаток</th><th style="${PTH}">Купить</th><th style="${PTH}">Сумма</th>
+        </tr>${body}
+      </table>
+      <div style="margin-top:12px;font-size:15px;font-weight:900">Итого закупка: ${money(total)}</div>`);
+  }
+}
+
 function invTransfer() {
   const store = findStore(document.getElementById('invStoreSelect').value);
   if (!store) { closeSheet('invStoreSheet'); return; }
