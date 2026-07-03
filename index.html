@@ -266,6 +266,15 @@ input,select{font-family:inherit}
   padding:2px 7px;border-radius:99px;
 }
 .day-badge.today{color:var(--red);background:var(--red-soft)}
+.loc-badge{
+  font-size:11px;font-weight:700;color:var(--muted);background:var(--line);
+  padding:2px 7px;border-radius:99px;
+}
+.cat-head{
+  padding:10px 18px 4px;font-size:11px;font-weight:800;letter-spacing:.06em;
+  text-transform:uppercase;color:var(--muted);
+}
+.cat-head:not(:first-child){border-top:1px solid var(--line)}
 .item-row.done .item-name{color:var(--muted);text-decoration:line-through}
 .item-row.done .item-total{color:#CBD5E1;text-decoration:line-through}
 .item-total{font-size:15px;font-weight:800;white-space:nowrap;flex:none}
@@ -630,6 +639,16 @@ input[type=file]{display:none}
         <input id="itemDayInput" type="number" inputmode="numeric" min="1" max="31" placeholder="—">
       </div>
     </div>
+    <div class="field-row">
+      <div class="field">
+        <label>Место (ряд, полка)</label>
+        <input id="itemLocInput" type="text" placeholder="Например: 2Г, линия 2А" autocomplete="off">
+      </div>
+      <div class="field">
+        <label>Категория</label>
+        <select id="itemCatSelect"></select>
+      </div>
+    </div>
     <div class="field">
       <label>Магазин</label>
       <select id="itemStoreSelect"></select>
@@ -764,6 +783,10 @@ input[type=file]{display:none}
     <div class="field" id="catProdNewCatField" style="display:none">
       <label>Название новой категории</label>
       <input id="catProdNewCat" type="text" placeholder="Например: Молочка" autocomplete="off">
+    </div>
+    <div class="field">
+      <label>Место (ряд, полка)</label>
+      <input id="catProdLoc" type="text" placeholder="Например: 2Г, линия 2А" autocomplete="off">
     </div>
     <button class="btn btn-primary" id="catProdSaveBtn" onclick="saveCatProduct()">Добавить</button>
     <button class="btn btn-danger-ghost" id="catProdDeleteBtn" onclick="deleteCatProduct()" style="display:none">Удалить из каталога</button>
@@ -1152,7 +1175,7 @@ function renderStores() {
   cont.innerHTML = d.stores.map(s => {
     const subtotal = s.items.reduce((t, it) => t + (+it.qty || 0) * (+it.price || 0), 0);
     const bought = s.items.filter(i => i.bought).length;
-    const rows = s.items.map(it => itemRowHTML(s.id, it)).join('');
+    const rows = storeItemsHTML(s);
     return `
     <section class="store-card ${s.collapsed ? 'collapsed' : ''}" data-store-card="${s.id}">
       <div class="store-head" onclick="toggleCollapse('${s.id}')">
@@ -1177,6 +1200,28 @@ function renderStores() {
   }).join('');
 }
 
+// items grouped by catalog category; uncategorized go last without their own header if they are alone
+function storeItemsHTML(s) {
+  const order = new Map(state.catalogDB.categories.map((c, i) => [c.id, i]));
+  const groups = new Map();
+  s.items.forEach(it => {
+    const k = (it.catId && order.has(it.catId)) ? it.catId : '';
+    if (!groups.has(k)) groups.set(k, []);
+    groups.get(k).push(it);
+  });
+  const keys = [...groups.keys()].sort((a, b) => {
+    if (a === '') return 1;
+    if (b === '') return -1;
+    return order.get(a) - order.get(b);
+  });
+  const showHeads = !(keys.length === 1 && keys[0] === '');
+  return keys.map(k => {
+    const head = showHeads
+      ? `<div class="cat-head">${k ? esc(catById(k).name) : 'Без категории'}</div>` : '';
+    return head + groups.get(k).map(it => itemRowHTML(s.id, it)).join('');
+  }).join('');
+}
+
 function itemRowHTML(sid, it) {
   const sum = (+it.qty || 0) * (+it.price || 0);
   let badge = '';
@@ -1193,7 +1238,7 @@ function itemRowHTML(sid, it) {
     </button>
     <div class="item-body" onclick="openItemSheet('${sid}','${it.id}')">
       <div class="item-name">${esc(it.name)}</div>
-      <div class="item-meta"><span>${fmt(it.qty)} × ${fmt(it.price)} ₽</span>${badge}</div>
+      <div class="item-meta"><span>${fmt(it.qty)} × ${fmt(it.price)} ₽</span>${it.loc ? `<span class="loc-badge">${esc(it.loc)}</span>` : ''}${badge}</div>
     </div>
     <span class="item-total ${sum < 0 ? 'neg' : ''}">${money(sum)}</span>
     <button class="drag-handle" aria-label="Перетащить">
@@ -1289,6 +1334,12 @@ function openItemSheet(sid, itemId) {
   document.getElementById('itemQtyInput').value = it ? it.qty : 1;
   document.getElementById('itemPriceInput').value = it ? (it.price || '') : '';
   document.getElementById('itemDayInput').value = it && it.day ? it.day : '';
+  document.getElementById('itemLocInput').value = it && it.loc ? it.loc : '';
+
+  document.getElementById('itemCatSelect').innerHTML =
+    `<option value="">Без категории</option>` +
+    state.catalogDB.categories.map(c =>
+      `<option value="${c.id}" ${it && it.catId === c.id ? 'selected' : ''}>${esc(c.name)}</option>`).join('');
 
   const sel = document.getElementById('itemStoreSelect');
   sel.innerHTML = data().stores.map(s =>
@@ -1313,7 +1364,8 @@ function renderSuggest() {
   if (v.length < 1) { box.innerHTML = ''; return; }
   // catalog products first, then per-list history; dedupe by name
   const map = new Map();
-  state.catalogDB.products.forEach(p => map.set(p.name.toLowerCase(), { name: p.name, price: p.price, qty: 1, day: null }));
+  state.catalogDB.products.forEach(p => map.set(p.name.toLowerCase(),
+    { name: p.name, price: p.price, qty: 1, day: null, catId: p.categoryId, loc: p.loc || '' }));
   data().catalog.forEach(c => { const k = (c.name || '').toLowerCase(); if (!map.has(k)) map.set(k, c); });
   const sugg = [...map.values()]
     .filter(c => c.name.toLowerCase() !== v.toLowerCase() && textMatch(c.name, v))
@@ -1329,6 +1381,8 @@ function applySuggest(i) {
   document.getElementById('itemPriceInput').value = c.price || '';
   document.getElementById('itemQtyInput').value = c.qty || 1;
   if (c.day) document.getElementById('itemDayInput').value = c.day;
+  if (c.loc) document.getElementById('itemLocInput').value = c.loc;
+  if (c.catId) document.getElementById('itemCatSelect').value = c.catId;
   document.getElementById('suggestBox').innerHTML = '';
 }
 
@@ -1338,6 +1392,8 @@ function saveItemSheet() {
   const price = parseFloat(document.getElementById('itemPriceInput').value) || 0;
   let day = parseInt(document.getElementById('itemDayInput').value) || null;
   if (day && (day < 1 || day > 31)) day = null;
+  const loc = document.getElementById('itemLocInput').value.trim();
+  const catId = document.getElementById('itemCatSelect').value || null;
   const targetSid = document.getElementById('itemStoreSelect').value || itemSheetStore;
   if (!name || isNaN(qty) || qty <= 0) {
     document.getElementById(!name ? 'itemNameInput' : 'itemQtyInput').focus();
@@ -1347,13 +1403,13 @@ function saveItemSheet() {
     const fromStore = findStore(itemSheetStore);
     const idx = fromStore.items.findIndex(i => i.id === itemSheetEditId);
     const it = fromStore.items[idx];
-    Object.assign(it, { name, qty, price, day });
+    Object.assign(it, { name, qty, price, day, loc, catId });
     if (targetSid !== itemSheetStore) {
       fromStore.items.splice(idx, 1);
       findStore(targetSid).items.push(it);
     }
   } else {
-    findStore(targetSid).items.push({ id: uid(), name, qty, price, day, bought: false });
+    findStore(targetSid).items.push({ id: uid(), name, qty, price, day, loc, catId, bought: false });
   }
   // history upsert (per-list autocomplete)
   const cat = data().catalog;
@@ -1362,7 +1418,7 @@ function saveItemSheet() {
   else cat.push({ name, qty, price, day });
   if (cat.length > 300) cat.splice(0, cat.length - 300);
   // global catalog upsert — the catalog builds itself as you add items
-  upsertCatalogProduct(name, price, null);
+  upsertCatalogProduct(name, price, catId, loc);
 
   save(); render(); closeSheet('itemSheet'); vibrate(10);
 }
@@ -1511,7 +1567,7 @@ function shareList() {
       const sum = (+it.qty || 0) * (+it.price || 0);
       lines.push((it.bought ? '  ✓ ' : '  – ') + it.name +
         ((+it.qty || 1) !== 1 ? ' ' + fmt(it.qty) + ' × ' + fmt(it.price) + ' ₽' : '') +
-        ' — ' + money(sum) + (it.day ? ' (платёж ' + it.day + '-го)' : ''));
+        ' — ' + money(sum) + (it.loc ? ' [' + it.loc + ']' : '') + (it.day ? ' (платёж ' + it.day + '-го)' : ''));
     });
     lines.push('');
   });
@@ -1693,13 +1749,14 @@ let catFilter = null, catEditProductId = null, catAddProductId = null, catEditCa
 const catById = id => state.catalogDB.categories.find(c => c.id === id);
 const prodById = id => state.catalogDB.products.find(p => p.id === id);
 
-function upsertCatalogProduct(name, price, categoryId) {
+function upsertCatalogProduct(name, price, categoryId, loc) {
   const p = state.catalogDB.products.find(x => x.name.toLowerCase() === name.toLowerCase());
   if (p) {
     if (price) p.price = price;
     if (categoryId) p.categoryId = categoryId;
+    if (loc) p.loc = loc;
   } else {
-    state.catalogDB.products.push({ id: uid(), name, price: +price || 0, categoryId: categoryId || null });
+    state.catalogDB.products.push({ id: uid(), name, price: +price || 0, categoryId: categoryId || null, loc: loc || '' });
   }
 }
 
@@ -1745,7 +1802,7 @@ function renderCatalog() {
     <div class="cat-row">
       <div class="cat-info" onclick="openCatProductSheet('${p.id}')">
         <div class="cat-name">${esc(p.name)}</div>
-        <div class="cat-meta">${cat ? esc(cat.name) : 'Без категории'}</div>
+        <div class="cat-meta">${cat ? esc(cat.name) : 'Без категории'}${p.loc ? ' · ' + esc(p.loc) : ''}</div>
       </div>
       <span class="cat-price">${money(p.price)}</span>
       <button class="cat-add" onclick="openCatAddSheet('${p.id}')" aria-label="Добавить в список">${ic('plus', 18)}</button>
@@ -1763,6 +1820,7 @@ function openCatProductSheet(id) {
   document.getElementById('catProdDeleteBtn').style.display = p ? 'flex' : 'none';
   document.getElementById('catProdName').value = p ? p.name : '';
   document.getElementById('catProdPrice').value = p ? (p.price || '') : '';
+  document.getElementById('catProdLoc').value = p && p.loc ? p.loc : '';
   const sel = document.getElementById('catProdCategory');
   sel.innerHTML = `<option value="">Без категории</option>` +
     state.catalogDB.categories.map(c =>
@@ -1789,10 +1847,11 @@ function saveCatProduct() {
     if (!cat) { cat = { id: uid(), name: catName }; state.catalogDB.categories.push(cat); }
     categoryId = cat.id;
   }
+  const loc = document.getElementById('catProdLoc').value.trim();
   if (catEditProductId) {
-    Object.assign(prodById(catEditProductId), { name, price, categoryId });
+    Object.assign(prodById(catEditProductId), { name, price, categoryId, loc });
   } else {
-    state.catalogDB.products.push({ id: uid(), name, price, categoryId });
+    state.catalogDB.products.push({ id: uid(), name, price, categoryId, loc });
   }
   save(); renderCatalog(); closeSheet('catProductSheet'); vibrate(10);
 }
@@ -1836,7 +1895,7 @@ function saveCatAdd() {
   const price = parseFloat(document.getElementById('catAddPrice').value) || 0;
   const store = findStore(document.getElementById('catAddStore').value);
   if (!store || isNaN(qty) || qty <= 0) return;
-  store.items.push({ id: uid(), name: p.name, qty, price, day: null, bought: false });
+  store.items.push({ id: uid(), name: p.name, qty, price, day: null, loc: p.loc || '', catId: p.categoryId || null, bought: false });
   save(); render(); closeSheet('catAddSheet'); vibrate(10);
   toast(`«${p.name}» — в списке`);
 }
@@ -1901,8 +1960,10 @@ function importSheetRows(rows) {
   let ni = 0, pi = 1, ci = 2, start = 0;
   const head = rows[0].map(c => c.toLowerCase());
   const find = re => head.findIndex(c => re.test(c));
-  const hn = find(/назв|товар|наимен|name|product/), hp = find(/цен|стоим|закуп|price|cost/), hc = find(/катег|групп|раздел|categ|group/);
-  if (hn !== -1 || hp !== -1) { start = 1; if (hn !== -1) ni = hn; if (hp !== -1) pi = hp; ci = hc; }
+  let li = -1;
+  const hn = find(/назв|товар|наимен|name|product/), hp = find(/цен|стоим|закуп|price|cost/),
+    hc = find(/катег|групп|раздел|categ|group/), hl = find(/мест|распол|ряд|полк|location|place/);
+  if (hn !== -1 || hp !== -1) { start = 1; if (hn !== -1) ni = hn; if (hp !== -1) pi = hp; ci = hc; li = hl; }
   else if (rows[0].length < 3) ci = -1;
   let count = 0;
   for (let r = start; r < rows.length; r++) {
@@ -1911,13 +1972,14 @@ function importSheetRows(rows) {
     if (!name) continue;
     const price = parseFloat(String(cells[pi] || '').replace(/\s|₽/g, '').replace(',', '.')) || 0;
     const catName = ci >= 0 ? (cells[ci] || '').trim() : '';
+    const loc = li >= 0 ? (cells[li] || '').trim() : '';
     let categoryId = null;
     if (catName) {
       let cat = state.catalogDB.categories.find(c => c.name.toLowerCase() === catName.toLowerCase());
       if (!cat) { cat = { id: uid(), name: catName }; state.catalogDB.categories.push(cat); }
       categoryId = cat.id;
     }
-    upsertCatalogProduct(name, price, categoryId);
+    upsertCatalogProduct(name, price, categoryId, loc);
     count++;
   }
   return count;
