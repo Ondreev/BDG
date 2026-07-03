@@ -816,18 +816,15 @@ input[type=file]{display:none}
     <h2>Облако — копия данных</h2>
     <div class="about">
       <p>Все данные (списки, каталог, бюджет) сохраняются в защищённое облако под вашим логином. Другие пользователи их не видят. При первой выгрузке аккаунт создаётся автоматически — просто придумайте PIN.</p>
+      <p><b>Номер вводите без +7 и без 8</b> — сразу с девятки, 10 цифр: например 9991234567. Если введёте с 7 или 8 в начале, мы поправим сами.</p>
     </div>
     <div class="field">
-      <label>Телефон — логин (только цифры)</label>
-      <input id="syncLogin" type="tel" inputmode="numeric" placeholder="9099001234" autocomplete="off">
+      <label>Телефон — логин (10 цифр, без +7 и 8)</label>
+      <input id="syncLogin" type="tel" inputmode="numeric" placeholder="9991234567" autocomplete="off">
     </div>
     <div class="field">
       <label>PIN — 4 цифры</label>
       <input id="syncPin" type="password" inputmode="numeric" maxlength="4" placeholder="••••" autocomplete="off">
-    </div>
-    <div class="field">
-      <label>Адрес веб-приложения (настройка, один раз)</label>
-      <input id="syncUrl" type="url" placeholder="https://script.google.com/macros/s/…/exec" autocomplete="off">
     </div>
     <button class="btn btn-primary" id="syncUpBtn" onclick="syncUpload(false)">Выгрузить в облако</button>
     <button class="btn btn-ghost" id="syncDownBtn" onclick="syncDownload()">Загрузить из облака</button>
@@ -1569,7 +1566,6 @@ function openSyncSheet() {
   const s = syncState();
   document.getElementById('syncLogin').value = s.login || '';
   document.getElementById('syncPin').value = s.pin || '';
-  document.getElementById('syncUrl').value = s.url || DEFAULT_SYNC_URL;
   renderSyncStatus();
   openSheet('syncSheet');
 }
@@ -1581,12 +1577,17 @@ function renderSyncStatus() {
 }
 
 function readSyncCreds() {
-  const login = document.getElementById('syncLogin').value.replace(/\D/g, '');
+  let login = document.getElementById('syncLogin').value.replace(/\D/g, '');
+  // РФ: номер с 7/8 в начале приводим к 10 цифрам с девятки
+  if (login.length === 11 && (login[0] === '7' || login[0] === '8')) {
+    login = login.slice(1);
+    document.getElementById('syncLogin').value = login;
+  }
   const pin = document.getElementById('syncPin').value.replace(/\D/g, '');
-  const url = document.getElementById('syncUrl').value.trim();
-  if (login.length < 10 || login.length > 15) { toast('Логин — номер телефона, 10–15 цифр'); return null; }
+  const url = (syncState().url || DEFAULT_SYNC_URL);
+  if (login.length < 10 || login.length > 15) { toast('Номер — 10 цифр, без +7 и 8: 9991234567'); return null; }
   if (pin.length !== 4) { toast('PIN — ровно 4 цифры'); return null; }
-  if (!/^https:\/\/script\.google\.com\/macros\//.test(url)) { toast('Нужен адрес веб-приложения из Apps Script'); return null; }
+  if (!url) { toast('Облако не настроено'); return null; }
   Object.assign(syncState(), { login, pin, url });
   save();
   return { login, pin, url };
