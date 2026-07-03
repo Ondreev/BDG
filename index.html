@@ -47,7 +47,7 @@ button{font-family:inherit;color:inherit}
 input,select{font-family:inherit}
 
 /* ---------- layout ---------- */
-.app{max-width:520px;margin:0 auto;padding:0 16px calc(120px + env(safe-area-inset-bottom))}
+.app{max-width:520px;margin:0 auto;padding:0 16px calc(170px + env(safe-area-inset-bottom))}
 
 /* ---------- top bar ---------- */
 .topbar{
@@ -315,7 +315,7 @@ input,select{font-family:inherit}
 
 /* ---------- FAB ---------- */
 .fab{
-  position:fixed;right:max(18px,calc(50% - 242px));bottom:calc(22px + env(safe-area-inset-bottom));z-index:60;
+  position:fixed;right:max(18px,calc(50% - 242px));bottom:calc(86px + env(safe-area-inset-bottom));z-index:60;
   width:60px;height:60px;border-radius:20px;border:none;cursor:pointer;
   background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;
   box-shadow:0 10px 26px rgba(99,102,241,.45);
@@ -426,8 +426,126 @@ input,select{font-family:inherit}
 .sheet .about b{color:var(--text)}
 input[type=file]{display:none}
 
+/* ---------- bottom navigation ---------- */
+.bottom-nav{
+  position:fixed;left:50%;transform:translateX(-50%);bottom:calc(10px + env(safe-area-inset-bottom));
+  z-index:70;display:flex;gap:2px;background:rgba(255,255,255,.92);
+  backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+  border-radius:20px;padding:6px;box-shadow:0 10px 30px rgba(30,41,59,.16);
+}
+.nav-btn{
+  border:none;background:none;cursor:pointer;border-radius:14px;
+  display:flex;flex-direction:column;align-items:center;gap:2px;
+  padding:8px 13px;color:var(--muted);transition:all .18s;min-width:64px;
+}
+.nav-btn.on{background:var(--accent-soft);color:var(--accent)}
+.nav-btn span{font-size:10.5px;font-weight:800;letter-spacing:.02em}
+.view{display:none}
+.view.on{display:block}
+
+/* ---------- debts ---------- */
+.seg-wide{width:100%;margin:14px 0 0}
+.seg-wide button{flex:1}
+.debt-row{
+  display:flex;align-items:center;gap:4px;padding:4px 8px;border-bottom:1px solid var(--line);
+}
+.debt-row:last-child{border-bottom:none}
+.debt-row.paid .d-name{color:var(--muted);text-decoration:line-through}
+.debt-row.paid .d-sum{color:#CBD5E1;text-decoration:line-through}
+.d-body{flex:1;min-width:0;padding:11px 4px;cursor:pointer}
+.d-name{font-size:15.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.d-meta{font-size:12.5px;color:var(--muted);margin-top:2px;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.d-sum{font-size:15px;font-weight:800;white-space:nowrap;flex:none;padding-right:10px}
+.d-sum.plus{color:var(--green)}
+.d-sum.minus{color:var(--red)}
+.day-badge.over{color:#fff;background:var(--red)}
+.stat .v.neg{color:var(--red)}
+.stat .v.pos{color:var(--green)}
+
+/* ---------- schedule ---------- */
+.sched-bar{display:flex;align-items:center;gap:10px;margin-top:14px;flex-wrap:wrap}
+.sched-nav{display:flex;align-items:center;gap:4px;background:var(--card);border-radius:14px;box-shadow:var(--shadow);padding:4px}
+.sched-nav button{width:38px;height:38px;border:none;background:none;border-radius:10px;cursor:pointer;color:var(--muted);font-size:16px;display:flex;align-items:center;justify-content:center}
+.sched-nav button:active{background:var(--bg)}
+.sched-nav .lbl{font-size:13.5px;font-weight:800;padding:0 8px;white-space:nowrap;text-transform:capitalize}
+.print-btn{
+  margin-left:auto;display:none;align-items:center;gap:8px;border:none;background:var(--card);
+  box-shadow:var(--shadow);border-radius:14px;padding:11px 16px;font-size:13.5px;font-weight:800;cursor:pointer;color:var(--text);
+}
+.table-card{padding:6px 0 0;overflow:hidden}
+.table-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.sched-table{border-collapse:collapse;width:100%;min-width:640px}
+.sched-table th{
+  font-size:10.5px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);
+  padding:10px 6px;border-bottom:1px solid var(--line);text-align:center;white-space:nowrap;
+}
+.sched-table th.emp-col{text-align:left;padding-left:18px;min-width:130px}
+.sched-table th .dnum{display:block;font-size:12.5px;color:var(--text);margin-top:1px}
+.sched-table th.today-col .dnum{color:var(--accent)}
+.sched-table td{border-bottom:1px solid var(--line);padding:6px 4px;text-align:center;vertical-align:middle}
+.sched-table tr:last-child td{border-bottom:none}
+.emp-cell{cursor:pointer;text-align:left;padding-left:18px !important}
+.emp-name{font-size:14px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:130px}
+.emp-role{display:inline-block;font-size:10.5px;font-weight:800;padding:2px 8px;border-radius:99px;margin-top:3px;white-space:nowrap}
+.slot-chip{
+  display:inline-block;border:none;cursor:pointer;font-size:11.5px;font-weight:800;border-radius:9px;
+  padding:6px 7px;min-width:52px;line-height:1.25;
+}
+.slot-chip small{display:block;font-weight:700;opacity:.75;font-size:10px}
+.slot-chip.off{background:none;color:#CBD5E1;font-size:15px;font-weight:600}
+.hours-cell{font-size:13px;font-weight:800;white-space:nowrap}
+.mcell{width:12px;height:26px;border-radius:5px;margin:0 auto}
+.msum{font-size:11.5px;font-weight:700;color:var(--muted);white-space:nowrap}
+.sal-badge{display:inline-block;font-size:10.5px;font-weight:800;padding:3px 8px;border-radius:99px}
+.sal-badge.ok{color:#047857;background:var(--green-soft)}
+.sal-badge.due{color:var(--red);background:var(--red-soft)}
+.emp-summary{background:var(--bg);border-radius:16px;padding:14px 16px;margin-bottom:14px}
+.emp-summary .row{display:flex;justify-content:space-between;font-size:13.5px;font-weight:600;color:var(--muted);padding:3px 0}
+.emp-summary .row b{color:var(--text)}
+.emp-summary .row.total{border-top:1px solid var(--line);margin-top:6px;padding-top:8px;font-weight:800}
+.mini-form{display:flex;gap:8px;margin-bottom:10px}
+.mini-form input{flex:1;min-width:0;padding:11px 12px;border:2px solid var(--line);border-radius:12px;font-size:14px;font-weight:600;background:var(--bg);outline:none}
+.mini-form input:focus{border-color:var(--accent)}
+.mini-form button{flex:none;border:none;border-radius:12px;background:var(--accent-soft);color:var(--accent);font-size:13px;font-weight:800;padding:0 16px;cursor:pointer}
+.hist-row{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600;color:var(--muted);padding:6px 2px;border-bottom:1px solid var(--line)}
+.hist-row:last-child{border-bottom:none}
+.hist-row .hs{margin-left:auto;font-weight:800;color:var(--text);white-space:nowrap}
+.hist-row button{border:none;background:none;color:var(--red);cursor:pointer;display:flex;padding:4px}
+
+/* ---------- inventory ---------- */
+.inv-row{display:flex;align-items:center;gap:8px;padding:10px 14px;border-bottom:1px solid var(--line)}
+.inv-row:last-child{border-bottom:none}
+.inv-info{flex:1;min-width:0}
+.inv-name{font-size:14.5px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.inv-meta{font-size:11.5px;color:var(--muted);margin-top:1px}
+.inv-in{width:64px;flex:none;text-align:center;padding:10px 4px;border:2px solid var(--line);border-radius:12px;font-size:15px;font-weight:700;background:var(--bg);outline:none}
+.inv-in:focus{border-color:var(--accent);background:#fff}
+.inv-diff{flex:none;min-width:74px;text-align:right;font-size:12.5px;font-weight:800;white-space:nowrap}
+.inv-diff.bad{color:var(--red)}
+.inv-diff.good{color:var(--green)}
+.inv-diff.zero{color:#CBD5E1}
+.inv-del{flex:none;width:34px;height:34px;border:none;background:none;color:#CBD5E1;cursor:pointer;display:flex;align-items:center;justify-content:center;border-radius:10px}
+.inv-del:active{color:var(--red)}
+.inv-cols{display:flex;gap:8px;padding:10px 14px 4px;font-size:10.5px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);justify-content:flex-end}
+.inv-cols span{width:64px;text-align:center;flex:none}
+.inv-cols .sp{min-width:74px;width:auto}
+
+/* ---------- print ---------- */
+.print-sheet{display:none}
+@media print{
+  body>*{display:none !important}
+  body>.print-sheet{display:block !important}
+  body::before{display:none}
+  @page{size:A4 landscape;margin:10mm}
+}
+
 /* ---------- desktop ---------- */
 @media(hover:hover){
+  .nav-btn:hover{color:var(--accent)}
+  .print-btn:hover{color:var(--accent)}
+  .slot-chip:hover{filter:brightness(.95)}
+  .emp-cell:hover .emp-name{color:var(--accent)}
+  .inv-del:hover{color:var(--red)}
   .icon-btn:hover{transform:translateY(-1px);box-shadow:0 4px 14px rgba(30,41,59,.10)}
   .list-switch:hover{background:rgba(99,102,241,.08)}
   .item-row:hover{background:#FAFBFE}
@@ -450,8 +568,9 @@ input[type=file]{display:none}
   .stepper button:hover{background:#DDE0FD}
 }
 @media(min-width:920px){
-  .app{max-width:1140px;padding:0 32px 80px}
+  .app{max-width:1140px;padding:0 32px 120px}
   .topbar{padding:18px 4px 16px}
+  .print-btn{display:flex}
   .layout{display:grid;grid-template-columns:410px minmax(0,1fr);gap:26px;align-items:start}
   .side{position:sticky;top:96px}
   .main #stores .store-card:first-child{margin-top:6px}
@@ -495,6 +614,7 @@ input[type=file]{display:none}
     </div>
   </header>
 
+  <div class="view on" id="view-shop">
   <div class="layout">
   <div class="side">
   <section class="budget-card">
@@ -578,9 +698,92 @@ input[type=file]{display:none}
   </div>
   </div><!-- /main -->
   </div><!-- /layout -->
+  </div><!-- /view-shop -->
+
+  <div class="view" id="view-debts">
+    <section class="budget-card">
+      <div class="budget-label" style="margin-bottom:10px">Долги и кредиты</div>
+      <div class="stats">
+        <div class="stat"><div class="k">Мне должны</div><div class="v pos" id="debtOwedVal">0 ₽</div></div>
+        <div class="stat"><div class="k">Я должен</div><div class="v neg" id="debtOwnVal">0 ₽</div></div>
+        <div class="stat"><div class="k">Кредиты</div><div class="v" id="debtCreditVal">0 ₽</div></div>
+      </div>
+    </section>
+    <div class="seg seg-wide">
+      <button id="dsegOwed" class="on" onclick="setDebtTab('owed')">Мне должны</button>
+      <button id="dsegOwn" onclick="setDebtTab('own')">Я должен</button>
+      <button id="dsegCredit" onclick="setDebtTab('credit')">Кредиты</button>
+    </div>
+    <section class="store-card"><div id="debtRows"></div></section>
+    <button class="add-store-btn" onclick="openDebtSheet()">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+      Новая запись
+    </button>
+  </div>
+
+  <div class="view" id="view-sched">
+    <div class="sched-bar">
+      <div class="seg">
+        <button id="ssegWeek" class="on" onclick="setSchedMode('week')">Неделя</button>
+        <button id="ssegMonth" onclick="setSchedMode('month')">Месяц</button>
+      </div>
+      <div class="sched-nav">
+        <button onclick="schedShift(-1)" aria-label="Назад">‹</button>
+        <span class="lbl" id="schedLabel"></span>
+        <button onclick="schedShift(1)" aria-label="Вперёд">›</button>
+      </div>
+      <button class="print-btn" onclick="printSchedule()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V3.5h12V9M6 17H4.5A1.5 1.5 0 0 1 3 15.5v-5A1.5 1.5 0 0 1 4.5 9h15A1.5 1.5 0 0 1 21 10.5v5a1.5 1.5 0 0 1-1.5 1.5H18M6 14h12v6.5H6z"/></svg>
+        Печать A4
+      </button>
+    </div>
+    <section class="store-card table-card" id="schedCard"><div class="table-scroll" id="schedGrid"></div></section>
+    <button class="add-store-btn" onclick="openEmpSheet()">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+      Добавить сотрудника
+    </button>
+  </div>
+
+  <div class="view" id="view-inv">
+    <div class="seg seg-wide">
+      <button id="isegInv" class="on" onclick="setInvMode('inv')">Инвентаризация</button>
+      <button id="isegBuy" onclick="setInvMode('buy')">Закупка</button>
+    </div>
+    <section class="budget-card" style="margin-top:14px">
+      <div class="stats" id="invStats"></div>
+    </section>
+    <section class="store-card">
+      <div class="inv-cols" id="invCols"></div>
+      <div id="invRows"></div>
+    </section>
+    <button class="add-store-btn" onclick="openCatalogSheet('inv')">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+      Товары из каталога
+    </button>
+    <button class="btn btn-primary" id="invActionBtn" style="margin-top:12px" onclick="invAction()">В список закупок</button>
+  </div>
 </div>
 
-<button class="fab" onclick="openFabSheet()" aria-label="Добавить">
+<nav class="bottom-nav">
+  <button class="nav-btn on" id="nav-shop" onclick="switchView('shop')">
+    <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="20" r="1.4"/><circle cx="17" cy="20" r="1.4"/><path d="M3 4h2l2.3 11h10.4l2-8H6.2"/></svg>
+    <span>Закупки</span>
+  </button>
+  <button class="nav-btn" id="nav-debts" onclick="switchView('debts')">
+    <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="13.5" rx="2.8"/><path d="M3 10.5h18M16.2 15.2h1.6"/></svg>
+    <span>Долги</span>
+  </button>
+  <button class="nav-btn" id="nav-sched" onclick="switchView('sched')">
+    <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="16" rx="2.6"/><path d="M8 3v4M16 3v4M3.5 11h17"/></svg>
+    <span>График</span>
+  </button>
+  <button class="nav-btn" id="nav-inv" onclick="switchView('inv')">
+    <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5.5" y="4.5" width="13" height="17" rx="2.4"/><path d="M9.3 4.5a2.7 2.7 0 0 1 5.4 0M9 13l2.1 2.1L15 11"/></svg>
+    <span>Инвентура</span>
+  </button>
+</nav>
+
+<button class="fab" onclick="onFab()" aria-label="Добавить">
   <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.8" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
 </button>
 
@@ -861,6 +1064,111 @@ input[type=file]{display:none}
   </div>
 </div>
 
+<div class="sheet-wrap" id="debtSheet"><div class="backdrop" onclick="closeSheet('debtSheet')"></div>
+  <div class="sheet">
+    <div class="grab"></div>
+    <h2 id="debtSheetTitle">Новая запись</h2>
+    <div class="field">
+      <label>Раздел</label>
+      <select id="debtType">
+        <option value="owed">Мне должны</option>
+        <option value="own">Я должен</option>
+        <option value="credit">Кредит</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>Кто / что</label>
+      <input id="debtName" type="text" placeholder="Например: Иван / Ипотека" autocomplete="off">
+    </div>
+    <div class="field-row">
+      <div class="field">
+        <label>Сумма, ₽</label>
+        <input id="debtAmount" type="number" inputmode="decimal" step="any" placeholder="0">
+      </div>
+      <div class="field">
+        <label>Дата платежа</label>
+        <input id="debtDate" type="date">
+      </div>
+    </div>
+    <div class="field">
+      <label>Заметка (необязательно)</label>
+      <input id="debtNote" type="text" placeholder="Комментарий" autocomplete="off">
+    </div>
+    <button class="btn btn-primary" id="debtSaveBtn" onclick="saveDebtSheet()">Добавить</button>
+    <button class="btn btn-danger-ghost" id="debtDeleteBtn" onclick="deleteDebtFromSheet()" style="display:none">Удалить запись</button>
+  </div>
+</div>
+
+<div class="sheet-wrap" id="empSheet"><div class="backdrop" onclick="closeSheet('empSheet')"></div>
+  <div class="sheet">
+    <div class="grab"></div>
+    <h2 id="empSheetTitle">Сотрудник</h2>
+    <div class="field">
+      <label>Имя</label>
+      <input id="empName" type="text" placeholder="Например: Иван" autocomplete="off">
+    </div>
+    <div class="field-row">
+      <div class="field">
+        <label>Роль</label>
+        <input id="empRole" type="text" placeholder="Повар, кассир…" autocomplete="off">
+      </div>
+      <div class="field">
+        <label>Ставка, ₽/час</label>
+        <input id="empRate" type="number" inputmode="decimal" min="0" step="any" placeholder="0">
+      </div>
+    </div>
+    <div id="empPayBlock" style="display:none">
+      <div class="emp-summary" id="empSummary"></div>
+      <div class="field" style="margin-bottom:8px"><label>Штраф (сумма и причина)</label></div>
+      <div class="mini-form">
+        <input id="penSum" type="number" inputmode="decimal" placeholder="Сумма" style="max-width:110px">
+        <input id="penNote" type="text" placeholder="Причина">
+        <button onclick="addPenalty()">Штраф</button>
+      </div>
+      <div class="field" style="margin-bottom:8px"><label>Выплата зарплаты</label></div>
+      <div class="mini-form">
+        <input id="paySum" type="number" inputmode="decimal" placeholder="Сумма">
+        <button onclick="addPayout()">Выплатить</button>
+      </div>
+      <div id="empHistory" style="margin-bottom:14px"></div>
+    </div>
+    <button class="btn btn-primary" id="empSaveBtn" onclick="saveEmpSheet()">Добавить</button>
+    <button class="btn btn-danger-ghost" id="empDeleteBtn" onclick="deleteEmpFromSheet()" style="display:none">Удалить сотрудника</button>
+  </div>
+</div>
+
+<div class="sheet-wrap" id="slotSheet"><div class="backdrop" onclick="closeSheet('slotSheet')"></div>
+  <div class="sheet">
+    <div class="grab"></div>
+    <h2 id="slotSheetTitle">Смена</h2>
+    <div class="field-row">
+      <div class="field">
+        <label>Начало</label>
+        <input id="slotFrom" type="time" value="09:00">
+      </div>
+      <div class="field">
+        <label>Конец</label>
+        <input id="slotTo" type="time" value="18:00">
+      </div>
+    </div>
+    <button class="btn btn-primary" onclick="saveSlot()">Сохранить</button>
+    <button class="btn btn-ghost" onclick="clearSlot()">Выходной</button>
+  </div>
+</div>
+
+<div class="sheet-wrap" id="invStoreSheet"><div class="backdrop" onclick="closeSheet('invStoreSheet')"></div>
+  <div class="sheet">
+    <div class="grab"></div>
+    <h2>В список закупок</h2>
+    <p style="color:var(--muted);font-size:14px;margin:0 0 14px" id="invStoreInfo"></p>
+    <div class="field">
+      <label>Магазин</label>
+      <select id="invStoreSelect"></select>
+    </div>
+    <button class="btn btn-primary" onclick="invTransfer()">Добавить</button>
+  </div>
+</div>
+
 <div class="sheet-wrap" id="sheetImportSheet"><div class="backdrop" onclick="closeSheet('sheetImportSheet')"></div>
   <div class="sheet">
     <div class="grab"></div>
@@ -875,6 +1183,8 @@ input[type=file]{display:none}
     <button class="btn btn-primary" id="sheetImportBtn" onclick="importFromSheet()">Загрузить каталог</button>
   </div>
 </div>
+
+<div class="print-sheet" id="printSheet"></div>
 
 <script>
 'use strict';
@@ -961,6 +1271,16 @@ function sanitizeCatalogDB(s) {
   s.catalogDB.products = Array.isArray(s.catalogDB.products) ? s.catalogDB.products : [];
   s.catalogDB.categories.forEach(c => { c.id = c.id || uid(); c.name = c.name || 'Категория'; });
   s.catalogDB.products.forEach(p => { p.id = p.id || uid(); p.price = +p.price || 0; p.categoryId = p.categoryId || null; });
+  // debts / staff / inventory modules
+  s.debts = Array.isArray(s.debts) ? s.debts : [];
+  s.debts.forEach(d => { d.id = d.id || uid(); d.amount = +d.amount || 0; d.paid = !!d.paid; });
+  s.staff = s.staff || {};
+  s.staff.employees = Array.isArray(s.staff.employees) ? s.staff.employees : [];
+  s.staff.shifts = s.staff.shifts || {};
+  s.staff.penalties = Array.isArray(s.staff.penalties) ? s.staff.penalties : [];
+  s.staff.payouts = Array.isArray(s.staff.payouts) ? s.staff.payouts : [];
+  s.staff.employees.forEach(e => { e.id = e.id || uid(); e.rate = +e.rate || 0; });
+  s.inventory = Array.isArray(s.inventory) ? s.inventory : [];
 }
 
 const list = () => state.lists.find(l => l.id === state.currentId);
@@ -1251,6 +1571,26 @@ function itemRowHTML(sid, it) {
       <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor"><circle cx="9" cy="6" r="1.7"/><circle cx="15" cy="6" r="1.7"/><circle cx="9" cy="12" r="1.7"/><circle cx="15" cy="12" r="1.7"/><circle cx="9" cy="18" r="1.7"/><circle cx="15" cy="18" r="1.7"/></svg>
     </button>
   </div>`;
+}
+
+/* ================= views / navigation ================= */
+let currentView = 'shop';
+function switchView(v) {
+  currentView = v;
+  ['shop', 'debts', 'sched', 'inv'].forEach(x => {
+    document.getElementById('view-' + x).classList.toggle('on', x === v);
+    document.getElementById('nav-' + x).classList.toggle('on', x === v);
+  });
+  if (v === 'debts') renderDebts();
+  if (v === 'sched') renderSched();
+  if (v === 'inv') renderInv();
+  window.scrollTo({ top: 0 });
+}
+function onFab() {
+  if (currentView === 'debts') { openDebtSheet(); return; }
+  if (currentView === 'sched') { openEmpSheet(); return; }
+  if (currentView === 'inv') { openCatalogSheet('inv'); return; }
+  openFabSheet();
 }
 
 /* ================= sheets ================= */
@@ -1806,11 +2146,17 @@ function upsertCatalogProduct(name, price, categoryId, loc) {
   }
 }
 
-function openCatalogSheet() {
+let catTarget = 'list'; // 'list' — в список закупок, 'inv' — в инвентуру
+function openCatalogSheet(target) {
+  catTarget = target === 'inv' ? 'inv' : 'list';
   catFilter = null;
   document.getElementById('catSearch').value = '';
   renderCatalog();
   openSheet('catalogSheet');
+}
+function catAddClick(pid) {
+  if (catTarget === 'inv') invAddProduct(pid);
+  else openCatAddSheet(pid);
 }
 
 function productMatches(p, q) {
@@ -1851,7 +2197,7 @@ function renderCatalog() {
         <div class="cat-meta">${cat ? esc(cat.name) : 'Без категории'}${p.loc ? ' · ' + esc(p.loc) : ''}</div>
       </div>
       <span class="cat-price">${money(p.price)}</span>
-      <button class="cat-add" onclick="openCatAddSheet('${p.id}')" aria-label="Добавить в список">${ic('plus', 18)}</button>
+      <button class="cat-add" onclick="catAddClick('${p.id}')" aria-label="Добавить">${ic('plus', 18)}</button>
     </div>`;
   }).join('') : `<div class="cat-empty">${db.products.length ? 'Ничего не найдено' : 'Каталог пуст — добавьте товары вручную или загрузите из Google Таблицы'}</div>`;
 }
@@ -2056,6 +2402,536 @@ function importFromSheet() {
     })
     .catch(() => toast('Не удалось загрузить — проверьте доступ «Все, у кого есть ссылка»'))
     .finally(() => { btn.textContent = 'Загрузить каталог'; btn.disabled = false; });
+}
+
+/* ================= debts module ================= */
+let debtTab = 'owed', debtEditId = null;
+const DEBT_LABEL = { owed: 'Мне должны', own: 'Я должен', credit: 'Кредит' };
+
+function debtDaysLeft(dateStr) {
+  if (!dateStr) return null;
+  const now = new Date();
+  const t0 = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  return Math.round((new Date(dateStr + 'T00:00:00') - t0) / 864e5);
+}
+function debtBadge(d) {
+  if (d.paid || !d.date) return '';
+  const dl = debtDaysLeft(d.date);
+  if (dl < 0) return `<span class="day-badge over">просрочено ${-dl} дн.</span>`;
+  if (dl === 0) return '<span class="day-badge today">сегодня</span>';
+  if (dl === 1) return '<span class="day-badge">завтра</span>';
+  return `<span class="day-badge">через ${dl} дн.</span>`;
+}
+function setDebtTab(t) {
+  debtTab = t;
+  ['owed', 'own', 'credit'].forEach(x =>
+    document.getElementById('dseg' + x[0].toUpperCase() + x.slice(1)).classList.toggle('on', x === t));
+  renderDebts();
+}
+function renderDebts() {
+  const ds = state.debts;
+  const sum = type => ds.filter(d => d.type === type && !d.paid).reduce((t, d) => t + d.amount, 0);
+  // «Мне должны» — в минусовом эквиваленте
+  document.getElementById('debtOwedVal').textContent = money(-sum('owed'));
+  document.getElementById('debtOwnVal').textContent = money(sum('own'));
+  document.getElementById('debtCreditVal').textContent = money(sum('credit'));
+
+  const rows = ds.filter(d => d.type === debtTab)
+    .sort((a, b) => (a.paid - b.paid) || (a.date || '9999').localeCompare(b.date || '9999'));
+  document.getElementById('debtRows').innerHTML = rows.length ? rows.map(d => {
+    const dateTxt = d.date ? new Date(d.date + 'T00:00:00').toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' }) : '';
+    const sumTxt = d.type === 'owed' ? money(-d.amount) : money(d.amount);
+    return `
+    <div class="debt-row ${d.paid ? 'paid' : ''}">
+      <button class="check" onclick="toggleDebt('${d.id}')" aria-label="Погашено">
+        <span class="box" style="${d.paid ? 'background:var(--green);border-color:var(--green)' : ''}">
+          ${d.paid ? '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 12.5l5 5 10-11"/></svg>' : ''}
+        </span>
+      </button>
+      <div class="d-body" onclick="openDebtSheet('${d.id}')">
+        <div class="d-name">${esc(d.name)}</div>
+        <div class="d-meta">${dateTxt ? `<span>${dateTxt}</span>` : ''}${debtBadge(d)}${d.note ? `<span>· ${esc(d.note)}</span>` : ''}${d.type === 'credit' && d.paidCount ? `<span>· платежей: ${d.paidCount}</span>` : ''}</div>
+      </div>
+      <span class="d-sum ${d.type === 'owed' ? 'plus' : 'minus'}">${sumTxt}</span>
+    </div>`;
+  }).join('') : '<div class="empty-items">Пока нет записей — нажмите «Новая запись»</div>';
+}
+function toggleDebt(id) {
+  const d = state.debts.find(x => x.id === id);
+  if (d.type === 'credit' && !d.paid && d.date) {
+    // кредит: платёж отмечен — переносим дату на месяц вперёд
+    const dt = new Date(d.date + 'T00:00:00');
+    dt.setMonth(dt.getMonth() + 1);
+    const prev = d.date;
+    d.date = dt.toISOString().slice(0, 10);
+    d.paidCount = (d.paidCount || 0) + 1;
+    save(); renderDebts(); vibrate(15);
+    snackbar(`Платёж отмечен — следующий ${dt.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' })}`, () => {
+      d.date = prev; d.paidCount--; save(); renderDebts();
+    });
+    return;
+  }
+  d.paid = !d.paid;
+  save(); renderDebts(); vibrate(15);
+}
+function openDebtSheet(id) {
+  debtEditId = id || null;
+  const d = id ? state.debts.find(x => x.id === id) : null;
+  document.getElementById('debtSheetTitle').textContent = d ? 'Запись' : 'Новая запись';
+  document.getElementById('debtSaveBtn').textContent = d ? 'Сохранить' : 'Добавить';
+  document.getElementById('debtDeleteBtn').style.display = d ? 'flex' : 'none';
+  document.getElementById('debtType').value = d ? d.type : debtTab;
+  document.getElementById('debtName').value = d ? d.name : '';
+  document.getElementById('debtAmount').value = d ? d.amount : '';
+  document.getElementById('debtDate').value = d && d.date ? d.date : '';
+  document.getElementById('debtNote').value = d && d.note ? d.note : '';
+  openSheet('debtSheet');
+  if (!d) setTimeout(() => document.getElementById('debtName').focus(), 320);
+}
+function saveDebtSheet() {
+  const name = document.getElementById('debtName').value.trim();
+  const amount = Math.abs(parseFloat(document.getElementById('debtAmount').value) || 0);
+  if (!name || !amount) {
+    document.getElementById(!name ? 'debtName' : 'debtAmount').focus();
+    return;
+  }
+  const rec = {
+    type: document.getElementById('debtType').value,
+    name, amount,
+    date: document.getElementById('debtDate').value || null,
+    note: document.getElementById('debtNote').value.trim()
+  };
+  if (debtEditId) Object.assign(state.debts.find(x => x.id === debtEditId), rec);
+  else state.debts.push(Object.assign({ id: uid(), paid: false, paidCount: 0 }, rec));
+  debtTab = rec.type;
+  setDebtTab(debtTab);
+  save(); closeSheet('debtSheet'); vibrate(10);
+}
+function deleteDebtFromSheet() {
+  const idx = state.debts.findIndex(x => x.id === debtEditId);
+  if (idx === -1) { closeSheet('debtSheet'); return; }
+  const removed = state.debts.splice(idx, 1)[0];
+  save(); renderDebts(); closeSheet('debtSheet');
+  snackbar(`«${removed.name}» удалена`, () => {
+    state.debts.splice(Math.min(idx, state.debts.length), 0, removed);
+    save(); renderDebts();
+  });
+}
+
+/* ================= schedule module ================= */
+let schedMode = 'week', schedRef = new Date(), empEditId = null, slotCtx = null;
+const WD = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
+const empColor = i => CHART_COLORS[i % CHART_COLORS.length];
+
+function weekStart(d) {
+  const x = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  x.setDate(x.getDate() - (x.getDay() + 6) % 7);
+  return x;
+}
+function slotHours(s) {
+  if (!s || !s.f || !s.t) return 0;
+  const [fh, fm] = s.f.split(':').map(Number), [th, tm] = s.t.split(':').map(Number);
+  let h = (th * 60 + tm - fh * 60 - fm) / 60;
+  if (h <= 0) h += 24;
+  return Math.round(h * 100) / 100;
+}
+function empShifts(id) {
+  if (!state.staff.shifts[id]) state.staff.shifts[id] = [null, null, null, null, null, null, null];
+  return state.staff.shifts[id];
+}
+function monthStats(empId, y, m) {
+  const sh = empShifts(empId);
+  const emp = state.staff.employees.find(e => e.id === empId);
+  let hours = 0;
+  const days = new Date(y, m + 1, 0).getDate();
+  for (let d = 1; d <= days; d++) {
+    const s = sh[(new Date(y, m, d).getDay() + 6) % 7];
+    if (s) hours += slotHours(s);
+  }
+  const ym = y + '-' + String(m + 1).padStart(2, '0');
+  const pen = state.staff.penalties.filter(p => p.empId === empId && p.ym === ym).reduce((t, p) => t + p.sum, 0);
+  const paid = state.staff.payouts.filter(p => p.empId === empId && p.ym === ym).reduce((t, p) => t + p.sum, 0);
+  const salary = Math.round(hours * (+emp.rate || 0) * 100) / 100;
+  return { hours: Math.round(hours * 10) / 10, salary, pen, paid, debt: salary - pen - paid, ym };
+}
+function setSchedMode(m) {
+  schedMode = m;
+  document.getElementById('ssegWeek').classList.toggle('on', m === 'week');
+  document.getElementById('ssegMonth').classList.toggle('on', m === 'month');
+  renderSched();
+}
+function schedShift(dir) {
+  if (schedMode === 'week') schedRef.setDate(schedRef.getDate() + dir * 7);
+  else schedRef.setMonth(schedRef.getMonth() + dir, 1);
+  renderSched();
+}
+function renderSched() {
+  const emps = state.staff.employees;
+  const card = document.getElementById('schedCard');
+  const grid = document.getElementById('schedGrid');
+  if (!emps.length) {
+    document.getElementById('schedLabel').textContent = '';
+    card.style.display = 'block';
+    grid.innerHTML = '<div class="empty-items" style="padding:28px">Добавьте первого сотрудника — и стройте график смен</div>';
+    return;
+  }
+  if (schedMode === 'week') renderSchedWeek(); else renderSchedMonth();
+}
+function renderSchedWeek() {
+  const ws = weekStart(schedRef);
+  const days = [...Array(7)].map((_, i) => { const d = new Date(ws); d.setDate(d.getDate() + i); return d; });
+  document.getElementById('schedLabel').textContent =
+    days[0].toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' }) + ' – ' +
+    days[6].toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' });
+  const todayStr = new Date().toDateString();
+  let html = '<table class="sched-table"><tr><th class="emp-col">Сотрудник</th>' +
+    days.map((d, i) => `<th class="${d.toDateString() === todayStr ? 'today-col' : ''}">${WD[i]}<span class="dnum">${d.getDate()}</span></th>`).join('') +
+    '<th>Часы</th></tr>';
+  state.staff.employees.forEach((e, ei) => {
+    const sh = empShifts(e.id);
+    let week = 0;
+    const cells = days.map((d, i) => {
+      const s = sh[i];
+      if (s) week += slotHours(s);
+      return `<td><button class="slot-chip ${s ? '' : 'off'}" style="${s ? `background:${empColor(ei)}22;color:${empColor(ei)}` : ''}" onclick="openSlotSheet('${e.id}',${i})">${s ? `${s.f}<small>${s.t}</small>` : '+'}</button></td>`;
+    }).join('');
+    html += `<tr>
+      <td class="emp-cell" onclick="openEmpSheet('${e.id}')">
+        <div class="emp-name">${esc(e.name)}</div>
+        ${e.role ? `<span class="emp-role" style="background:${empColor(ei)}22;color:${empColor(ei)}">${esc(e.role)}</span>` : ''}
+      </td>${cells}
+      <td class="hours-cell">${Math.round(week * 10) / 10} ч${e.rate ? `<br><span class="msum">${money(week * e.rate)}</span>` : ''}</td>
+    </tr>`;
+  });
+  document.getElementById('schedGrid').innerHTML = html + '</table>';
+}
+function renderSchedMonth() {
+  const y = schedRef.getFullYear(), m = schedRef.getMonth();
+  const days = new Date(y, m + 1, 0).getDate();
+  document.getElementById('schedLabel').textContent =
+    schedRef.toLocaleDateString('ru-RU', { month: 'long', year: 'numeric' }).replace(' г.', '');
+  const today = new Date();
+  let html = '<table class="sched-table" style="min-width:' + (days * 26 + 300) + 'px"><tr><th class="emp-col">Сотрудник</th>';
+  for (let d = 1; d <= days; d++) {
+    const isToday = today.getFullYear() === y && today.getMonth() === m && today.getDate() === d;
+    html += `<th class="${isToday ? 'today-col' : ''}" style="padding:10px 2px"><span class="dnum">${d}</span></th>`;
+  }
+  html += '<th>Итог</th></tr>';
+  state.staff.employees.forEach((e, ei) => {
+    const sh = empShifts(e.id);
+    const st = monthStats(e.id, y, m);
+    let cells = '';
+    for (let d = 1; d <= days; d++) {
+      const s = sh[(new Date(y, m, d).getDay() + 6) % 7];
+      cells += `<td style="padding:6px 2px"><div class="mcell" style="background:${s ? empColor(ei) : 'var(--line)'};opacity:${s ? .85 : .6};height:${s ? 10 + Math.min(16, slotHours(s) * 1.6) : 8}px"></div></td>`;
+    }
+    html += `<tr>
+      <td class="emp-cell" onclick="openEmpSheet('${e.id}')">
+        <div class="emp-name">${esc(e.name)}</div>
+        ${e.role ? `<span class="emp-role" style="background:${empColor(ei)}22;color:${empColor(ei)}">${esc(e.role)}</span>` : ''}
+      </td>${cells}
+      <td class="hours-cell" style="text-align:left;padding-right:14px">
+        ${st.hours} ч · ${money(st.salary)}<br>
+        <span class="msum">${st.pen ? 'штрафы ' + money(st.pen) + ' · ' : ''}выплачено ${money(st.paid)}</span><br>
+        <span class="sal-badge ${st.debt <= 0.01 ? 'ok' : 'due'}">${st.debt <= 0.01 ? 'ЗП погашена' : 'долг ' + money(st.debt)}</span>
+      </td>
+    </tr>`;
+  });
+  document.getElementById('schedGrid').innerHTML = html + '</table>';
+}
+
+/* ---------- employee sheet ---------- */
+function openEmpSheet(id) {
+  empEditId = id || null;
+  const e = id ? state.staff.employees.find(x => x.id === id) : null;
+  document.getElementById('empSheetTitle').textContent = e ? e.name : 'Новый сотрудник';
+  document.getElementById('empSaveBtn').textContent = e ? 'Сохранить' : 'Добавить';
+  document.getElementById('empDeleteBtn').style.display = e ? 'flex' : 'none';
+  document.getElementById('empPayBlock').style.display = e ? 'block' : 'none';
+  document.getElementById('empName').value = e ? e.name : '';
+  document.getElementById('empRole').value = e ? (e.role || '') : '';
+  document.getElementById('empRate').value = e ? (e.rate || '') : '';
+  if (e) renderEmpPay(e.id);
+  openSheet('empSheet');
+  if (!e) setTimeout(() => document.getElementById('empName').focus(), 320);
+}
+function renderEmpPay(id) {
+  const y = schedRef.getFullYear(), m = schedRef.getMonth();
+  const st = monthStats(id, y, m);
+  const mName = schedRef.toLocaleDateString('ru-RU', { month: 'long', year: 'numeric' }).replace(' г.', '');
+  document.getElementById('empSummary').innerHTML = `
+    <div class="row"><span>Месяц</span><b style="text-transform:capitalize">${mName}</b></div>
+    <div class="row"><span>Отработано часов</span><b>${st.hours} ч</b></div>
+    <div class="row"><span>Начислено</span><b>${money(st.salary)}</b></div>
+    <div class="row"><span>Штрафы</span><b style="color:var(--red)">${st.pen ? '−' + money(st.pen) : '0 ₽'}</b></div>
+    <div class="row"><span>Выплачено</span><b>${money(st.paid)}</b></div>
+    <div class="row total"><span>Долг по ЗП</span><b class="${st.debt <= 0.01 ? '' : ''}" style="color:${st.debt <= 0.01 ? 'var(--green)' : 'var(--red)'}">${st.debt <= 0.01 ? 'погашен' : money(st.debt)}</b></div>`;
+  const hist = [
+    ...state.staff.penalties.filter(p => p.empId === id && p.ym === st.ym).map(p => ({ ...p, kind: 'pen' })),
+    ...state.staff.payouts.filter(p => p.empId === id && p.ym === st.ym).map(p => ({ ...p, kind: 'pay' }))
+  ];
+  document.getElementById('empHistory').innerHTML = hist.map(h => `
+    <div class="hist-row">
+      <span>${h.kind === 'pen' ? 'Штраф' : 'Выплата'}${h.note ? ' · ' + esc(h.note) : ''}</span>
+      <span class="hs" style="color:${h.kind === 'pen' ? 'var(--red)' : 'var(--green)'}">${h.kind === 'pen' ? '−' : ''}${money(h.sum)}</span>
+      <button onclick="delPayRec('${h.kind}','${h.id}')">${ic('trash', 14)}</button>
+    </div>`).join('');
+}
+function addPenalty() {
+  const sum = parseFloat(document.getElementById('penSum').value);
+  if (!empEditId || !sum) return;
+  const y = schedRef.getFullYear(), m = schedRef.getMonth();
+  state.staff.penalties.push({ id: uid(), empId: empEditId, ym: y + '-' + String(m + 1).padStart(2, '0'), sum: Math.abs(sum), note: document.getElementById('penNote').value.trim() });
+  document.getElementById('penSum').value = ''; document.getElementById('penNote').value = '';
+  save(); renderEmpPay(empEditId); renderSched(); vibrate(10);
+}
+function addPayout() {
+  const sum = parseFloat(document.getElementById('paySum').value);
+  if (!empEditId || !sum) return;
+  const y = schedRef.getFullYear(), m = schedRef.getMonth();
+  state.staff.payouts.push({ id: uid(), empId: empEditId, ym: y + '-' + String(m + 1).padStart(2, '0'), sum: Math.abs(sum) });
+  document.getElementById('paySum').value = '';
+  save(); renderEmpPay(empEditId); renderSched(); vibrate(10);
+}
+function delPayRec(kind, id) {
+  const arr = kind === 'pen' ? state.staff.penalties : state.staff.payouts;
+  const idx = arr.findIndex(x => x.id === id);
+  if (idx !== -1) arr.splice(idx, 1);
+  save(); renderEmpPay(empEditId); renderSched();
+}
+function saveEmpSheet() {
+  const name = document.getElementById('empName').value.trim();
+  if (!name) { document.getElementById('empName').focus(); return; }
+  const role = document.getElementById('empRole').value.trim();
+  const rate = parseFloat(document.getElementById('empRate').value) || 0;
+  if (empEditId) Object.assign(state.staff.employees.find(x => x.id === empEditId), { name, role, rate });
+  else state.staff.employees.push({ id: uid(), name, role, rate });
+  save(); renderSched(); closeSheet('empSheet'); vibrate(10);
+}
+function deleteEmpFromSheet() {
+  const e = state.staff.employees.find(x => x.id === empEditId);
+  closeSheet('empSheet');
+  confirmAction('Удалить сотрудника?', `«${e.name}», его график, штрафы и выплаты будут удалены.`, () => {
+    state.staff.employees = state.staff.employees.filter(x => x.id !== empEditId);
+    delete state.staff.shifts[empEditId];
+    state.staff.penalties = state.staff.penalties.filter(p => p.empId !== empEditId);
+    state.staff.payouts = state.staff.payouts.filter(p => p.empId !== empEditId);
+    save(); renderSched();
+  });
+}
+
+/* ---------- slot sheet ---------- */
+function openSlotSheet(empId, wd) {
+  slotCtx = { empId, wd };
+  const e = state.staff.employees.find(x => x.id === empId);
+  const s = empShifts(empId)[wd];
+  document.getElementById('slotSheetTitle').textContent = e.name + ' — ' + ['Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота', 'Воскресенье'][wd];
+  document.getElementById('slotFrom').value = s ? s.f : '09:00';
+  document.getElementById('slotTo').value = s ? s.t : '18:00';
+  openSheet('slotSheet');
+}
+function saveSlot() {
+  const f = document.getElementById('slotFrom').value, t = document.getElementById('slotTo').value;
+  if (!f || !t) return;
+  empShifts(slotCtx.empId)[slotCtx.wd] = { f, t };
+  save(); renderSched(); closeSheet('slotSheet'); vibrate(10);
+}
+function clearSlot() {
+  empShifts(slotCtx.empId)[slotCtx.wd] = null;
+  save(); renderSched(); closeSheet('slotSheet'); vibrate(10);
+}
+
+/* ---------- print week (A4) ---------- */
+function printSchedule() {
+  if (schedMode !== 'week') setSchedMode('week');
+  const ws = weekStart(schedRef);
+  const days = [...Array(7)].map((_, i) => { const d = new Date(ws); d.setDate(d.getDate() + i); return d; });
+  const range = days[0].toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' }) + ' — ' +
+    days[6].toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' });
+  let rows = '';
+  state.staff.employees.forEach((e, ei) => {
+    const sh = empShifts(e.id);
+    let week = 0;
+    const cells = days.map((d, i) => {
+      const s = sh[i];
+      if (s) week += slotHours(s);
+      return `<td style="border:1px solid #CBD5E1;padding:10px 6px;text-align:center;font-size:13px;font-weight:${s ? 700 : 400};color:${s ? '#1E293B' : '#CBD5E1'}">${s ? s.f + ' – ' + s.t : '—'}</td>`;
+    }).join('');
+    rows += `<tr>
+      <td style="border:1px solid #CBD5E1;padding:10px 12px">
+        <div style="font-weight:800;font-size:14px">${esc(e.name)}</div>
+        ${e.role ? `<div style="font-size:11px;color:#64748B;font-weight:700;text-transform:uppercase;letter-spacing:.04em">${esc(e.role)}</div>` : ''}
+      </td>${cells}
+      <td style="border:1px solid #CBD5E1;padding:10px 6px;text-align:center;font-weight:800;font-size:13px">${Math.round(week * 10) / 10} ч</td>
+    </tr>`;
+  });
+  document.getElementById('printSheet').innerHTML = `
+    <div style="font-family:-apple-system,'Segoe UI',Roboto,Arial,sans-serif;color:#1E293B">
+      <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:14px">
+        <div style="font-size:22px;font-weight:900">Расписание смен</div>
+        <div style="font-size:13px;font-weight:700;color:#64748B">BDG · ${range}</div>
+      </div>
+      <table style="border-collapse:collapse;width:100%">
+        <tr>
+          <th style="border:1px solid #CBD5E1;background:#F1F5F9;padding:9px 12px;text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.05em">Сотрудник</th>
+          ${days.map((d, i) => `<th style="border:1px solid #CBD5E1;background:#F1F5F9;padding:9px 6px;font-size:11px;text-transform:uppercase;letter-spacing:.05em">${WD[i]} ${d.getDate()}.${String(d.getMonth() + 1).padStart(2, '0')}</th>`).join('')}
+          <th style="border:1px solid #CBD5E1;background:#F1F5F9;padding:9px 6px;font-size:11px;text-transform:uppercase">Часы</th>
+        </tr>${rows}
+      </table>
+      <div style="margin-top:12px;font-size:11px;color:#94A3B8;font-weight:600">Сформировано в BDG · ${new Date().toLocaleDateString('ru-RU')}</div>
+    </div>`;
+  window.print();
+}
+
+/* ================= inventory module ================= */
+let invMode = 'inv';
+
+function setInvMode(m) {
+  invMode = m;
+  document.getElementById('isegInv').classList.toggle('on', m === 'inv');
+  document.getElementById('isegBuy').classList.toggle('on', m === 'buy');
+  renderInv();
+}
+function invRowCalc(r) {
+  const p = prodById(r.productId);
+  const price = p ? +p.price || 0 : 0;
+  const diff = (r.actual === null || r.actual === undefined || r.actual === '') ? null : (+r.actual || 0) - (+r.expected || 0);
+  return { p, price, diff, diffSum: diff === null ? 0 : diff * price };
+}
+function renderInv() {
+  const rows = state.inventory;
+  document.getElementById('invCols').innerHTML = invMode === 'inv'
+    ? '<span>Учёт</span><span>Факт</span><span class="sp">Разница</span>'
+    : '<span>Купить</span><span class="sp">Сумма</span>';
+  document.getElementById('invActionBtn').textContent = invMode === 'inv' ? 'Принять факт как учёт' : 'В список закупок';
+
+  document.getElementById('invRows').innerHTML = rows.length ? rows.map(r => {
+    const c = invRowCalc(r);
+    if (!c.p) return '';
+    let right;
+    if (invMode === 'inv') {
+      const cls = c.diff === null ? 'zero' : c.diff < 0 ? 'bad' : c.diff > 0 ? 'good' : 'zero';
+      const txt = c.diff === null ? '—' : c.diff === 0 ? '✓' : `${c.diff > 0 ? '+' : ''}${fmt(c.diff)}<br>${money(c.diffSum)}`;
+      right = `
+        <input class="inv-in" type="number" inputmode="decimal" step="any" value="${r.expected ?? ''}" placeholder="0" oninput="invInput('${r.id}','expected',this.value)">
+        <input class="inv-in" type="number" inputmode="decimal" step="any" value="${r.actual ?? ''}" placeholder="—" oninput="invInput('${r.id}','actual',this.value)">
+        <span class="inv-diff ${cls}" id="diff-${r.id}">${txt}</span>`;
+    } else {
+      right = `
+        <input class="inv-in" type="number" inputmode="decimal" step="any" value="${r.buy || ''}" placeholder="0" oninput="invInput('${r.id}','buy',this.value)">
+        <span class="inv-diff" id="buy-${r.id}">${r.buy ? money(r.buy * c.price) : '—'}</span>`;
+    }
+    return `
+    <div class="inv-row">
+      <div class="inv-info">
+        <div class="inv-name">${esc(c.p.name)}</div>
+        <div class="inv-meta">${money(c.price)}${c.p.loc ? ' · ' + esc(c.p.loc) : ''}</div>
+      </div>
+      ${right}
+      <button class="inv-del" onclick="invRemove('${r.id}')">${ic('trash', 15)}</button>
+    </div>`;
+  }).join('') : '<div class="empty-items">Добавьте товары из каталога — и сверяйте остатки или планируйте закупку</div>';
+  renderInvStats();
+}
+function renderInvStats() {
+  const rows = state.inventory;
+  if (invMode === 'inv') {
+    let shortage = 0, surplus = 0, counted = 0;
+    rows.forEach(r => {
+      const c = invRowCalc(r);
+      if (c.diff === null) return;
+      counted++;
+      if (c.diffSum < 0) shortage += c.diffSum; else surplus += c.diffSum;
+    });
+    document.getElementById('invStats').innerHTML = `
+      <div class="stat"><div class="k">Позиции</div><div class="v">${counted} из ${rows.length}</div></div>
+      <div class="stat"><div class="k">Недостача</div><div class="v ${shortage < 0 ? 'neg' : ''}">${money(shortage)}</div></div>
+      <div class="stat"><div class="k">Излишек</div><div class="v ${surplus > 0 ? 'pos' : ''}">${money(surplus)}</div></div>`;
+  } else {
+    let total = 0, count = 0;
+    rows.forEach(r => {
+      const c = invRowCalc(r);
+      if (+r.buy > 0) { total += r.buy * c.price; count++; }
+    });
+    document.getElementById('invStats').innerHTML = `
+      <div class="stat"><div class="k">Позиций к закупке</div><div class="v">${count}</div></div>
+      <div class="stat"><div class="k">Сумма закупки</div><div class="v">${money(total)}</div></div>`;
+  }
+}
+function invInput(id, field, val) {
+  const r = state.inventory.find(x => x.id === id);
+  if (!r) return;
+  r[field] = val === '' ? (field === 'actual' ? null : 0) : parseFloat(val) || 0;
+  save();
+  // обновляем только ячейку и итоги, чтобы не терять фокус ввода
+  const c = invRowCalc(r);
+  if (field !== 'buy') {
+    const el = document.getElementById('diff-' + id);
+    if (el) {
+      const cls = c.diff === null ? 'zero' : c.diff < 0 ? 'bad' : c.diff > 0 ? 'good' : 'zero';
+      el.className = 'inv-diff ' + cls;
+      el.innerHTML = c.diff === null ? '—' : c.diff === 0 ? '✓' : `${c.diff > 0 ? '+' : ''}${fmt(c.diff)}<br>${money(c.diffSum)}`;
+    }
+  } else {
+    const el = document.getElementById('buy-' + id);
+    if (el) el.textContent = r.buy ? money(r.buy * c.price) : '—';
+  }
+  renderInvStats();
+}
+function invRemove(id) {
+  const idx = state.inventory.findIndex(x => x.id === id);
+  if (idx === -1) return;
+  const removed = state.inventory.splice(idx, 1)[0];
+  save(); renderInv();
+  const p = prodById(removed.productId);
+  snackbar(`«${p ? p.name : 'Позиция'}» убрана`, () => {
+    state.inventory.splice(Math.min(idx, state.inventory.length), 0, removed);
+    save(); renderInv();
+  });
+}
+function invAddProduct(productId) {
+  if (state.inventory.some(r => r.productId === productId)) { toast('Уже в списке инвентуры'); return; }
+  state.inventory.push({ id: uid(), productId, expected: 0, actual: null, buy: 0 });
+  save(); renderInv();
+  const p = prodById(productId);
+  toast(`«${p.name}» — в инвентуре`);
+}
+function invAction() {
+  if (invMode === 'inv') {
+    const cnt = state.inventory.filter(r => r.actual !== null && r.actual !== undefined).length;
+    if (!cnt) { toast('Сначала введите фактические остатки'); return; }
+    confirmAction('Принять факт как учёт?', `Фактические остатки (${cnt} поз.) станут новыми учётными, поле «факт» очистится.`, () => {
+      const backup = JSON.stringify(state.inventory);
+      state.inventory.forEach(r => {
+        if (r.actual !== null && r.actual !== undefined) { r.expected = +r.actual || 0; r.actual = null; }
+      });
+      save(); renderInv();
+      snackbar('Учёт обновлён', () => { state.inventory = JSON.parse(backup); save(); renderInv(); });
+    }, 'Принять', true);
+  } else {
+    const picks = state.inventory.filter(r => +r.buy > 0);
+    if (!picks.length) { toast('Укажите количество к закупке'); return; }
+    if (!data().stores.length) { toast('В списке нет магазинов — добавьте магазин'); switchView('shop'); openStoreSheet(); return; }
+    const total = picks.reduce((t, r) => t + r.buy * invRowCalc(r).price, 0);
+    document.getElementById('invStoreInfo').textContent = `${picks.length} позиций на ${money(total)} — в какой магазин текущего списка добавить?`;
+    document.getElementById('invStoreSelect').innerHTML = data().stores.map((s, i) =>
+      `<option value="${s.id}" ${i === 0 ? 'selected' : ''}>${esc(s.name)}</option>`).join('');
+    openSheet('invStoreSheet');
+  }
+}
+function invTransfer() {
+  const store = findStore(document.getElementById('invStoreSelect').value);
+  if (!store) { closeSheet('invStoreSheet'); return; }
+  const picks = state.inventory.filter(r => +r.buy > 0);
+  picks.forEach(r => {
+    const p = prodById(r.productId);
+    if (!p) return;
+    store.items.push({ id: uid(), name: p.name, qty: +r.buy, price: +p.price || 0, day: null, loc: p.loc || '', catId: p.categoryId || null, bought: false });
+    r.buy = 0;
+  });
+  save(); render(); renderInv(); closeSheet('invStoreSheet');
+  toast(`Добавлено в «${store.name}»: ${picks.length} поз.`);
+  switchView('shop');
 }
 
 /* ================= drag & drop ================= */
