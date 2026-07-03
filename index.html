@@ -817,6 +817,10 @@ input[type=file]{display:none}
         <select id="catAddStore"></select>
       </div>
     </div>
+    <div class="field">
+      <label>Место (ряд, полка)</label>
+      <input id="catAddLoc" type="text" placeholder="Например: 2Г, линия 2А" autocomplete="off">
+    </div>
     <button class="btn btn-primary" onclick="saveCatAdd()">Добавить в список</button>
   </div>
 </div>
@@ -1879,6 +1883,7 @@ function openCatAddSheet(pid) {
   document.getElementById('catAddTitle').textContent = p.name;
   document.getElementById('catAddQty').value = 1;
   document.getElementById('catAddPrice').value = p.price || '';
+  document.getElementById('catAddLoc').value = p.loc || '';
   document.getElementById('catAddStore').innerHTML = data().stores.map((s, i) =>
     `<option value="${s.id}" ${i === 0 ? 'selected' : ''}>${esc(s.name)}</option>`).join('');
   openSheet('catAddSheet');
@@ -1895,7 +1900,9 @@ function saveCatAdd() {
   const price = parseFloat(document.getElementById('catAddPrice').value) || 0;
   const store = findStore(document.getElementById('catAddStore').value);
   if (!store || isNaN(qty) || qty <= 0) return;
-  store.items.push({ id: uid(), name: p.name, qty, price, day: null, loc: p.loc || '', catId: p.categoryId || null, bought: false });
+  const addLoc = document.getElementById('catAddLoc').value.trim();
+  store.items.push({ id: uid(), name: p.name, qty, price, day: null, loc: addLoc, catId: p.categoryId || null, bought: false });
+  if (addLoc && addLoc !== (p.loc || '')) { p.loc = addLoc; }
   save(); render(); closeSheet('catAddSheet'); vibrate(10);
   toast(`«${p.name}» — в списке`);
 }
