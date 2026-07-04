@@ -532,12 +532,19 @@ input[type=file]{display:none}
 
 /* ---------- AI assistant ---------- */
 .ai-panel{
-  position:fixed;left:50%;transform:translate(-50%,180%);bottom:calc(86px + env(safe-area-inset-bottom));
+  position:fixed;left:50%;bottom:calc(86px + env(safe-area-inset-bottom));
+  transform:translate(-50%,calc(100% + 140px));visibility:hidden;pointer-events:none;
   z-index:150;width:min(480px,calc(100vw - 24px));background:#1E293B;color:#fff;border-radius:20px;
-  padding:14px 16px;box-shadow:0 18px 44px rgba(15,23,42,.45);display:flex;gap:12px;align-items:flex-start;
-  transition:transform .5s cubic-bezier(.22,1,.36,1);
+  padding:14px 38px 14px 16px;box-shadow:0 18px 44px rgba(15,23,42,.45);display:flex;gap:12px;align-items:flex-start;
+  transition:transform .5s cubic-bezier(.22,1,.36,1),visibility .5s;
 }
-.ai-panel.show{transform:translate(-50%,0)}
+.ai-panel.show{transform:translate(-50%,0);visibility:visible;pointer-events:auto}
+.ai-close{
+  position:absolute;top:8px;right:8px;width:28px;height:28px;border:none;border-radius:9px;
+  background:rgba(255,255,255,.1);color:#94A3B8;cursor:pointer;font-size:14px;font-weight:800;
+  display:flex;align-items:center;justify-content:center;
+}
+.ai-close:active{background:rgba(255,255,255,.2)}
 .ai-avatar{
   width:42px;height:42px;border-radius:14px;flex:none;
   background:linear-gradient(135deg,var(--accent),var(--accent2));
@@ -1245,6 +1252,7 @@ input[type=file]{display:none}
 </div>
 
 <div class="ai-panel" id="aiPanel">
+  <button class="ai-close" onclick="aiHide();aiSnoozeUntil=Date.now()+10*60000" aria-label="Закрыть">✕</button>
   <div class="ai-avatar">
     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4.5" y="7" width="15" height="12" rx="4"/><path d="M12 7V4M9 4h6"/><circle cx="9.2" cy="12.4" r="1" fill="#fff" stroke="none"/><circle cx="14.8" cy="12.4" r="1" fill="#fff" stroke="none"/><path d="M9.5 15.6c1.6 1.2 3.4 1.2 5 0"/></svg>
   </div>
@@ -2165,10 +2173,13 @@ function syncErrMsg(code) {
 }
 
 function syncCall(creds, action, payload) {
+  const ctrl = new AbortController();
+  const kill = setTimeout(() => ctrl.abort(), 25000); // подвисший запрос не должен блокировать интерфейс
   return fetch(creds.url, {
     method: 'POST',
+    signal: ctrl.signal,
     body: JSON.stringify({ action, login: creds.login, pin: creds.pin, payload })
-  }).then(r => {
+  }).finally(() => clearTimeout(kill)).then(r => {
     if (!r.ok) throw new Error('http ' + r.status);
     return r.json();
   }).then(res => {
