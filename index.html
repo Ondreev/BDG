@@ -109,8 +109,14 @@ input,select{font-family:inherit}
 .stat{
   flex:1;background:var(--bg);border-radius:14px;padding:10px 12px;min-width:0;
 }
-.stat .k{font-size:11px;font-weight:700;color:var(--muted);letter-spacing:.04em;text-transform:uppercase}
+.stat .k{font-size:11px;font-weight:700;color:var(--muted);letter-spacing:.04em;text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .stat .v{font-size:15px;font-weight:800;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+@media(max-width:380px){
+  .stats{gap:6px}
+  .stat{padding:9px 7px}
+  .stat .k{font-size:9.5px;letter-spacing:.02em}
+  .stat .v{font-size:13px}
+}
 .over-note{
   display:none;margin-top:12px;padding:10px 14px;border-radius:14px;
   background:var(--red-soft);color:var(--red);font-size:13.5px;font-weight:700;
@@ -429,17 +435,22 @@ input[type=file]{display:none}
 /* ---------- bottom navigation ---------- */
 .bottom-nav{
   position:fixed;left:50%;transform:translateX(-50%);bottom:calc(10px + env(safe-area-inset-bottom));
-  z-index:70;display:flex;gap:2px;background:rgba(255,255,255,.92);
+  z-index:70;display:flex;gap:1px;background:rgba(255,255,255,.92);
   backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
   border-radius:20px;padding:6px;box-shadow:0 10px 30px rgba(30,41,59,.16);
+  max-width:calc(100vw - 12px);
 }
 .nav-btn{
   border:none;background:none;cursor:pointer;border-radius:14px;
   display:flex;flex-direction:column;align-items:center;gap:2px;
-  padding:8px 13px;color:var(--muted);transition:all .18s;min-width:64px;
+  padding:8px 8px;color:var(--muted);transition:all .18s;min-width:0;flex:1;
 }
 .nav-btn.on{background:var(--accent-soft);color:var(--accent)}
-.nav-btn span{font-size:10.5px;font-weight:800;letter-spacing:.02em}
+.nav-btn span{font-size:9.5px;font-weight:800;letter-spacing:.01em;white-space:nowrap}
+@media(min-width:420px){
+  .nav-btn{padding:8px 13px;flex:none;min-width:60px}
+  .nav-btn span{font-size:10.5px}
+}
 .view{display:none}
 .view.on{display:block}
 
@@ -461,6 +472,13 @@ input[type=file]{display:none}
 .day-badge.over{color:#fff;background:var(--red)}
 .stat .v.neg{color:var(--red)}
 .stat .v.pos{color:var(--green)}
+
+/* ---------- plan (checklist) ---------- */
+.plan-row{display:flex;align-items:center;gap:4px;padding:4px 8px;border-bottom:1px solid var(--line)}
+.plan-row:last-child{border-bottom:none}
+.plan-row.done .p-name{color:var(--muted);text-decoration:line-through}
+.p-body{flex:1;min-width:0;padding:11px 4px;cursor:pointer}
+.p-name{font-size:15.5px;font-weight:600;overflow-wrap:anywhere}
 
 /* ---------- schedule ---------- */
 .sched-bar{display:flex;align-items:center;gap:10px;margin-top:14px;flex-wrap:wrap}
@@ -840,12 +858,35 @@ input[type=file]{display:none}
     </button>
     <button class="btn btn-primary" id="invActionBtn" style="margin-top:12px" onclick="invAction()">В список закупок</button>
   </div>
+
+  <div class="view" id="view-plan">
+    <button class="list-switch" onclick="openPlansSheet()" style="padding:6px 4px;margin-top:2px">
+      <span class="list-name"><span id="planName">Мой план</span>
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#94A3B8" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+      </span>
+    </button>
+    <section class="budget-card" style="margin-top:6px">
+      <div class="stats">
+        <div class="stat"><div class="k">Сделано</div><div class="v" id="planDoneVal">0 из 0</div></div>
+      </div>
+      <div class="progress"><div class="progress-fill" id="planProgressFill"></div></div>
+    </section>
+    <section class="store-card"><div id="planRows"></div></section>
+    <button class="add-store-btn" onclick="openPlanTaskSheet()">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+      Добавить задачу
+    </button>
+  </div>
 </div>
 
 <nav class="bottom-nav">
   <button class="nav-btn on" id="nav-shop" onclick="switchView('shop')">
     <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="20" r="1.4"/><circle cx="17" cy="20" r="1.4"/><path d="M3 4h2l2.3 11h10.4l2-8H6.2"/></svg>
     <span>Закупки</span>
+  </button>
+  <button class="nav-btn" id="nav-plan" onclick="switchView('plan')">
+    <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11.5l2 2 4-4.5"/><rect x="3.5" y="3.5" width="17" height="17" rx="3.5"/></svg>
+    <span>План</span>
   </button>
   <button class="nav-btn" id="nav-debts" onclick="switchView('debts')">
     <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="13.5" rx="2.8"/><path d="M3 10.5h18M16.2 15.2h1.6"/></svg>
@@ -989,8 +1030,8 @@ input[type=file]{display:none}
       <button class="action-item" onclick="openSyncSheet()"><span class="ic" data-icon="cloud"></span><span>Облако — копия данных<small>Телефон + PIN · Google Таблица</small></span></button>
       <button class="action-item" onclick="refreshFromCatalog()"><span class="ic" data-icon="refresh"></span><span>Обновить из каталога<small>Свежие цены и места для некупленного</small></span></button>
       <button class="action-item" onclick="shareList()"><span class="ic" data-icon="share"></span><span>Поделиться списком<small>Отправить текстом</small></span></button>
-      <button class="action-item" onclick="exportData()"><span class="ic" data-icon="export"></span><span>Экспорт данных<small>Скачать резервную копию (JSON)</small></span></button>
-      <button class="action-item" onclick="document.getElementById('importFile').click()"><span class="ic" data-icon="import"></span><span>Импорт данных<small>Восстановить из файла</small></span></button>
+      <button class="action-item" onclick="exportData()"><span class="ic" data-icon="export"></span><span>Файл-копия на компьютер<small>Резервный JSON, работает без облака</small></span></button>
+      <button class="action-item" onclick="document.getElementById('importFile').click()"><span class="ic" data-icon="import"></span><span>Восстановить из файла<small>Если нет доступа к облаку</small></span></button>
       <button class="action-item" onclick="closeSheet('menuSheet');openSheet('installSheet')"><span class="ic" data-icon="phone"></span><span>Установить на телефон</span></button>
       <button class="action-item" onclick="shareApp()"><span class="ic" data-icon="megaphone"></span><span>Поделиться приложением BDG<small>Отправить ссылку друзьям</small></span></button>
       <a class="action-item" href="https://karatmarket.ru/kivimarket" target="_blank" rel="noopener"><span class="ic" data-icon="link"></span><span>КИВИ Маркет</span></a>
@@ -1124,8 +1165,9 @@ input[type=file]{display:none}
     <div class="grab"></div>
     <h2>Облако — копия данных</h2>
     <div class="about">
-      <p>Все данные (списки, каталог, бюджет) сохраняются в защищённое облако под вашим логином. Другие пользователи их не видят. При первой выгрузке аккаунт создаётся автоматически — просто придумайте PIN.</p>
+      <p>Все данные (списки, каталог, бюджет, долги, график, инвентура) сохраняются в защищённое облако под вашим логином. Другие пользователи их не видят. При первой выгрузке аккаунт создаётся автоматически — просто придумайте PIN.</p>
       <p><b>Номер вводите без +7 и без 8</b> — сразу с девятки, 10 цифр: например 9991234567. Если введёте с 7 или 8 в начале, мы поправим сами.</p>
+      <p>Это работает автоматически: ассистент сам предложит сохранить после изменений, а при открытии на другом устройстве спросит, если там есть более свежая версия. Кнопки «Файл-копия» и «Восстановить из файла» в меню — отдельный, ручной способ бэкапа на случай, если облако недоступно.</p>
     </div>
     <div class="field">
       <label>Телефон — логин (10 цифр, без +7 и 8)</label>
@@ -1176,6 +1218,43 @@ input[type=file]{display:none}
   </div>
 </div>
 
+<div class="sheet-wrap" id="planTaskSheet"><div class="backdrop" onclick="closeSheet('planTaskSheet')"></div>
+  <div class="sheet">
+    <div class="grab"></div>
+    <h2 id="planTaskTitle">Новая задача</h2>
+    <div class="field">
+      <label>Задача</label>
+      <input id="planTaskText" type="text" placeholder="Например: Позвонить поставщику" autocomplete="off" enterkeyhint="done">
+    </div>
+    <button class="btn btn-primary" id="planTaskSaveBtn" onclick="savePlanTask()">Добавить</button>
+    <button class="btn btn-danger-ghost" id="planTaskDeleteBtn" onclick="deletePlanTaskFromSheet()" style="display:none">Удалить задачу</button>
+  </div>
+</div>
+
+<div class="sheet-wrap" id="plansSheet"><div class="backdrop" onclick="closeSheet('plansSheet')"></div>
+  <div class="sheet">
+    <div class="grab"></div>
+    <h2>Мои планы</h2>
+    <div id="plansBox"></div>
+    <button class="btn btn-primary" onclick="closeSheet('plansSheet');openNewPlanSheet()">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.8" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+      Создать план
+    </button>
+  </div>
+</div>
+
+<div class="sheet-wrap" id="planNameSheet"><div class="backdrop" onclick="closeSheet('planNameSheet')"></div>
+  <div class="sheet">
+    <div class="grab"></div>
+    <h2 id="planNameTitle">Новый план</h2>
+    <div class="field">
+      <label>Название</label>
+      <input id="planNameInput" type="text" placeholder="Например: План на неделю" autocomplete="off" enterkeyhint="done">
+    </div>
+    <button class="btn btn-primary" id="planNameSaveBtn" onclick="savePlanNameSheet()">Создать</button>
+  </div>
+</div>
+
 <div class="sheet-wrap" id="empSheet"><div class="backdrop" onclick="closeSheet('empSheet')"></div>
   <div class="sheet">
     <div class="grab"></div>
@@ -1196,7 +1275,11 @@ input[type=file]{display:none}
     </div>
     <div id="empPayBlock" style="display:none">
       <div class="emp-summary" id="empSummary"></div>
-      <div class="field" style="margin-bottom:8px"><label>Штраф (сумма и причина)</label></div>
+      <button class="btn btn-ghost" onclick="printEmpCard()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:6px;vertical-align:-3px"><path d="M6 9V3.5h12V9M6 17H4.5A1.5 1.5 0 0 1 3 15.5v-5A1.5 1.5 0 0 1 4.5 9h15A1.5 1.5 0 0 1 21 10.5v5a1.5 1.5 0 0 1-1.5 1.5H18M6 14h12v6.5H6z"/></svg>
+        Печать карточки A4
+      </button>
+      <div class="field" style="margin-bottom:8px;margin-top:14px"><label>Штраф (сумма и причина)</label></div>
       <div class="mini-form">
         <input id="penSum" type="number" inputmode="decimal" placeholder="Сумма" style="max-width:110px">
         <input id="penNote" type="text" placeholder="Причина">
@@ -1303,7 +1386,7 @@ function blankList(name) {
     data: { budget: 0, stores: [], catalog: [] } };
 }
 
-function save() {
+function save(skipAutoSync) {
   try {
     const json = JSON.stringify(state);
     localStorage.setItem(KEY, json);
@@ -1311,7 +1394,7 @@ function save() {
   } catch (e) {
     toast('Не удалось сохранить данные');
   }
-  try { scheduleAutoSync(); } catch (e) {}
+  if (!skipAutoSync) { try { scheduleAutoSync(); } catch (e) {} }
 }
 
 function tryParse(raw) { try { return JSON.parse(raw); } catch (e) { return null; } }
@@ -1387,10 +1470,21 @@ function sanitizeCatalogDB(s) {
     if (!p.wk) p.wk = p.ym ? weekKeyOf(new Date(p.ym + '-01T00:00:00')) : curWk;
   });
   s.inventory = Array.isArray(s.inventory) ? s.inventory : [];
+  // planning module (checklists)
+  s.plans = Array.isArray(s.plans) ? s.plans : [];
+  s.plans.forEach(p => {
+    p.id = p.id || uid();
+    p.name = p.name || 'Мой план';
+    p.items = Array.isArray(p.items) ? p.items : [];
+    p.items.forEach(it => { it.id = it.id || uid(); it.done = !!it.done; });
+  });
+  if (!s.plans.length) s.plans.push({ id: uid(), name: 'Мой план', date: today(), items: [] });
+  if (!s.plans.some(p => p.id === s.currentPlanId)) s.currentPlanId = s.plans[0].id;
 }
 
 const list = () => state.lists.find(l => l.id === state.currentId);
 const data = () => list().data;
+const curPlan = () => state.plans.find(p => p.id === state.currentPlanId);
 const findStore = id => data().stores.find(s => s.id === id);
 
 /* ================= helpers ================= */
@@ -1690,16 +1784,18 @@ function itemRowHTML(sid, it) {
 let currentView = 'shop';
 function switchView(v) {
   currentView = v;
-  ['shop', 'debts', 'sched', 'inv'].forEach(x => {
+  ['shop', 'plan', 'debts', 'sched', 'inv'].forEach(x => {
     document.getElementById('view-' + x).classList.toggle('on', x === v);
     document.getElementById('nav-' + x).classList.toggle('on', x === v);
   });
+  if (v === 'plan') renderPlan();
   if (v === 'debts') renderDebts();
   if (v === 'sched') renderSched();
   if (v === 'inv') renderInv();
   window.scrollTo({ top: 0 });
 }
 function onFab() {
+  if (currentView === 'plan') { openPlanTaskSheet(); return; }
   if (currentView === 'debts') { openDebtSheet(); return; }
   if (currentView === 'sched') { openEmpSheet(); return; }
   if (currentView === 'inv') { openCatalogSheet('inv'); return; }
@@ -2229,6 +2325,49 @@ function syncDownload() {
   }, 'Заменить и загрузить');
 }
 
+/* ---------- обнаружение новых данных с другого устройства ---------- */
+let pendingRemote = null;
+function checkRemoteUpdates() {
+  const s = syncState();
+  if (!s.login || !s.pin) return;
+  if (window.__remoteCheckBusy || pendingRemote) return;
+  if (document.querySelector('.sheet-wrap.open')) return; // не мешаем работе
+  window.__remoteCheckBusy = true;
+  syncCall({ login: s.login, pin: s.pin, url: s.url || DEFAULT_SYNC_URL }, 'load')
+    .then(res => {
+      if (!res.payload || !res.at) return;
+      // строки ISO дат сравниваются лексикографически корректно
+      if (s.last && res.at <= s.last) return; // это наша же версия или старее — ничего не делаем
+      pendingRemote = { payload: res.payload, at: res.at };
+      offerRemoteUpdate();
+    })
+    .catch(() => {})
+    .finally(() => { window.__remoteCheckBusy = false; });
+}
+function offerRemoteUpdate() {
+  if (!pendingRemote) return;
+  if (window.__tourActive || document.querySelector('.sheet-wrap.open')) {
+    setTimeout(offerRemoteUpdate, 5000);
+    return;
+  }
+  aiSay('Есть новые данные с другого устройства. Загрузить их сюда?', [
+    { label: 'Загрузить', pri: true, fn: applyPendingRemote },
+    { label: 'Оставить как есть', fn: () => { pendingRemote = null; } }
+  ]);
+}
+function applyPendingRemote() {
+  if (!pendingRemote) return;
+  const s = syncState();
+  const payload = pendingRemote.payload;
+  sanitizeCatalogDB(payload);
+  payload.sync = { login: s.login, pin: s.pin, url: s.url, last: pendingRemote.at };
+  state = payload;
+  if (!state.lists.some(l => l.id === state.currentId)) state.currentId = state.lists[0].id;
+  pendingRemote = null;
+  save(true); render();
+  toast('Данные обновлены с другого устройства');
+}
+
 function errToMsg(err) {
   const m = String(err && err.message || err);
   if (m.startsWith('#')) return syncErrMsg(m.slice(1));
@@ -2265,13 +2404,17 @@ const AI_NO_CREDS = 'Стоп-стоп, я же тебя не знаю! Номе
 const pick = arr => arr[Math.floor(Math.random() * arr.length)];
 let aiSnoozeUntil = 0;
 
+let aiGen = 0;
 function aiSay(text, actions, autoHideMs) {
+  const gen = ++aiGen; // у каждого сообщения свой номер — старый отложенный auto-hide не погасит новое
+  const panel = document.getElementById('aiPanel');
   document.getElementById('aiText').textContent = text;
   document.getElementById('aiActions').innerHTML = (actions || []).map((a, i) =>
     `<button class="ai-btn ${a.pri ? 'pri' : 'sec'}" onclick="__aiAct(${i})">${a.label}</button>`).join('');
   window.__aiActs = (actions || []).map(a => a.fn);
-  document.getElementById('aiPanel').classList.add('show');
-  if (autoHideMs) setTimeout(aiHide, autoHideMs);
+  panel.dataset.gen = gen;
+  panel.classList.add('show');
+  if (autoHideMs) setTimeout(() => { if (panel.dataset.gen == gen) aiHide(); }, autoHideMs);
 }
 function __aiAct(i) { const fn = window.__aiActs[i]; aiHide(); if (fn) fn(); }
 function aiHide() { document.getElementById('aiPanel').classList.remove('show'); }
@@ -2591,6 +2734,129 @@ function deleteCatCategory() {
   save(); renderCatalog(); closeSheet('catCategorySheet');
   toast(`Категория «${removed.name}» удалена — товары остались в каталоге`);
 }
+
+/* ================= plan module (checklists) ================= */
+let planTaskEditId = null;
+
+function renderPlan() {
+  const p = curPlan();
+  document.getElementById('planName').textContent = p.name;
+  const total = p.items.length;
+  const done = p.items.filter(it => it.done).length;
+  document.getElementById('planDoneVal').textContent = done + ' из ' + total;
+  document.getElementById('planProgressFill').style.width = (total ? done / total * 100 : 0) + '%';
+  document.getElementById('planRows').innerHTML = p.items.length ? p.items.map(it => `
+    <div class="plan-row ${it.done ? 'done' : ''}">
+      <button class="check" onclick="togglePlanTask('${it.id}')" aria-label="Готово">
+        <span class="box" style="${it.done ? 'background:var(--green);border-color:var(--green)' : ''}">
+          ${it.done ? '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 12.5l5 5 10-11"/></svg>' : ''}
+        </span>
+      </button>
+      <div class="p-body" onclick="openPlanTaskSheet('${it.id}')"><div class="p-name">${esc(it.text)}</div></div>
+    </div>`).join('') : '<div class="empty-items">Пока пусто — добавьте первую задачу</div>';
+}
+function togglePlanTask(id) {
+  const it = curPlan().items.find(x => x.id === id);
+  it.done = !it.done;
+  save(); renderPlan(); vibrate(15);
+}
+function openPlanTaskSheet(id) {
+  planTaskEditId = id || null;
+  const it = id ? curPlan().items.find(x => x.id === id) : null;
+  document.getElementById('planTaskTitle').textContent = it ? 'Задача' : 'Новая задача';
+  document.getElementById('planTaskSaveBtn').textContent = it ? 'Сохранить' : 'Добавить';
+  document.getElementById('planTaskDeleteBtn').style.display = it ? 'flex' : 'none';
+  document.getElementById('planTaskText').value = it ? it.text : '';
+  openSheet('planTaskSheet');
+  setTimeout(() => document.getElementById('planTaskText').focus(), 320);
+}
+function savePlanTask() {
+  const text = document.getElementById('planTaskText').value.trim();
+  if (!text) { document.getElementById('planTaskText').focus(); return; }
+  if (planTaskEditId) curPlan().items.find(x => x.id === planTaskEditId).text = text;
+  else curPlan().items.push({ id: uid(), text, done: false });
+  save(); renderPlan(); closeSheet('planTaskSheet'); vibrate(10);
+}
+function deletePlanTaskFromSheet() {
+  const p = curPlan();
+  const idx = p.items.findIndex(x => x.id === planTaskEditId);
+  if (idx === -1) { closeSheet('planTaskSheet'); return; }
+  const removed = p.items.splice(idx, 1)[0];
+  save(); renderPlan(); closeSheet('planTaskSheet');
+  snackbar(`«${removed.text}» удалена`, () => {
+    p.items.splice(Math.min(idx, p.items.length), 0, removed);
+    save(); renderPlan();
+  });
+}
+document.getElementById('planTaskText').addEventListener('keydown', e => { if (e.key === 'Enter') savePlanTask(); });
+
+/* ---------- planы (несколько списков планирования) ---------- */
+function openPlansSheet() {
+  const box = document.getElementById('plansBox');
+  box.innerHTML = state.plans.map(p => {
+    const done = p.items.filter(it => it.done).length;
+    const cur = p.id === state.currentPlanId;
+    return `
+    <div class="list-row ${cur ? 'current' : ''}" onclick="selectPlanById('${p.id}')">
+      <div class="info">
+        <div class="nm">${esc(p.name)}</div>
+        <div class="mt">${done}/${p.items.length} задач · ${p.date || ''}</div>
+      </div>
+      <button class="mini" onclick="event.stopPropagation();openRenamePlan('${p.id}')" aria-label="Переименовать">${ic('pencil', 16)}</button>
+      ${state.plans.length > 1 ? `<button class="mini danger" onclick="event.stopPropagation();deletePlanById('${p.id}')" aria-label="Удалить">${ic('trash', 16)}</button>` : ''}
+    </div>`;
+  }).join('');
+  openSheet('plansSheet');
+}
+function selectPlanById(id) {
+  state.currentPlanId = id;
+  save(); renderPlan(); closeSheet('plansSheet');
+}
+function deletePlanById(id) {
+  const p = state.plans.find(x => x.id === id);
+  closeSheet('plansSheet');
+  confirmAction('Удалить план?', `«${p.name}» будет удалён безвозвратно.`, () => {
+    const idx = state.plans.findIndex(x => x.id === id);
+    const removed = state.plans.splice(idx, 1)[0];
+    if (state.currentPlanId === id) state.currentPlanId = state.plans[0].id;
+    save(); renderPlan();
+    snackbar(`План «${removed.name}» удалён`, () => {
+      state.plans.splice(Math.min(idx, state.plans.length), 0, removed);
+      save(); renderPlan();
+    });
+  });
+}
+let planNameEditId = null;
+function openNewPlanSheet() {
+  planNameEditId = null;
+  document.getElementById('planNameTitle').textContent = 'Новый план';
+  document.getElementById('planNameSaveBtn').textContent = 'Создать';
+  document.getElementById('planNameInput').value = '';
+  openSheet('planNameSheet');
+  setTimeout(() => document.getElementById('planNameInput').focus(), 320);
+}
+function openRenamePlan(id) {
+  planNameEditId = id;
+  closeSheet('plansSheet');
+  document.getElementById('planNameTitle').textContent = 'Переименовать план';
+  document.getElementById('planNameSaveBtn').textContent = 'Сохранить';
+  document.getElementById('planNameInput').value = state.plans.find(p => p.id === id).name;
+  openSheet('planNameSheet');
+  setTimeout(() => document.getElementById('planNameInput').focus(), 320);
+}
+function savePlanNameSheet() {
+  const name = document.getElementById('planNameInput').value.trim();
+  if (!name) return;
+  if (planNameEditId) {
+    state.plans.find(p => p.id === planNameEditId).name = name;
+  } else {
+    const p = { id: uid(), name, date: today(), items: [] };
+    state.plans.push(p);
+    state.currentPlanId = p.id;
+  }
+  save(); renderPlan(); closeSheet('planNameSheet'); vibrate(10);
+}
+document.getElementById('planNameInput').addEventListener('keydown', e => { if (e.key === 'Enter') savePlanNameSheet(); });
 
 /* ================= debts module ================= */
 let debtTab = 'owed', debtEditId = null;
@@ -3045,6 +3311,50 @@ function printSchedule() {
     </table>`);
 }
 
+/* ---------- print employee card (A4, портретная) ---------- */
+function printEmpCard() {
+  const e = state.staff.employees.find(x => x.id === empEditId);
+  if (!e) return;
+  const ws = weekStart(schedRef);
+  const we = new Date(ws); we.setDate(we.getDate() + 6);
+  const range = ws.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' }) + ' – ' + we.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short', year: 'numeric' });
+  const monIso = isoDate(ws);
+  const st = weekStats(e.id, monIso);
+  const carry = carryDebt(e.id, monIso);
+  const total = carry + st.net;
+
+  const days = [...Array(7)].map((_, i) => { const d = new Date(ws); d.setDate(d.getDate() + i); return d; });
+  const dayCells = days.map((d, i) => {
+    const s = effSlot(e.id, d);
+    return `<td style="${PTD};text-align:center;font-weight:${s ? 700 : 400};color:${s ? '#1E293B' : '#CBD5E1'}">${WD[i]}<br>${s ? s.f + '–' + s.t : '—'}</td>`;
+  }).join('');
+
+  const hist = [
+    ...state.staff.penalties.filter(p => p.empId === e.id && p.wk === monIso).map(p => ({ ...p, kind: 'Штраф', sign: '−' })),
+    ...state.staff.payouts.filter(p => p.empId === e.id && p.wk === monIso).map(p => ({ ...p, kind: 'Выплата', sign: '' }))
+  ];
+  const histRows = hist.length ? hist.map(h => `
+    <tr><td style="${PTD}">${h.kind}${h.note ? ' · ' + esc(h.note) : ''}</td>
+    <td style="${PTD};text-align:right;font-weight:700">${h.sign}${money(h.sum)}</td></tr>`).join('')
+    : `<tr><td style="${PTD}" colspan="2">Нет операций за эту неделю</td></tr>`;
+
+  printDoc('portrait', esc(e.name), range, `
+    ${e.role ? `<div style="font-size:12px;color:#64748B;font-weight:700;text-transform:uppercase;letter-spacing:.05em;margin:-8px 0 14px">${esc(e.role)}${e.rate ? ' · ' + fmt(e.rate) + ' ₽/час' : ''}</div>` : ''}
+    <table style="border-collapse:collapse;width:100%;margin-bottom:16px">
+      <tr>${dayCells}</tr>
+    </table>
+    <table style="border-collapse:collapse;width:100%;margin-bottom:16px">
+      <tr><td style="${PTD}">Отработано часов</td><td style="${PTD};text-align:right;font-weight:700">${st.hours} ч</td></tr>
+      <tr><td style="${PTD}">Начислено за неделю</td><td style="${PTD};text-align:right;font-weight:700">${money(st.salary)}</td></tr>
+      <tr><td style="${PTD}">Штрафы</td><td style="${PTD};text-align:right;font-weight:700;color:#DC2626">${st.pen ? '−' + money(st.pen) : '0 ₽'}</td></tr>
+      <tr><td style="${PTD}">Выплачено</td><td style="${PTD};text-align:right;font-weight:700">${money(st.paid)}</td></tr>
+      ${Math.abs(carry) > 0.01 ? `<tr><td style="${PTD}">Перенос с прошлых недель</td><td style="${PTD};text-align:right;font-weight:700;color:${carry > 0 ? '#DC2626' : '#059669'}">${money(carry)}</td></tr>` : ''}
+      <tr><td style="${PTD};font-weight:800">Долг по ЗП</td><td style="${PTD};text-align:right;font-weight:900;color:${total <= 0.01 ? '#059669' : '#DC2626'}">${total <= 0.01 ? 'погашен' : money(total)}</td></tr>
+    </table>
+    <div style="font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:#64748B;margin-bottom:6px">Операции за неделю</div>
+    <table style="border-collapse:collapse;width:100%">${histRows}</table>`);
+}
+
 /* ================= inventory module ================= */
 let invMode = 'inv';
 
@@ -3344,7 +3654,11 @@ document.getElementById('listNameInput').addEventListener('keydown', e => { if (
 
 // save on leaving the page, just in case
 window.addEventListener('pagehide', save);
-document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') save(); });
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'hidden') save();
+  else checkRemoteUpdates();
+});
+window.addEventListener('focus', checkRemoteUpdates);
 
 // refresh "days left" badges hourly
 setInterval(() => { if (!drag) render(); }, 60 * 60 * 1000);
@@ -3368,6 +3682,7 @@ render();
 // ассистент включается после старта: первые сохранения при загрузке не считаются
 setTimeout(() => { window.__bdgReady = true; }, 2500);
 maybeOfferTour();
+setTimeout(checkRemoteUpdates, 3000);
 </script>
 </body>
 </html>
