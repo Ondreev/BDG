@@ -1,4 +1,4 @@
-const CACHE = 'bdg-v4-8';
+const CACHE = 'bdg-v4-9';
 const ASSETS = ['./', './index.html', './manifest.webmanifest', './icon.svg'];
 
 self.addEventListener('install', e => {

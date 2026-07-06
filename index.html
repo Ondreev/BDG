@@ -82,29 +82,30 @@ input,select{font-family:inherit}
 
 /* ---------- budget card ---------- */
 .budget-card{
-  background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);
+  background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;
+  border-radius:var(--radius);box-shadow:0 14px 34px rgba(99,102,241,.32);
   padding:18px 18px 16px;margin-top:6px;
 }
 .budget-top{display:flex;align-items:flex-end;justify-content:space-between;gap:12px}
-.budget-label{font-size:12px;font-weight:700;color:var(--muted);letter-spacing:.06em;text-transform:uppercase;margin-bottom:4px}
+.budget-label{font-size:12px;font-weight:700;color:rgba(255,255,255,.85);letter-spacing:.06em;text-transform:uppercase;margin-bottom:4px}
 .budget-input-wrap{display:flex;align-items:center;gap:6px}
 .budget-input-wrap input{
-  width:150px;border:none;background:transparent;font-size:30px;font-weight:800;color:var(--text);
+  width:150px;border:none;background:transparent;font-size:30px;font-weight:800;color:#fff;
   padding:0;outline:none;
 }
-.budget-input-wrap input::placeholder{color:#CBD5E1}
-.budget-input-wrap .rub{font-size:22px;font-weight:800;color:var(--muted)}
+.budget-input-wrap input::placeholder{color:rgba(255,255,255,.55)}
+.budget-input-wrap .rub{font-size:22px;font-weight:800;color:rgba(255,255,255,.85)}
 .remaining-block{text-align:right}
-.remaining-block .cap{font-size:12px;font-weight:700;color:var(--muted);letter-spacing:.06em;text-transform:uppercase;margin-bottom:4px}
-.remaining-block .val{font-size:24px;font-weight:800;color:var(--green);white-space:nowrap}
-.remaining-block .val.neg{color:var(--red)}
-.progress{height:10px;background:var(--line);border-radius:99px;margin:16px 0 14px;overflow:hidden}
+.remaining-block .cap{font-size:12px;font-weight:700;color:rgba(255,255,255,.85);letter-spacing:.06em;text-transform:uppercase;margin-bottom:4px}
+.remaining-block .val{font-size:24px;font-weight:800;color:#fff;white-space:nowrap}
+.remaining-block .val.neg{color:#FFE1A8}
+.progress{height:10px;background:rgba(255,255,255,.25);border-radius:99px;margin:16px 0 14px;overflow:hidden}
 .progress-fill{
   height:100%;width:0%;border-radius:99px;
-  background:linear-gradient(90deg,var(--accent),var(--accent2));
+  background:#fff;
   transition:width .5s cubic-bezier(.22,1,.36,1),background .3s;
 }
-.progress-fill.over{background:linear-gradient(90deg,#FB7185,var(--red))}
+.progress-fill.over{background:#FFE1A8}
 .stats{display:flex;gap:8px}
 .stat{
   flex:1;background:var(--bg);border-radius:14px;padding:10px 12px;min-width:0;
@@ -151,8 +152,12 @@ input,select{font-family:inherit}
   background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);
   padding:18px;margin-top:14px;
 }
-.chart-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:16px}
-.chart-title{font-size:15px;font-weight:800}
+.chart-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:16px;cursor:pointer;user-select:none}
+.chart-title{font-size:15px;font-weight:800;flex:1;min-width:0}
+.chart-head .chev{margin:0;flex:none}
+.chart-card.collapsed .chart-head{margin-bottom:0}
+.chart-card.collapsed .chart-body{display:none}
+.chart-card.collapsed .chev{transform:rotate(-90deg)}
 .seg{display:flex;background:var(--bg);border-radius:12px;padding:3px;flex:none}
 .seg button{
   border:none;background:none;padding:7px 14px;border-radius:9px;
@@ -277,10 +282,12 @@ input,select{font-family:inherit}
   padding:2px 7px;border-radius:99px;
 }
 .cat-head{
+  display:flex;align-items:center;justify-content:space-between;gap:8px;
   padding:10px 18px 4px;font-size:11px;font-weight:800;letter-spacing:.06em;
   text-transform:uppercase;color:var(--muted);
 }
 .cat-head:not(:first-child){border-top:1px solid var(--line)}
+.cat-head-sum{font-size:12px;font-weight:800;letter-spacing:0;text-transform:none;color:var(--text)}
 .item-row.done .item-name{color:var(--muted);text-decoration:line-through}
 .item-row.done .item-total{color:#CBD5E1;text-decoration:line-through}
 .item-total{font-size:15px;font-weight:800;white-space:nowrap;flex:none}
@@ -304,14 +311,6 @@ input,select{font-family:inherit}
   transform:scale(1.02);
 }
 
-/* ---------- add store ---------- */
-.add-store-btn{
-  display:flex;align-items:center;justify-content:center;gap:8px;width:100%;
-  margin-top:14px;padding:16px;border-radius:var(--radius);cursor:pointer;
-  border:2px dashed #D6DCE8;background:none;color:var(--muted);font-size:15px;font-weight:700;
-}
-.add-store-btn:active{border-color:var(--accent);color:var(--accent);background:var(--accent-soft)}
-
 /* ---------- empty state ---------- */
 .empty-state{display:none;text-align:center;padding:44px 20px 10px;cursor:pointer}
 .empty-cta{max-width:280px;margin:22px auto 0}
@@ -319,16 +318,28 @@ input,select{font-family:inherit}
 .empty-state h2{font-size:19px;font-weight:800;margin:0 0 6px}
 .empty-state p{color:var(--muted);font-size:14.5px;margin:0;line-height:1.5}
 
-/* ---------- FAB ---------- */
+/* ---------- FAB / sticky add bar ---------- */
 .fab{
-  position:fixed;right:max(18px,calc(50% - 242px));bottom:calc(86px + env(safe-area-inset-bottom));z-index:60;
-  width:60px;height:60px;border-radius:20px;border:none;cursor:pointer;
+  position:fixed;left:16px;right:16px;max-width:488px;margin:0 auto;
+  bottom:calc(86px + env(safe-area-inset-bottom));z-index:60;
+  height:54px;border-radius:16px;border:none;cursor:pointer;
   background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;
-  box-shadow:0 10px 26px rgba(99,102,241,.45);
-  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 10px 26px rgba(99,102,241,.4);
+  display:flex;align-items:center;justify-content:center;gap:9px;
+  font-size:15px;font-weight:800;
   transition:transform .15s;
 }
-.fab:active{transform:scale(.9)}
+.fab:active{transform:scale(.97)}
+
+/* ---------- desktop top add button ---------- */
+.top-add-btn{
+  display:none;align-items:center;gap:8px;border:none;cursor:pointer;
+  padding:0 18px;height:44px;border-radius:14px;
+  background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;
+  font-size:14px;font-weight:800;box-shadow:0 6px 16px rgba(99,102,241,.35);
+  transition:transform .15s;
+}
+.top-add-btn:active{transform:scale(.96)}
 
 /* ---------- sheets ---------- */
 .sheet-wrap{position:fixed;inset:0;z-index:100;visibility:hidden}
@@ -642,7 +653,6 @@ input[type=file]{display:none}
   .check:hover .box{border-color:var(--accent)}
   .store-more:hover{background:var(--bg);color:var(--accent)}
   .add-item-row:hover{background:var(--accent-soft)}
-  .add-store-btn:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-soft)}
   .btn-primary:hover{filter:brightness(1.06)}
   .btn-ghost:hover{background:var(--line)}
   .btn-danger-ghost:hover{background:#FDDDE3}
@@ -654,6 +664,7 @@ input[type=file]{display:none}
   .mini:hover{color:var(--accent)}
   .seg button:hover{color:var(--text)}
   .fab:hover{transform:translateY(-2px);box-shadow:0 14px 32px rgba(99,102,241,.5)}
+  .top-add-btn:hover{filter:brightness(1.06)}
   .suggest button:hover{background:#DDE0FD}
   .stepper button:hover{background:#DDE0FD}
 }
@@ -674,7 +685,8 @@ input[type=file]{display:none}
   }
   .sheet-wrap.open .sheet{transform:translate(-50%,-50%);opacity:1}
   .grab{display:none}
-  .fab{right:40px;bottom:40px}
+  .fab{display:none}
+  .top-add-btn{display:flex}
   .snackbar{bottom:44px}
   .donut-wrap{width:170px;height:170px}
   .donut-center{inset:35px}
@@ -695,6 +707,10 @@ input[type=file]{display:none}
       </button>
     </div>
     <div style="display:flex;gap:8px">
+      <button class="top-add-btn" id="topAddBtn" onclick="onFab()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.8" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+        <span id="topAddLabel">Добавить магазин</span>
+      </button>
       <button class="icon-btn" id="catalogBtn" onclick="openCatalogSheet()" aria-label="Каталог товаров">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#475569" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.2 13.6 13.6 20.2a1.9 1.9 0 0 1-2.7 0L4 13.3V4h9.3l6.9 6.9a1.9 1.9 0 0 1 0 2.7z"/><circle cx="8.7" cy="8.7" r="1.3"/></svg>
       </button>
@@ -741,12 +757,13 @@ input[type=file]{display:none}
   </section>
 
   <section class="chart-card" id="chartCard" style="display:none">
-    <div class="chart-head">
+    <div class="chart-head" onclick="toggleChartCollapse()">
       <div class="chart-title">Структура расходов</div>
-      <div class="seg">
+      <div class="seg" onclick="event.stopPropagation()">
         <button id="segPlan" class="on" onclick="setChartMode('plan')">План</button>
         <button id="segSpent" onclick="setChartMode('spent')">Куплено</button>
       </div>
+      <svg class="chev" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
     </div>
     <div class="chart-body">
       <div class="donut-wrap">
@@ -763,11 +780,6 @@ input[type=file]{display:none}
 
   <div class="main">
   <div id="stores"></div>
-
-  <button class="add-store-btn" id="addStoreBtn" onclick="openStoreSheet()">
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
-    Добавить магазин
-  </button>
 
   <div class="empty-state" id="emptyState" onclick="openStoreSheet()" role="button">
     <div class="art">
@@ -805,10 +817,6 @@ input[type=file]{display:none}
       <button id="dsegCredit" onclick="setDebtTab('credit')">Кредиты</button>
     </div>
     <section class="store-card"><div id="debtRows"></div></section>
-    <button class="add-store-btn" onclick="openDebtSheet()">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
-      Новая запись
-    </button>
   </div>
 
   <div class="view" id="view-sched">
@@ -828,10 +836,6 @@ input[type=file]{display:none}
       </button>
     </div>
     <section class="store-card table-card" id="schedCard"><div class="table-scroll" id="schedGrid"></div></section>
-    <button class="add-store-btn" onclick="openEmpSheet()">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
-      Добавить сотрудника
-    </button>
   </div>
 
   <div class="view" id="view-inv">
@@ -852,10 +856,6 @@ input[type=file]{display:none}
       <div class="inv-cols" id="invCols"></div>
       <div id="invRows"></div>
     </section>
-    <button class="add-store-btn" onclick="openCatalogSheet('inv')">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
-      Товары из каталога
-    </button>
     <button class="btn btn-primary" id="invActionBtn" style="margin-top:12px" onclick="invAction()">В список закупок</button>
   </div>
 
@@ -872,10 +872,6 @@ input[type=file]{display:none}
       <div class="progress"><div class="progress-fill" id="planProgressFill"></div></div>
     </section>
     <section class="store-card"><div id="planRows"></div></section>
-    <button class="add-store-btn" onclick="openPlanTaskSheet()">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
-      Добавить задачу
-    </button>
   </div>
 </div>
 
@@ -903,7 +899,8 @@ input[type=file]{display:none}
 </nav>
 
 <button class="fab" onclick="onFab()" aria-label="Добавить">
-  <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.8" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.8" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+  <span id="fabLabel">Добавить магазин</span>
 </button>
 
 <div class="snackbar" id="snackbar"><span class="msg" id="snackMsg"></span><button id="snackBtn">Отменить</button></div>
@@ -1558,6 +1555,7 @@ function render() {
   renderPayments();
   renderChart();
   renderStores();
+  updateFabLabel();
   document.getElementById('listName').textContent = list().name;
 }
 
@@ -1626,6 +1624,12 @@ function renderPayments() {
 const CHART_COLORS = ['#6366F1', '#14B8A6', '#F59E0B', '#EC4899', '#0EA5E9'];
 const OTHER_COLOR = '#94A3B8';
 let chartMode = 'plan', chartSel = null;
+let chartCollapsed = localStorage.getItem('bdgChartCollapsed') === '1';
+function toggleChartCollapse() {
+  chartCollapsed = !chartCollapsed;
+  localStorage.setItem('bdgChartCollapsed', chartCollapsed ? '1' : '0');
+  document.getElementById('chartCard').classList.toggle('collapsed', chartCollapsed);
+}
 
 function arcPath(cx, cy, r, a0, a1) {
   const x0 = cx + r * Math.cos(a0), y0 = cy + r * Math.sin(a0);
@@ -1639,18 +1643,30 @@ function renderChart() {
   const anyPlanned = stores.some(s => s.items.some(it => (+it.qty || 0) * (+it.price || 0) > 0));
   if (!anyPlanned) { card.style.display = 'none'; return; }
   card.style.display = 'block';
+  card.classList.toggle('collapsed', chartCollapsed);
 
-  // color follows the store's stable position in the list, not its size
-  const rows = []; let other = 0;
-  stores.forEach((s, i) => {
-    const val = s.items.reduce((t, it) => {
-      const sum = (+it.qty || 0) * (+it.price || 0);
-      return (chartMode === 'spent' && !it.bought) ? t : t + sum;
-    }, 0);
+  // color follows the category's stable position in the catalog, not its size
+  const cats = state.catalogDB.categories;
+  const sums = new Map();
+  stores.forEach(s => s.items.forEach(it => {
+    const sum = (+it.qty || 0) * (+it.price || 0);
+    if (chartMode === 'spent' && !it.bought) return;
+    if (sum <= 0) return;
+    const k = (it.catId && cats.some(c => c.id === it.catId)) ? it.catId : '';
+    sums.set(k, (sums.get(k) || 0) + sum);
+  }));
+  const rows = []; let other = 0; let colorI = 0;
+  cats.forEach(c => {
+    const val = sums.get(c.id) || 0;
     if (val <= 0) return;
-    if (i < CHART_COLORS.length) rows.push({ id: s.id, name: s.name, val, color: CHART_COLORS[i] });
+    if (colorI < CHART_COLORS.length) { rows.push({ id: c.id, name: c.name, val, color: CHART_COLORS[colorI] }); colorI++; }
     else other += val;
   });
+  const uncatVal = sums.get('') || 0;
+  if (uncatVal > 0) {
+    if (colorI < CHART_COLORS.length) { rows.push({ id: '__uncat', name: 'Без категории', val: uncatVal, color: CHART_COLORS[colorI] }); colorI++; }
+    else other += uncatVal;
+  }
   if (other > 0) rows.push({ id: '__other', name: 'Прочее', val: other, color: OTHER_COLOR });
   const total = rows.reduce((t, r) => t + r.val, 0);
   if (chartSel && !rows.some(r => r.id === chartSel)) chartSel = null;
@@ -1703,7 +1719,6 @@ function renderStores() {
   const cont = document.getElementById('stores');
   const hasStores = d.stores.length > 0;
   document.getElementById('emptyState').style.display = hasStores ? 'none' : 'block';
-  document.getElementById('addStoreBtn').style.display = hasStores ? 'flex' : 'none';
 
   cont.innerHTML = d.stores.map(s => {
     const subtotal = s.items.reduce((t, it) => t + (+it.qty || 0) * (+it.price || 0), 0);
@@ -1749,9 +1764,11 @@ function storeItemsHTML(s) {
   });
   const showHeads = !(keys.length === 1 && keys[0] === '');
   return keys.map(k => {
+    const groupItems = groups.get(k);
+    const groupSum = groupItems.reduce((t, it) => t + (+it.qty || 0) * (+it.price || 0), 0);
     const head = showHeads
-      ? `<div class="cat-head">${k ? esc(catById(k).name) : 'Без категории'}</div>` : '';
-    return head + groups.get(k).map(it => itemRowHTML(s.id, it)).join('');
+      ? `<div class="cat-head"><span>${k ? esc(catById(k).name) : 'Без категории'}</span><span class="cat-head-sum">${money(groupSum)}</span></div>` : '';
+    return head + groupItems.map(it => itemRowHTML(s.id, it)).join('');
   }).join('');
 }
 
@@ -1782,6 +1799,15 @@ function itemRowHTML(sid, it) {
 
 /* ================= views / navigation ================= */
 let currentView = 'shop';
+const FAB_LABELS = {
+  shop: 'Добавить магазин', plan: 'Добавить задачу', debts: 'Новая запись',
+  sched: 'Добавить сотрудника', inv: 'Товары из каталога'
+};
+function updateFabLabel() {
+  const t = FAB_LABELS[currentView] || 'Добавить';
+  document.getElementById('fabLabel').textContent = t;
+  document.getElementById('topAddLabel').textContent = t;
+}
 function switchView(v) {
   currentView = v;
   ['shop', 'plan', 'debts', 'sched', 'inv'].forEach(x => {
@@ -1792,6 +1818,7 @@ function switchView(v) {
   if (v === 'debts') renderDebts();
   if (v === 'sched') renderSched();
   if (v === 'inv') renderInv();
+  updateFabLabel();
   window.scrollTo({ top: 0 });
 }
 function onFab() {
@@ -2284,6 +2311,16 @@ function syncCall(creds, action, payload) {
   });
 }
 
+// общая логика выгрузки — и ручная кнопка «Облако», и ИИ-ассистент шлют данные одним и тем же путём
+function performUpload(creds) {
+  const payload = JSON.parse(JSON.stringify(state));
+  delete payload.sync; // PIN не кладём в сами данные
+  return syncCall(creds, 'save', payload).then(res => {
+    syncState().last = res.at;
+    save(); renderSyncStatusSafe();
+    return res;
+  });
+}
 function syncUpload(silent) {
   const creds = silent
     ? (syncState().login && syncState().pin && syncState().url ? syncState() : null)
@@ -2291,18 +2328,22 @@ function syncUpload(silent) {
   if (!creds) return;
   const btn = document.getElementById('syncUpBtn');
   if (!silent) { btn.textContent = 'Выгружаю…'; btn.disabled = true; }
-  const payload = JSON.parse(JSON.stringify(state));
-  delete payload.sync; // PIN не кладём в сами данные
-  syncCall(creds, 'save', payload)
-    .then(res => {
-      syncState().last = res.at;
-      save(); renderSyncStatusSafe();
+  performUpload(creds)
+    .then(() => {
       if (!silent) { closeSheet('syncSheet'); stampShow(); setTimeout(() => aiSay(pick(AI_OK), [], 4200), 1500); }
     })
     .catch(err => { if (!silent) toast(errToMsg(err)); })
     .finally(() => { if (!silent) { btn.textContent = 'Выгрузить в облако'; btn.disabled = false; } });
 }
 
+// общая логика применения скачанных данных — и ручная кнопка, и подсказка ИИ о новых данных
+function applyRemotePayload(payload, creds, at) {
+  sanitizeCatalogDB(payload);
+  payload.sync = { login: creds.login, pin: creds.pin, url: creds.url, last: at };
+  state = payload;
+  if (!state.lists.some(l => l.id === state.currentId)) state.currentId = state.lists[0].id;
+  save(true); render();
+}
 function syncDownload() {
   const creds = readSyncCreds();
   if (!creds) return;
@@ -2313,11 +2354,8 @@ function syncDownload() {
       .then(res => {
         const s = res.payload;
         if (!s || !Array.isArray(s.lists) || !s.lists.length) { toast('В облаке пока нет данных'); return; }
-        sanitizeCatalogDB(s);
-        s.sync = { login: creds.login, pin: creds.pin, url: creds.url, last: res.at };
-        state = s;
-        if (!state.lists.some(l => l.id === state.currentId)) state.currentId = state.lists[0].id;
-        save(); render(); closeSheet('syncSheet');
+        applyRemotePayload(s, creds, res.at);
+        closeSheet('syncSheet');
         toast('Данные загружены из облака');
       })
       .catch(err => toast(errToMsg(err)))
@@ -2358,13 +2396,8 @@ function offerRemoteUpdate() {
 function applyPendingRemote() {
   if (!pendingRemote) return;
   const s = syncState();
-  const payload = pendingRemote.payload;
-  sanitizeCatalogDB(payload);
-  payload.sync = { login: s.login, pin: s.pin, url: s.url, last: pendingRemote.at };
-  state = payload;
-  if (!state.lists.some(l => l.id === state.currentId)) state.currentId = state.lists[0].id;
+  applyRemotePayload(pendingRemote.payload, { login: s.login, pin: s.pin, url: s.url }, pendingRemote.at);
   pendingRemote = null;
-  save(true); render();
   toast('Данные обновлены с другого устройства');
 }
 
@@ -2442,13 +2475,8 @@ function aiDoSave() {
     return;
   }
   aiSay('Секунду, несу данные в облако… 🏃', []);
-  const payload = JSON.parse(JSON.stringify(state));
-  delete payload.sync;
-  syncCall({ login: s.login, pin: s.pin, url: s.url || DEFAULT_SYNC_URL }, 'save', payload)
-    .then(res => {
-      s.last = res.at;
-      try { localStorage.setItem(KEY, JSON.stringify(state)); localStorage.setItem(BAK, JSON.stringify(state)); } catch (e) {}
-      renderSyncStatusSafe();
+  performUpload({ login: s.login, pin: s.pin, url: s.url || DEFAULT_SYNC_URL })
+    .then(() => {
       aiHide();
       stampShow();
       setTimeout(() => aiSay(pick(AI_OK), [], 4200), 1500);
@@ -2510,6 +2538,7 @@ function tourShow() {
     if (!el) { tourNext(); return; }
     el.scrollIntoView({ block: 'center', behavior: 'auto' });
     const r = el.getBoundingClientRect();
+    if (!r.width && !r.height) { tourNext(); return; }
     const pad = 8;
     hole.style.cssText = `left:${r.left - pad}px;top:${r.top - pad}px;width:${r.width + pad * 2}px;height:${r.height + pad * 2}px`;
     const tipW = Math.min(330, vw - 28);
@@ -2885,8 +2914,7 @@ function setDebtTab(t) {
 function renderDebts() {
   const ds = state.debts;
   const sum = type => ds.filter(d => d.type === type && !d.paid).reduce((t, d) => t + d.amount, 0);
-  // «Мне должны» — в минусовом эквиваленте
-  document.getElementById('debtOwedVal').textContent = money(-sum('owed'));
+  document.getElementById('debtOwedVal').textContent = money(sum('owed'));
   document.getElementById('debtOwnVal').textContent = money(sum('own'));
   document.getElementById('debtCreditVal').textContent = money(sum('credit'));
 
@@ -2894,7 +2922,7 @@ function renderDebts() {
     .sort((a, b) => (a.paid - b.paid) || (a.date || '9999').localeCompare(b.date || '9999'));
   document.getElementById('debtRows').innerHTML = rows.length ? rows.map(d => {
     const dateTxt = d.date ? new Date(d.date + 'T00:00:00').toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' }) : '';
-    const sumTxt = d.type === 'owed' ? money(-d.amount) : money(d.amount);
+    const sumTxt = money(d.amount);
     return `
     <div class="debt-row ${d.paid ? 'paid' : ''}">
       <button class="check" onclick="toggleDebt('${d.id}')" aria-label="Погашено">
