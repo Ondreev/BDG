@@ -3917,6 +3917,11 @@ document.addEventListener('click', e => {
 }, true);
 
 /* ================= init ================= */
+// tapping/clicking an inventory input selects its value so typing overwrites it right away
+document.addEventListener('focusin', e => {
+  if (e.target.classList.contains('inv-in')) e.target.select();
+});
+
 document.getElementById('budgetInput').addEventListener('input', e => {
   data().budget = parseFloat(e.target.value) || 0;
   save(); renderSummary();
