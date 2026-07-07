@@ -199,6 +199,8 @@ input,select{font-family:inherit}
 .search-wrap .sic{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--muted);display:flex;pointer-events:none}
 .chips{display:flex;gap:8px;overflow-x:auto;padding-bottom:6px;margin-bottom:8px;scrollbar-width:none}
 .chips::-webkit-scrollbar{display:none}
+@media(hover:hover){.chips{cursor:grab}}
+.chips.panning{cursor:grabbing;user-select:none}
 .chip{
   flex:none;border:none;background:var(--bg);color:var(--muted);font-size:13px;font-weight:700;
   padding:9px 14px;border-radius:99px;cursor:pointer;display:flex;align-items:center;gap:7px;
@@ -1089,6 +1091,7 @@ input[type=file]{display:none}
       <input id="catSearch" type="text" placeholder="Название, цена или категория" autocomplete="off" oninput="renderCatalog()">
     </div>
     <div class="chips" id="catChips"></div>
+    <div class="chips" id="catLocChips"></div>
     <div class="cat-list" id="catList"></div>
     <button class="btn btn-primary" onclick="openCatProductSheet()">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.8" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
@@ -1121,7 +1124,8 @@ input[type=file]{display:none}
     </div>
     <div class="field">
       <label>Место (ряд, полка)</label>
-      <input id="catProdLoc" type="text" placeholder="Например: 2Г, линия 2А" autocomplete="off">
+      <div class="chips" id="catProdLocChips"></div>
+      <input id="catProdLoc" type="text" placeholder="Например: 2Г, линия 2А" autocomplete="off" oninput="renderCatProdLocChips()">
     </div>
     <button class="btn btn-primary" id="catProdSaveBtn" onclick="saveCatProduct()">Добавить</button>
     <button class="btn btn-danger-ghost" id="catProdDeleteBtn" onclick="deleteCatProduct()" style="display:none">Удалить из каталога</button>
@@ -1618,14 +1622,25 @@ function renderSummary() {
 }
 
 /* ---------- upcoming payments (next 7 days) ---------- */
+function payWhenText(dl) {
+  if (dl < 0) return 'просрочено';
+  if (dl === 0) return 'сегодня';
+  if (dl === 1) return 'завтра';
+  return 'через ' + dl + ' дн.';
+}
 function renderPayments() {
   const card = document.getElementById('payCard');
   const rows = [];
   data().stores.forEach(s => s.items.forEach(it => {
     if (!it.day || it.bought) return;
     const dl = daysLeft(+it.day);
-    if (dl <= 7) rows.push({ sid: s.id, id: it.id, name: it.name, sum: (+it.qty || 0) * (+it.price || 0), dl });
+    if (dl <= 7) rows.push({ kind: 'item', sid: s.id, id: it.id, name: it.name, sum: (+it.qty || 0) * (+it.price || 0), dl });
   }));
+  (state.debts || []).forEach(d => {
+    if (d.paid || !d.date) return;
+    const dl = debtDaysLeft(d.date);
+    if (dl <= 7) rows.push({ kind: 'debt', id: d.id, name: d.name, sum: d.amount, dl });
+  });
   if (!rows.length) { card.style.display = 'none'; return; }
   rows.sort((a, b) => a.dl - b.dl);
   card.style.display = 'block';
@@ -1633,9 +1648,9 @@ function renderPayments() {
   const shown = rows.slice(0, 4);
   const rest = rows.slice(4);
   document.getElementById('payRows').innerHTML = shown.map(r => `
-    <button class="pay-row" onclick="openItemSheet('${r.sid}','${r.id}')">
+    <button class="pay-row" onclick="${r.kind === 'debt' ? `openDebtSheet('${r.id}')` : `openItemSheet('${r.sid}','${r.id}')`}">
       <span class="pname">${esc(r.name)}</span>
-      <span class="pwhen ${r.dl <= 0 ? 'today' : ''}">${r.dl <= 0 ? 'сегодня' : r.dl === 1 ? 'завтра' : 'через ' + r.dl + ' дн.'}</span>
+      <span class="pwhen ${r.dl <= 0 ? 'today' : ''}">${payWhenText(r.dl)}</span>
       <span class="psum">${money(r.sum)}</span>
     </button>`).join('') +
     (rest.length ? `<div class="pay-more">и ещё ${rest.length} на ${money(rest.reduce((t, r) => t + r.sum, 0))}</div>` : '');
@@ -1857,6 +1872,7 @@ function switchView(v) {
     document.getElementById('view-' + x).classList.toggle('on', x === v);
     document.getElementById('nav-' + x).classList.toggle('on', x === v);
   });
+  if (v === 'shop') renderPayments();
   if (v === 'plan') renderPlan();
   if (v === 'debts') renderDebts();
   if (v === 'sched') renderSched();
@@ -2618,10 +2634,11 @@ function maybeOfferTour() {
 }
 
 /* ================= catalog ================= */
-let catFilter = null, catEditProductId = null, catAddProductId = null, catEditCategoryId = null;
+let catFilter = null, catLocFilter = null, catEditProductId = null, catAddProductId = null, catEditCategoryId = null;
 
 const catById = id => state.catalogDB.categories.find(c => c.id === id);
 const prodById = id => state.catalogDB.products.find(p => p.id === id);
+const distinctLocations = () => [...new Set(state.catalogDB.products.map(p => (p.loc || '').trim()).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'ru'));
 
 function upsertCatalogProduct(name, price, categoryId, loc) {
   const p = state.catalogDB.products.find(x => x.name.toLowerCase() === name.toLowerCase());
@@ -2638,6 +2655,7 @@ let catTarget = 'list'; // 'list' — в список закупок, 'inv' — 
 function openCatalogSheet(target) {
   catTarget = target === 'inv' ? 'inv' : 'list';
   catFilter = null;
+  catLocFilter = null;
   document.getElementById('catSearch').value = '';
   renderCatalog();
   openSheet('catalogSheet');
@@ -2661,6 +2679,8 @@ function renderCatalog() {
   const db = state.catalogDB;
   const q = document.getElementById('catSearch').value.trim();
   if (catFilter && !catById(catFilter)) catFilter = null;
+  const locs = distinctLocations();
+  if (catLocFilter && !locs.includes(catLocFilter)) catLocFilter = null;
 
   // category chips
   document.getElementById('catChips').innerHTML =
@@ -2672,9 +2692,17 @@ function renderCatalog() {
       </button>`).join('') +
     `<button class="chip" onclick="openCatCategorySheet()">${ic('plus', 14)} Категория</button>`;
 
+  // location chips (built from products' "Место" values, filter-only — no separate location catalog)
+  const locChips = document.getElementById('catLocChips');
+  locChips.style.display = locs.length ? 'flex' : 'none';
+  locChips.innerHTML = locs.length
+    ? `<button class="chip ${!catLocFilter ? 'on' : ''}" onclick="setCatLocFilter(null)">Все места</button>` +
+      locs.map(l => `<button class="chip ${catLocFilter === l ? 'on' : ''}" data-loc="${esc(l)}" onclick="setCatLocFilter(this.dataset.loc)">${esc(l)}</button>`).join('')
+    : '';
+
   // product rows
   const prods = db.products
-    .filter(p => (!catFilter || p.categoryId === catFilter) && productMatches(p, q))
+    .filter(p => (!catFilter || p.categoryId === catFilter) && (!catLocFilter || (p.loc || '').trim() === catLocFilter) && productMatches(p, q))
     .sort((a, b) => a.name.localeCompare(b.name, 'ru'));
   document.getElementById('catList').innerHTML = prods.length ? prods.map(p => {
     const cat = catById(p.categoryId);
@@ -2690,6 +2718,7 @@ function renderCatalog() {
   }).join('') : `<div class="cat-empty">${db.products.length ? 'Ничего не найдено' : 'Каталог пуст — добавьте товары вручную или загрузите из Google Таблицы'}</div>`;
 }
 function setCatFilter(id) { catFilter = id === catFilter ? null : id; renderCatalog(); }
+function setCatLocFilter(loc) { catLocFilter = loc === catLocFilter ? null : loc; renderCatalog(); }
 
 /* ---------- catalog product add / edit ---------- */
 function openCatProductSheet(id) {
@@ -2701,6 +2730,7 @@ function openCatProductSheet(id) {
   document.getElementById('catProdName').value = p ? p.name : '';
   document.getElementById('catProdPrice').value = p ? (p.price || '') : '';
   document.getElementById('catProdLoc').value = p && p.loc ? p.loc : '';
+  renderCatProdLocChips();
   const sel = document.getElementById('catProdCategory');
   sel.innerHTML = `<option value="">Без категории</option>` +
     state.catalogDB.categories.map(c =>
@@ -2714,6 +2744,18 @@ function openCatProductSheet(id) {
 function onCatProdCategoryChange() {
   const isNew = document.getElementById('catProdCategory').value === '__new';
   document.getElementById('catProdNewCatField').style.display = isNew ? 'block' : 'none';
+}
+function renderCatProdLocChips() {
+  const locs = distinctLocations();
+  const chips = document.getElementById('catProdLocChips');
+  chips.style.display = locs.length ? 'flex' : 'none';
+  const cur = document.getElementById('catProdLoc').value.trim();
+  chips.innerHTML = locs.map(l =>
+    `<button type="button" class="chip ${cur === l ? 'on' : ''}" data-loc="${esc(l)}" onclick="pickCatProdLoc(this.dataset.loc)">${esc(l)}</button>`).join('');
+}
+function pickCatProdLoc(loc) {
+  document.getElementById('catProdLoc').value = loc;
+  renderCatProdLocChips();
 }
 function saveCatProduct() {
   const name = document.getElementById('catProdName').value.trim();
@@ -3716,6 +3758,33 @@ function rebuildOrderFromDOM() {
   });
   save(); render(); vibrate(10);
 }
+
+/* click-and-drag with the mouse to pan horizontally scrolling chip strips on desktop
+   (touch already scrolls them natively, so this only kicks in for mouse pointers) */
+let chipDrag = null, chipDragMoved = false;
+document.addEventListener('pointerdown', e => {
+  if (e.pointerType !== 'mouse') return;
+  const strip = e.target.closest('.chips');
+  if (!strip) return;
+  chipDrag = { strip, startX: e.clientX, startLeft: strip.scrollLeft };
+});
+document.addEventListener('pointermove', e => {
+  if (!chipDrag) return;
+  const dx = e.clientX - chipDrag.startX;
+  if (Math.abs(dx) > 4) {
+    chipDragMoved = true;
+    chipDrag.strip.classList.add('panning');
+    chipDrag.strip.scrollLeft = chipDrag.startLeft - dx;
+  }
+});
+document.addEventListener('pointerup', () => {
+  if (chipDrag) chipDrag.strip.classList.remove('panning');
+  chipDrag = null;
+});
+document.addEventListener('click', e => {
+  if (chipDragMoved && e.target.closest('.chips')) { e.preventDefault(); e.stopPropagation(); }
+  chipDragMoved = false;
+}, true);
 
 /* ================= init ================= */
 document.getElementById('budgetInput').addEventListener('input', e => {
