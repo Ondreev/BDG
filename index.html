@@ -79,35 +79,49 @@ input,select{font-family:inherit}
   transition:transform .12s;
 }
 .icon-btn:active{transform:scale(.92)}
+.print-top-btn{
+  display:none;align-items:center;gap:7px;border:none;background:var(--card);
+  box-shadow:var(--shadow);border-radius:14px;padding:0 16px;height:44px;font-size:13.5px;font-weight:800;
+  cursor:pointer;color:var(--text);flex:none;transition:transform .12s;
+}
+.print-top-btn:active{transform:scale(.96)}
 
 /* ---------- budget card ---------- */
 .budget-card{
   background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);
-  padding:18px 18px 16px;margin-top:6px;
+  padding:14px 16px 13px;margin-top:6px;
 }
 .budget-top{display:flex;align-items:flex-end;justify-content:space-between;gap:12px}
-.budget-label{font-size:12px;font-weight:700;color:var(--muted);letter-spacing:.06em;text-transform:uppercase;margin-bottom:4px}
+.budget-label{font-size:11.5px;font-weight:700;color:var(--muted);letter-spacing:.06em;text-transform:uppercase;margin-bottom:2px}
 .budget-input-wrap{display:flex;align-items:center;gap:6px}
 .budget-input-wrap input{
-  width:150px;border:none;background:transparent;font-size:30px;font-weight:800;color:var(--text);
+  width:150px;border:none;background:transparent;font-size:27px;font-weight:800;color:var(--text);
   padding:0;outline:none;
 }
 .budget-input-wrap input::placeholder{color:#CBD5E1}
-.budget-input-wrap .rub{font-size:22px;font-weight:800;color:var(--muted)}
+.budget-input-wrap .rub{font-size:20px;font-weight:800;color:var(--muted)}
 .remaining-block{text-align:right}
-.remaining-block .cap{font-size:12px;font-weight:700;color:var(--muted);letter-spacing:.06em;text-transform:uppercase;margin-bottom:4px}
-.remaining-block .val{font-size:24px;font-weight:800;color:var(--green);white-space:nowrap}
+.remaining-block .cap{font-size:11.5px;font-weight:700;color:var(--muted);letter-spacing:.06em;text-transform:uppercase;margin-bottom:2px}
+.remaining-block .val{font-size:21px;font-weight:800;color:var(--green);white-space:nowrap}
 .remaining-block .val.neg{color:var(--red)}
-.progress{height:10px;background:var(--line);border-radius:99px;margin:16px 0 14px;overflow:hidden}
+.progress-row{display:flex;align-items:center;gap:8px;margin:10px 0 11px}
+.progress{flex:1;height:8px;background:var(--line);border-radius:99px;overflow:hidden}
 .progress-fill{
-  height:100%;width:0%;border-radius:99px;
+  position:relative;height:100%;width:0%;border-radius:99px;overflow:hidden;
   background:linear-gradient(90deg,var(--accent),var(--accent2));
-  transition:width .5s cubic-bezier(.22,1,.36,1),background .3s;
+  transition:width .6s cubic-bezier(.22,1,.36,1),background .3s;
+}
+.progress-fill::after{
+  content:'';position:absolute;inset:0;background-size:200% 100%;
+  background-image:linear-gradient(110deg,transparent 30%,rgba(255,255,255,.55) 50%,transparent 70%);
+  animation:barShine 2.6s ease-in-out infinite;
 }
 .progress-fill.over{background:linear-gradient(90deg,#FB7185,var(--red))}
+@keyframes barShine{0%{background-position:180% 0}100%{background-position:-20% 0}}
+.progress-pct{flex:none;min-width:30px;text-align:right;font-size:11.5px;font-weight:800;color:var(--muted);font-variant-numeric:tabular-nums}
 .stats{display:flex;gap:8px}
 .stat{
-  flex:1;background:var(--bg);border-radius:14px;padding:10px 12px;min-width:0;
+  flex:1;background:var(--bg);border-radius:14px;padding:9px 10px;min-width:0;
 }
 .stat .k{font-size:11px;font-weight:700;color:var(--muted);letter-spacing:.04em;text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .stat .v{font-size:15px;font-weight:800;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -118,13 +132,15 @@ input,select{font-family:inherit}
   .stat .v{font-size:13px}
 }
 .over-note{
-  display:none;margin-top:12px;padding:10px 14px;border-radius:14px;
+  display:none;margin-top:10px;padding:9px 14px;border-radius:14px;
   background:var(--red-soft);color:var(--red);font-size:13.5px;font-weight:700;
 }
 .done-note{
-  display:none;margin-top:12px;padding:12px 14px;border-radius:14px;text-align:center;
+  display:none;margin-top:10px;padding:10px 14px;border-radius:14px;text-align:center;
   background:var(--green-soft);color:#047857;font-size:14px;font-weight:800;
+  animation:notePopIn .45s cubic-bezier(.34,1.56,.64,1) both;
 }
+@keyframes notePopIn{from{opacity:0;transform:scale(.92) translateY(4px)}to{opacity:1;transform:scale(1) translateY(0)}}
 
 /* ---------- upcoming payments ---------- */
 .pay-card{
@@ -714,6 +730,7 @@ input[type=file]{display:none}
   .app{max-width:1140px;padding:0 32px 120px}
   .topbar{padding:18px 4px 16px}
   #topNavSlot{flex:1;display:flex;justify-content:center;min-width:0}
+  .print-top-btn.view-shop{display:flex}
   .topbar .bottom-nav{
     position:static;transform:none;left:auto;bottom:auto;max-width:none;
     background:none;backdrop-filter:none;-webkit-backdrop-filter:none;box-shadow:none;padding:0;
@@ -753,6 +770,9 @@ input[type=file]{display:none}
     </div>
     <div id="topNavSlot"></div>
     <div style="display:flex;gap:8px">
+      <button class="print-top-btn view-shop" id="printTopBtn" onclick="openPrintListSheet()" aria-label="Печать списка">
+        <span class="ic" data-icon="printer"></span><span>Печать</span>
+      </button>
       <button class="icon-btn" id="catalogBtn" onclick="openCatalogSheet()" aria-label="Каталог товаров">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#475569" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.2 13.6 13.6 20.2a1.9 1.9 0 0 1-2.7 0L4 13.3V4h9.3l6.9 6.9a1.9 1.9 0 0 1 0 2.7z"/><circle cx="8.7" cy="8.7" r="1.3"/></svg>
       </button>
@@ -779,7 +799,10 @@ input[type=file]{display:none}
         <div class="val" id="remainingVal">0 ₽</div>
       </div>
     </div>
-    <div class="progress"><div class="progress-fill" id="progressFill"></div></div>
+    <div class="progress-row">
+      <div class="progress"><div class="progress-fill" id="progressFill"></div></div>
+      <span class="progress-pct" id="progressPct">0%</span>
+    </div>
     <div class="stats">
       <div class="stat"><div class="k">Потрачено</div><div class="v" id="spentVal">0 ₽</div></div>
       <div class="stat"><div class="k">План</div><div class="v" id="plannedVal">0 ₽</div></div>
@@ -915,7 +938,11 @@ input[type=file]{display:none}
       <div class="stats">
         <div class="stat"><div class="k">Сделано</div><div class="v" id="planDoneVal">0 из 0</div></div>
       </div>
-      <div class="progress"><div class="progress-fill" id="planProgressFill"></div></div>
+      <div class="progress-row">
+        <div class="progress"><div class="progress-fill" id="planProgressFill"></div></div>
+        <span class="progress-pct" id="planProgressPct">0%</span>
+      </div>
+      <div class="done-note" id="planDoneNote">Все задачи сделаны — отличная работа</div>
     </section>
     <section class="store-card"><div id="planRows"></div></section>
   </div>
@@ -1774,6 +1801,7 @@ function renderSummary() {
   const pct = budget > 0 ? Math.max(0, Math.min(100, spent / budget * 100)) : 0;
   fill.style.width = pct + '%';
   fill.classList.toggle('over', budget > 0 && spent > budget);
+  document.getElementById('progressPct').textContent = Math.round(budget > 0 ? spent / budget * 100 : 0) + '%';
 
   const over = document.getElementById('overNote');
   if (budget > 0 && planned > budget) {
@@ -2052,6 +2080,7 @@ function switchView(v) {
     document.getElementById('view-' + x).classList.toggle('on', x === v);
     document.getElementById('nav-' + x).classList.toggle('on', x === v);
   });
+  document.getElementById('printTopBtn').classList.toggle('view-shop', v === 'shop');
   if (v === 'shop') renderPayments();
   if (v === 'plan') renderPlan();
   if (v === 'debts') renderDebts();
@@ -3213,7 +3242,10 @@ function renderPlan() {
   const total = p.items.length;
   const done = p.items.filter(it => it.done).length;
   document.getElementById('planDoneVal').textContent = done + ' из ' + total;
-  document.getElementById('planProgressFill').style.width = (total ? done / total * 100 : 0) + '%';
+  const planPct = total ? done / total * 100 : 0;
+  document.getElementById('planProgressFill').style.width = planPct + '%';
+  document.getElementById('planProgressPct').textContent = Math.round(planPct) + '%';
+  document.getElementById('planDoneNote').style.display = (total > 0 && done === total) ? 'block' : 'none';
   document.getElementById('planRows').innerHTML = p.items.length ? p.items.map(it => `
     <div class="plan-row ${it.done ? 'done' : ''}">
       <button class="check" onclick="togglePlanTask('${it.id}')" aria-label="Готово">
