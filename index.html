@@ -494,6 +494,7 @@ input[type=file]{display:none}
 .plan-row.done .p-name{color:var(--muted);text-decoration:line-through}
 .p-body{flex:1;min-width:0;padding:11px 4px;cursor:pointer}
 .p-name{font-size:15.5px;font-weight:600;overflow-wrap:anywhere}
+.p-meta{font-size:12.5px;color:var(--muted);margin-top:2px;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
 
 /* ---------- schedule ---------- */
 .sched-bar{display:flex;align-items:center;gap:10px;margin-top:14px;flex-wrap:wrap}
@@ -779,7 +780,7 @@ input[type=file]{display:none}
 
   <section class="pay-card" id="payCard">
     <div class="pay-head">
-      <div class="pay-title"><span class="pdot"></span>Ближайшие платежи</div>
+      <div class="pay-title"><span class="pdot"></span>Важное</div>
       <div class="pay-total" id="payTotal">0 ₽</div>
     </div>
     <div class="pay-sub">В течение 7 дней</div>
@@ -1312,6 +1313,10 @@ input[type=file]{display:none}
       <label>Задача</label>
       <input id="planTaskText" type="text" placeholder="Например: Позвонить поставщику" autocomplete="off" enterkeyhint="done">
     </div>
+    <div class="field">
+      <label>Срок (необязательно)</label>
+      <input id="planTaskDate" type="date">
+    </div>
     <button class="btn btn-primary" id="planTaskSaveBtn" onclick="savePlanTask()">Добавить</button>
     <button class="btn btn-danger-ghost" id="planTaskDeleteBtn" onclick="deletePlanTaskFromSheet()" style="display:none">Удалить задачу</button>
   </div>
@@ -1741,19 +1746,35 @@ function renderPayments() {
     const dl = debtDaysLeft(d.date);
     if (dl <= 7) rows.push({ kind: 'debt', id: d.id, name: d.name, sum: d.amount, dl });
   });
+  (state.plans || []).forEach(p => p.items.forEach(it => {
+    if (it.done || !it.date) return;
+    const dl = debtDaysLeft(it.date);
+    if (dl <= 7) rows.push({ kind: 'plan', planId: p.id, id: it.id, name: it.text, sum: 0, dl });
+  }));
   if (!rows.length) { card.style.display = 'none'; return; }
   rows.sort((a, b) => a.dl - b.dl);
   card.style.display = 'block';
-  document.getElementById('payTotal').textContent = money(rows.reduce((t, r) => t + r.sum, 0));
+  const moneyRows = rows.filter(r => r.kind !== 'plan');
+  document.getElementById('payTotal').textContent = money(moneyRows.reduce((t, r) => t + r.sum, 0));
   const shown = rows.slice(0, 4);
   const rest = rows.slice(4);
   document.getElementById('payRows').innerHTML = shown.map(r => `
-    <button class="pay-row" onclick="${r.kind === 'debt' ? `openDebtSheet('${r.id}')` : `openItemSheet('${r.sid}','${r.id}')`}">
+    <button class="pay-row" onclick="${
+      r.kind === 'debt' ? `openDebtSheet('${r.id}')`
+      : r.kind === 'plan' ? `openPlanTaskFromHome('${r.planId}','${r.id}')`
+      : `openItemSheet('${r.sid}','${r.id}')`
+    }">
       <span class="pname">${esc(r.name)}</span>
       <span class="pwhen ${r.dl <= 0 ? 'today' : ''}">${payWhenText(r.dl)}</span>
-      <span class="psum">${money(r.sum)}</span>
+      <span class="psum">${r.kind === 'plan' ? '' : money(r.sum)}</span>
     </button>`).join('') +
-    (rest.length ? `<div class="pay-more">и ещё ${rest.length} на ${money(rest.reduce((t, r) => t + r.sum, 0))}</div>` : '');
+    (rest.length ? `<div class="pay-more">и ещё ${rest.length} на ${money(rest.filter(r => r.kind !== 'plan').reduce((t, r) => t + r.sum, 0))}</div>` : '');
+}
+function openPlanTaskFromHome(planId, taskId) {
+  state.currentPlanId = planId;
+  save();
+  switchView('plan');
+  openPlanTaskSheet(taskId);
 }
 
 /* ---------- spending structure donut ---------- */
@@ -3057,8 +3078,17 @@ function renderPlan() {
           ${it.done ? '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 12.5l5 5 10-11"/></svg>' : ''}
         </span>
       </button>
-      <div class="p-body" onclick="openPlanTaskSheet('${it.id}')"><div class="p-name">${esc(it.text)}</div></div>
+      <div class="p-body" onclick="openPlanTaskSheet('${it.id}')">
+        <div class="p-name">${esc(it.text)}</div>
+        ${it.date ? `<div class="p-meta"><span>${planDateTxt(it.date)}</span>${planTaskBadge(it)}</div>` : ''}
+      </div>
     </div>`).join('') : '<div class="empty-items">Пока пусто — добавьте первую задачу</div>';
+}
+function planDateTxt(dateStr) {
+  return new Date(dateStr + 'T00:00:00').toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' });
+}
+function planTaskBadge(it) {
+  return it.done ? '' : dueBadge(it.date);
 }
 function togglePlanTask(id) {
   const it = curPlan().items.find(x => x.id === id);
@@ -3072,14 +3102,16 @@ function openPlanTaskSheet(id) {
   document.getElementById('planTaskSaveBtn').textContent = it ? 'Сохранить' : 'Добавить';
   document.getElementById('planTaskDeleteBtn').style.display = it ? 'flex' : 'none';
   document.getElementById('planTaskText').value = it ? it.text : '';
+  document.getElementById('planTaskDate').value = it && it.date ? it.date : '';
   openSheet('planTaskSheet');
   setTimeout(() => document.getElementById('planTaskText').focus(), 320);
 }
 function savePlanTask() {
   const text = document.getElementById('planTaskText').value.trim();
   if (!text) { document.getElementById('planTaskText').focus(); return; }
-  if (planTaskEditId) curPlan().items.find(x => x.id === planTaskEditId).text = text;
-  else curPlan().items.push({ id: uid(), text, done: false });
+  const date = document.getElementById('planTaskDate').value || null;
+  if (planTaskEditId) Object.assign(curPlan().items.find(x => x.id === planTaskEditId), { text, date });
+  else curPlan().items.push({ id: uid(), text, done: false, date });
   save(); renderPlan(); closeSheet('planTaskSheet'); vibrate(10);
 }
 function deletePlanTaskFromSheet() {
@@ -3173,13 +3205,16 @@ function debtDaysLeft(dateStr) {
   const t0 = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   return Math.round((new Date(dateStr + 'T00:00:00') - t0) / 864e5);
 }
-function debtBadge(d) {
-  if (d.paid || !d.date) return '';
-  const dl = debtDaysLeft(d.date);
+function dueBadge(dateStr) {
+  if (!dateStr) return '';
+  const dl = debtDaysLeft(dateStr);
   if (dl < 0) return `<span class="day-badge over">просрочено ${-dl} дн.</span>`;
   if (dl === 0) return '<span class="day-badge today">сегодня</span>';
   if (dl === 1) return '<span class="day-badge">завтра</span>';
   return `<span class="day-badge">через ${dl} дн.</span>`;
+}
+function debtBadge(d) {
+  return d.paid ? '' : dueBadge(d.date);
 }
 function setDebtTab(t) {
   debtTab = t;
