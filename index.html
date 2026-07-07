@@ -545,6 +545,21 @@ input[type=file]{display:none}
 .hist-row .hs{margin-left:auto;font-weight:800;color:var(--text);white-space:nowrap}
 .hist-row button{border:none;background:none;color:var(--red);cursor:pointer;display:flex;padding:4px}
 
+/* ---------- inventory accept: pick employees to split a penalty ---------- */
+.emp-pick-list{max-height:38vh;overflow-y:auto;overscroll-behavior:contain}
+.emp-pick-row{
+  display:flex;align-items:center;gap:10px;width:100%;padding:11px 2px;border:none;background:none;
+  border-bottom:1px solid var(--line);cursor:pointer;text-align:left;
+}
+.emp-pick-row:last-child{border-bottom:none}
+.emp-pick-row .check-dot{
+  width:24px;height:24px;border-radius:8px;border:2px solid #CBD5E1;background:#fff;flex:none;
+  display:flex;align-items:center;justify-content:center;transition:all .18s;
+}
+.emp-pick-row.on .check-dot{background:var(--accent);border-color:var(--accent)}
+.emp-pick-row .epr-name{flex:1;min-width:0;font-size:15px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.emp-pick-row .epr-sum{font-size:13.5px;font-weight:800;color:var(--red);white-space:nowrap}
+
 /* ---------- inventory ---------- */
 .inv-table-inner{width:max-content;min-width:100%}
 .inv-row{display:flex;align-items:center;gap:8px;padding:10px 14px;border-bottom:1px solid var(--line)}
@@ -1362,6 +1377,37 @@ input[type=file]{display:none}
       <select id="invStoreSelect"></select>
     </div>
     <button class="btn btn-primary" onclick="invTransfer()">Добавить</button>
+  </div>
+</div>
+
+<div class="sheet-wrap" id="invAcceptSheet"><div class="backdrop" onclick="closeSheet('invAcceptSheet')"></div>
+  <div class="sheet">
+    <div class="grab"></div>
+    <h2>Принять факт как учёт</h2>
+    <p style="color:var(--muted);font-size:14px;margin:0 0 16px" id="invAcceptInfo"></p>
+
+    <div class="field" id="invAcceptSurplusField">
+      <label>Учитывать излишки?</label>
+      <div class="seg seg-wide">
+        <button id="segSurplusYes" class="on" onclick="setInvAcceptSurplus(true)">Да</button>
+        <button id="segSurplusNo" onclick="setInvAcceptSurplus(false)">Нет</button>
+      </div>
+    </div>
+
+    <div class="field" id="invAcceptPenalizeField">
+      <label>Назначить штрафы за недостачу?</label>
+      <div class="seg seg-wide">
+        <button id="segPenalizeYes" onclick="setInvAcceptPenalize(true)">Да</button>
+        <button id="segPenalizeNo" class="on" onclick="setInvAcceptPenalize(false)">Нет</button>
+      </div>
+    </div>
+
+    <div class="field" id="invAcceptEmpBlock" style="display:none">
+      <label>Кто виноват — сумма разделится поровну</label>
+      <div class="emp-pick-list" id="invAcceptEmpList"></div>
+    </div>
+
+    <button class="btn btn-primary" onclick="applyInvAccept()">Применить</button>
   </div>
 </div>
 
@@ -3604,16 +3650,7 @@ function invAddProduct(productId) {
 }
 function invAction() {
   if (invMode === 'inv') {
-    const cnt = state.inventory.filter(r => r.actual !== null && r.actual !== undefined).length;
-    if (!cnt) { toast('Сначала введите фактические остатки'); return; }
-    confirmAction('Принять факт как учёт?', `Фактические остатки (${cnt} поз.) станут новыми учётными, поле «факт» очистится.`, () => {
-      const backup = JSON.stringify(state.inventory);
-      state.inventory.forEach(r => {
-        if (r.actual !== null && r.actual !== undefined) { r.expected = +r.actual || 0; r.actual = null; }
-      });
-      save(); renderInv();
-      snackbar('Учёт обновлён', () => { state.inventory = JSON.parse(backup); save(); renderInv(); });
-    }, 'Принять', true);
+    openInvAcceptSheet();
   } else {
     const picks = state.inventory.filter(r => +r.buy > 0);
     if (!picks.length) { toast('Укажите количество к закупке'); return; }
@@ -3624,6 +3661,89 @@ function invAction() {
       `<option value="${s.id}" ${i === 0 ? 'selected' : ''}>${esc(s.name)}</option>`).join('');
     openSheet('invStoreSheet');
   }
+}
+
+/* ---------- accept fact as new baseline: surplus + shortage-penalty flow ---------- */
+let invAcceptSurplus = true, invAcceptPenalize = false, invAcceptEmpIds = new Set(), invAcceptShortage = 0;
+function openInvAcceptSheet() {
+  const cnt = state.inventory.filter(r => r.actual !== null && r.actual !== undefined).length;
+  if (!cnt) { toast('Сначала введите фактические остатки'); return; }
+  let shortage = 0, surplus = 0;
+  state.inventory.forEach(r => {
+    const c = invRowCalc(r);
+    if (c.diff === null) return;
+    if (c.diffSum < 0) shortage += c.diffSum; else surplus += c.diffSum;
+  });
+  invAcceptShortage = Math.abs(shortage);
+  invAcceptSurplus = true;
+  invAcceptPenalize = false;
+  invAcceptEmpIds = new Set();
+  document.getElementById('invAcceptInfo').textContent =
+    `Фактические остатки (${cnt} поз.) станут новыми учётными, поле «факт» очистится. Недостача: ${money(invAcceptShortage)} · Излишек: ${money(surplus)}`;
+  document.getElementById('invAcceptSurplusField').style.display = surplus > 0 ? 'block' : 'none';
+  document.getElementById('invAcceptPenalizeField').style.display = invAcceptShortage > 0 ? 'block' : 'none';
+  setInvAcceptSurplus(true);
+  setInvAcceptPenalize(false);
+  renderInvAcceptEmpList();
+  openSheet('invAcceptSheet');
+}
+function setInvAcceptSurplus(v) {
+  invAcceptSurplus = v;
+  document.getElementById('segSurplusYes').classList.toggle('on', v);
+  document.getElementById('segSurplusNo').classList.toggle('on', !v);
+}
+function setInvAcceptPenalize(v) {
+  invAcceptPenalize = v;
+  document.getElementById('segPenalizeYes').classList.toggle('on', v);
+  document.getElementById('segPenalizeNo').classList.toggle('on', !v);
+  document.getElementById('invAcceptEmpBlock').style.display = v ? 'block' : 'none';
+}
+function toggleInvAcceptEmp(id) {
+  if (invAcceptEmpIds.has(id)) invAcceptEmpIds.delete(id); else invAcceptEmpIds.add(id);
+  renderInvAcceptEmpList();
+}
+function renderInvAcceptEmpList() {
+  const emps = state.staff.employees;
+  const per = invAcceptEmpIds.size ? invAcceptShortage / invAcceptEmpIds.size : 0;
+  document.getElementById('invAcceptEmpList').innerHTML = emps.length
+    ? emps.map(e => {
+        const on = invAcceptEmpIds.has(e.id);
+        return `
+        <button type="button" class="emp-pick-row ${on ? 'on' : ''}" onclick="toggleInvAcceptEmp('${e.id}')">
+          <span class="check-dot">${on ? '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 12.5l5 5 10-11"/></svg>' : ''}</span>
+          <span class="epr-name">${esc(e.name)}</span>
+          ${on ? `<span class="epr-sum">${money(per)}</span>` : ''}
+        </button>`;
+      }).join('')
+    : '<div class="cat-empty">Сначала добавьте сотрудников в Графике</div>';
+}
+function applyInvAccept() {
+  if (invAcceptPenalize && invAcceptShortage > 0 && !invAcceptEmpIds.size) {
+    toast('Выберите хотя бы одного сотрудника');
+    return;
+  }
+  const backupInv = JSON.stringify(state.inventory);
+  const backupPen = JSON.stringify(state.staff.penalties);
+  state.inventory.forEach(r => {
+    if (r.actual === null || r.actual === undefined) return;
+    const c = invRowCalc(r);
+    if (!(c.diff > 0 && !invAcceptSurplus)) r.expected = +r.actual || 0;
+    r.actual = null;
+  });
+  let msg = 'Учёт обновлён';
+  if (invAcceptPenalize && invAcceptEmpIds.size && invAcceptShortage > 0) {
+    const per = Math.round((invAcceptShortage / invAcceptEmpIds.size) * 100) / 100;
+    const wk = isoDate(weekStart(new Date()));
+    const note = 'Инвентура ' + new Date().toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' });
+    invAcceptEmpIds.forEach(empId => state.staff.penalties.push({ id: uid(), empId, wk, sum: per, note }));
+    msg = `Учёт обновлён. Штраф ${money(invAcceptShortage)} назначен (${invAcceptEmpIds.size} чел.)`;
+  }
+  save(); renderInv(); renderSched(); closeSheet('invAcceptSheet');
+  snackbar(msg, () => {
+    state.inventory = JSON.parse(backupInv);
+    state.staff.penalties = JSON.parse(backupPen);
+    save(); renderInv(); renderSched();
+  });
 }
 /* ---------- print inventory (A4, портретная) ---------- */
 function printInventory() {
