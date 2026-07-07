@@ -496,6 +496,18 @@ input[type=file]{display:none}
 .p-name{font-size:15.5px;font-weight:600;overflow-wrap:anywhere}
 .p-meta{font-size:12.5px;color:var(--muted);margin-top:2px;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
 
+/* ---------- print list sheet ---------- */
+.plr-list{max-height:52vh;overflow-y:auto;margin:4px 0 14px}
+.plr-row{display:flex;align-items:center;gap:10px;padding:9px 4px;border-bottom:1px solid var(--line)}
+.plr-row:last-child{border-bottom:none}
+.plr-row.skip{opacity:.45}
+.plr-body{flex:1;min-width:0}
+.plr-name{font-size:14.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.plr-meta{font-size:12px;color:var(--muted);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.plr-qty{width:60px;flex:none;text-align:center;padding:9px 4px;border:2px solid var(--line);border-radius:12px;font-size:14.5px;font-weight:700;background:var(--bg);outline:none}
+.plr-qty:focus{border-color:var(--accent);background:#fff}
+.plr-footer{display:flex;justify-content:space-between;align-items:baseline;font-size:14px;font-weight:800;margin-bottom:12px}
+
 /* ---------- schedule ---------- */
 .sched-bar{display:flex;align-items:center;gap:10px;margin-top:14px;flex-wrap:wrap}
 .sched-nav{display:flex;align-items:center;gap:4px;background:var(--card);border-radius:14px;box-shadow:var(--shadow);padding:4px}
@@ -1067,6 +1079,7 @@ input[type=file]{display:none}
       <button class="action-item" onclick="openSyncSheet()"><span class="ic" data-icon="cloud"></span><span>Облако — копия данных<small>Телефон + PIN · Google Таблица</small></span></button>
       <button class="action-item" onclick="refreshFromCatalog()"><span class="ic" data-icon="refresh"></span><span>Обновить из каталога<small>Свежие цены и места для некупленного</small></span></button>
       <button class="action-item" onclick="shareList()"><span class="ic" data-icon="share"></span><span>Поделиться списком<small>Отправить текстом</small></span></button>
+      <button class="action-item" onclick="openPrintListSheet()"><span class="ic" data-icon="printer"></span><span>Печать списка<small>Накладная A4 или этикетки 40×30</small></span></button>
       <button class="action-item" onclick="exportData()"><span class="ic" data-icon="export"></span><span>Файл-копия на компьютер<small>Резервный JSON, работает без облака</small></span></button>
       <button class="action-item" onclick="document.getElementById('importFile').click()"><span class="ic" data-icon="import"></span><span>Восстановить из файла<small>Если нет доступа к облаку</small></span></button>
       <button class="action-item" onclick="closeSheet('menuSheet');openSheet('installSheet')"><span class="ic" data-icon="phone"></span><span>Установить на телефон</span></button>
@@ -1115,6 +1128,24 @@ input[type=file]{display:none}
       </div>
     </div>
     <button class="btn btn-ghost" onclick="closeSheet('aboutSheet')">Закрыть</button>
+  </div>
+</div>
+
+<div class="sheet-wrap" id="printListSheet"><div class="backdrop" onclick="closeSheet('printListSheet')"></div>
+  <div class="sheet">
+    <div class="grab"></div>
+    <h2>Печать списка</h2>
+    <div class="seg seg-wide">
+      <button id="plmDoc" class="on" onclick="setPrintListMode('doc')">Накладная A4</button>
+      <button id="plmLabels" onclick="setPrintListMode('labels')">Этикетки 40×30</button>
+    </div>
+    <p id="printListHint" style="color:var(--muted);font-size:12.5px;margin:8px 4px 0"></p>
+    <div class="plr-list" id="printListRows"></div>
+    <div class="plr-footer" id="printListFooter"></div>
+    <button class="btn btn-primary" onclick="executePrintList()">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M7 8.5V4h10v4.5M7 17.5H5.5A1.5 1.5 0 0 1 4 16v-5a1.5 1.5 0 0 1 1.5-1.5h13A1.5 1.5 0 0 1 20 11v5a1.5 1.5 0 0 1-1.5 1.5H17M7 14.5h10v6H7z"/></svg>
+      Печать
+    </button>
   </div>
 </div>
 
@@ -1674,7 +1705,8 @@ const ICONS = {
   tag: '<path d="M20.2 13.6 13.6 20.2a1.9 1.9 0 0 1-2.7 0L4 13.3V4h9.3l6.9 6.9a1.9 1.9 0 0 1 0 2.7z"/><circle cx="8.7" cy="8.7" r="1.3"/>',
   cloud: '<path d="M7.2 18.5h9.6a3.7 3.7 0 0 0 .7-7.3 5.4 5.4 0 0 0-10.5-1.2 4.2 4.2 0 0 0 .2 8.5z"/>',
   megaphone: '<path d="M3 10.5v3a1.5 1.5 0 0 0 1.5 1.5H7l7 4.5v-15L7 9H4.5A1.5 1.5 0 0 0 3 10.5z"/><path d="M17.5 9.5a4 4 0 0 1 0 5"/>',
-  refresh: '<path d="M20 12a8 8 0 1 1-2.4-5.7M20 4v4.5h-4.5"/>'
+  refresh: '<path d="M20 12a8 8 0 1 1-2.4-5.7M20 4v4.5h-4.5"/>',
+  printer: '<path d="M7 8.5V4h10v4.5M7 17.5H5.5A1.5 1.5 0 0 1 4 16v-5a1.5 1.5 0 0 1 1.5-1.5h13A1.5 1.5 0 0 1 20 11v5a1.5 1.5 0 0 1-1.5 1.5H17M7 14.5h10v6H7z"/>'
 };
 function ic(name, size) {
   return `<svg width="${size || 19}" height="${size || 19}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${ICONS[name] || ''}</svg>`;
@@ -3618,6 +3650,14 @@ function printDoc(orientation, title, subtitle, bodyHtml) {
 }
 
 /* ---------- print a 40x30mm sticker: name, QR of the SKU, SKU in large digits ---------- */
+function labelHtml(name, sku, qrImg) {
+  return `
+    <div style="width:40mm;height:30mm;box-sizing:border-box;padding:1mm;display:flex;flex-direction:column;align-items:center;font-family:Arial,Helvetica,sans-serif;overflow:hidden;color:#000">
+      <div style="height:7mm;width:100%;flex:none;display:flex;align-items:center;justify-content:center;font-size:2.2mm;font-weight:800;line-height:1.15;overflow:hidden;text-align:center">${esc(name)}</div>
+      <img src="${qrImg}" style="width:15mm;height:15mm;flex:none">
+      <div style="height:5mm;flex:none;display:flex;align-items:center;justify-content:center;font-size:4mm;font-weight:900;letter-spacing:.4mm">${esc(sku)}</div>
+    </div>`;
+}
 function printLabel(id) {
   const p = prodById(id);
   if (!p) return;
@@ -3625,15 +3665,118 @@ function printLabel(id) {
   const qr = qrcode(0, 'M');
   qr.addData(p.sku);
   qr.make();
-  const qrImg = qr.createDataURL(6, 2);
   document.getElementById('printPageStyle').textContent = `@media print{@page{size:40mm 30mm;margin:0}}`;
-  document.getElementById('printSheet').innerHTML = `
-    <div style="width:40mm;height:30mm;box-sizing:border-box;padding:1mm;display:flex;flex-direction:column;align-items:center;font-family:Arial,Helvetica,sans-serif;overflow:hidden;color:#000">
-      <div style="height:7mm;width:100%;flex:none;display:flex;align-items:center;justify-content:center;font-size:2.2mm;font-weight:800;line-height:1.15;overflow:hidden;text-align:center">${esc(p.name)}</div>
-      <img src="${qrImg}" style="width:15mm;height:15mm;flex:none">
-      <div style="height:5mm;flex:none;display:flex;align-items:center;justify-content:center;font-size:4mm;font-weight:900;letter-spacing:.4mm">${esc(p.sku)}</div>
-    </div>`;
+  document.getElementById('printSheet').innerHTML = labelHtml(p.name, p.sku, qr.createDataURL(6, 2));
   window.print();
+}
+function printLabelsBatch(items) {
+  document.getElementById('printPageStyle').textContent = `@media print{@page{size:40mm 30mm;margin:0}}`;
+  const pages = [];
+  items.forEach(it => {
+    const qr = qrcode(0, 'M');
+    qr.addData(it.sku);
+    qr.make();
+    const qrImg = qr.createDataURL(6, 2);
+    for (let i = 0; i < it.qty; i++) pages.push(labelHtml(it.name, it.sku, qrImg));
+  });
+  document.getElementById('printSheet').innerHTML = pages
+    .map((html, i) => i < pages.length - 1 ? `<div style="page-break-after:always">${html}</div>` : html)
+    .join('');
+  window.print();
+}
+
+/* ---------- print current purchase list: A4 invoice or batch 40x30 labels ---------- */
+let printListMode = 'doc';
+let printListQty = {};
+function openPrintListSheet() {
+  closeSheet('menuSheet');
+  printListMode = 'doc';
+  printListQty = {};
+  data().stores.forEach(s => s.items.forEach(it => { printListQty[it.id] = +it.qty || 0; }));
+  document.getElementById('plmDoc').classList.add('on');
+  document.getElementById('plmLabels').classList.remove('on');
+  renderPrintListRows();
+  openSheet('printListSheet');
+}
+function printListRowsData() {
+  const rows = [];
+  data().stores.forEach(s => s.items.forEach(it => {
+    const p = state.catalogDB.products.find(x => x.name.toLowerCase() === it.name.toLowerCase());
+    rows.push({ it, storeName: s.name, sku: p && p.sku ? p.sku : '' });
+  }));
+  return rows;
+}
+function setPrintListMode(m) {
+  printListMode = m;
+  document.getElementById('plmDoc').classList.toggle('on', m === 'doc');
+  document.getElementById('plmLabels').classList.toggle('on', m === 'labels');
+  renderPrintListRows();
+}
+function renderPrintListRows() {
+  const rows = printListRowsData();
+  document.getElementById('printListHint').textContent = printListMode === 'labels'
+    ? 'Этикетка печатается для каждой единицы товара — по количеству ниже. Доступны только товары с ID из каталога.'
+    : 'В накладную попадут все товары из списка с указанным количеством.';
+  const usable = printListMode === 'labels' ? rows.filter(r => r.sku) : rows;
+  const skipped = printListMode === 'labels' ? rows.filter(r => !r.sku) : [];
+  document.getElementById('printListRows').innerHTML =
+    (usable.length ? usable.map(r => `
+      <div class="plr-row">
+        <div class="plr-body">
+          <div class="plr-name">${esc(r.it.name)}</div>
+          <div class="plr-meta">${esc(r.storeName)}${r.it.loc ? ' · ' + esc(r.it.loc) : ''}${printListMode === 'doc' ? ' · ' + money(r.it.price || 0) : ' · #' + esc(r.sku)}</div>
+        </div>
+        <input type="number" min="0" inputmode="numeric" class="plr-qty" autocomplete="off"
+          value="${printListQty[r.it.id] ?? 0}"
+          oninput="printListQty['${r.it.id}']=Math.max(0,+this.value||0);updatePrintListFooter()">
+      </div>`).join('') : '<div class="empty-items">Список пуст</div>') +
+    (skipped.length ? `<div class="plr-row skip"><div class="plr-body"><div class="plr-name" style="white-space:normal">${skipped.map(r => esc(r.it.name)).join(', ')}</div><div class="plr-meta">нет ID в каталоге — пропущены</div></div></div>` : '');
+  updatePrintListFooter();
+}
+function updatePrintListFooter() {
+  const rows = printListRowsData();
+  const usable = printListMode === 'labels' ? rows.filter(r => r.sku) : rows;
+  const footer = document.getElementById('printListFooter');
+  if (printListMode === 'labels') {
+    const count = usable.reduce((t, r) => t + (printListQty[r.it.id] || 0), 0);
+    footer.innerHTML = `<span>Этикеток к печати</span><span>${count}</span>`;
+  } else {
+    const total = usable.reduce((t, r) => t + (printListQty[r.it.id] || 0) * (+r.it.price || 0), 0);
+    footer.innerHTML = `<span>Итого</span><span>${money(total)}</span>`;
+  }
+}
+function executePrintList() {
+  const rows = printListRowsData();
+  if (printListMode === 'labels') {
+    const items = rows.filter(r => r.sku && (printListQty[r.it.id] || 0) > 0)
+      .map(r => ({ name: r.it.name, sku: r.sku, qty: printListQty[r.it.id] }));
+    if (!items.length) { toast('Нет товаров для печати этикеток'); return; }
+    printLabelsBatch(items);
+  } else {
+    const picks = rows.filter(r => (printListQty[r.it.id] || 0) > 0);
+    if (!picks.length) { toast('Укажите количество для печати'); return; }
+    let total = 0;
+    const body = picks.map(r => {
+      const qty = printListQty[r.it.id];
+      const sum = qty * (+r.it.price || 0);
+      total += sum;
+      return `<tr>
+        <td style="${PTD}"><b>${esc(r.it.name)}</b>${r.it.loc ? `<span style="color:#64748B;font-size:11px"> · ${esc(r.it.loc)}</span>` : ''}</td>
+        <td style="${PTD};text-align:right">${money(r.it.price || 0)}</td>
+        <td style="${PTD};text-align:center;font-weight:800;font-size:15px">${fmt(qty)}</td>
+        <td style="${PTD};text-align:right;font-weight:700">${sum ? money(sum) : ''}</td>
+      </tr>`;
+    }).join('');
+    printDoc('portrait', 'Накладная', list().name, `
+      <table style="border-collapse:collapse;width:100%">
+        <tr>
+          <th style="${PTH};text-align:left">Товар</th><th style="${PTH}">Цена</th>
+          <th style="${PTH}">Кол-во</th><th style="${PTH}">Сумма</th>
+        </tr>${body}
+      </table>
+      <div style="margin-top:12px;font-size:15px;font-weight:900">Итого: ${money(total)}</div>`);
+  }
+  closeSheet('printListSheet');
 }
 
 /* ---------- print week (A4, альбомная) ---------- */
