@@ -428,6 +428,14 @@ input,select{font-family:inherit}
 
 .sheet .about p{color:var(--muted);font-size:14.5px;line-height:1.6;margin:0 0 12px}
 .sheet .about b{color:var(--text)}
+.about-toggle{
+  display:flex;align-items:center;gap:5px;border:none;background:none;cursor:pointer;
+  color:var(--accent);font-size:13.5px;font-weight:800;padding:0 0 14px;
+}
+.about-toggle .chev{transition:transform .25s}
+.about-toggle.open .chev{transform:rotate(180deg)}
+.about-collapse{max-height:0;overflow:hidden;transition:max-height .35s ease}
+.about-collapse.open{max-height:600px}
 input[type=file]{display:none}
 
 /* ---------- bottom navigation ---------- */
@@ -1043,9 +1051,14 @@ input[type=file]{display:none}
     <div class="grab"></div>
     <h2>О приложении</h2>
     <div class="about">
-      <p><b>BDG</b> — планировщик закупок и бюджета от КИВИ Маркет.</p>
-      <p>Задайте бюджет, добавьте магазины и товары — приложение посчитает траты и остаток. Отмечайте купленное одним касанием, следите за регулярными платежами по дню месяца.</p>
-      <p>Все данные хранятся только в вашем браузере и сохраняются автоматически при каждом изменении. Для надёжности делайте экспорт-копию в меню.</p>
+      <p><b>BDG</b> — планировщик закупок и бюджета от КИВИ Маркет. Бюджет, магазины и товары — под контролем в одно касание.</p>
+      <button class="about-toggle" onclick="toggleAboutMore('aboutMore', this)">
+        Смотреть больше<svg class="chev" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+      </button>
+      <div class="about-collapse" id="aboutMore">
+        <p>Помимо закупок — полноценный органайзер бизнеса: <b>Долги и кредиты</b> с датами платежей, <b>График</b> сотрудников с расчётом зарплаты и печатью на A4, <b>Инвентура</b> с планированием закупок, <b>План</b> — чек-листы дел.</p>
+        <p>Данные синхронизируются между устройствами через облако, а встроенный ИИ-ассистент сам подскажет, когда пора сохраниться.</p>
+      </div>
     </div>
     <button class="btn btn-ghost" onclick="closeSheet('aboutSheet')">Закрыть</button>
   </div>
@@ -1149,9 +1162,15 @@ input[type=file]{display:none}
     <div class="grab"></div>
     <h2>Облако — копия данных</h2>
     <div class="about">
-      <p>Все данные (списки, каталог, бюджет, долги, график, инвентура) сохраняются в защищённое облако под вашим логином. Другие пользователи их не видят. При первой выгрузке аккаунт создаётся автоматически — просто придумайте PIN.</p>
-      <p><b>Номер вводите без +7 и без 8</b> — сразу с девятки, 10 цифр: например 9991234567. Если введёте с 7 или 8 в начале, мы поправим сами.</p>
-      <p>Это работает автоматически: ассистент сам предложит сохранить после изменений, а при открытии на другом устройстве спросит, если там есть более свежая версия. Кнопки «Файл-копия» и «Восстановить из файла» в меню — отдельный, ручной способ бэкапа на случай, если облако недоступно.</p>
+      <p>Данные сохраняются в защищённое облако по вашему номеру и PIN — надёжно и видно только вам.</p>
+      <button class="about-toggle" onclick="toggleAboutMore('syncAboutMore', this)">
+        Подробнее<svg class="chev" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+      </button>
+      <div class="about-collapse" id="syncAboutMore">
+        <p>Все данные (списки, каталог, бюджет, долги, график, инвентура) защищены логином и PIN — другие пользователи их не видят. При первой выгрузке аккаунт создаётся автоматически.</p>
+        <p><b>Номер вводите без +7 и без 8</b> — сразу с девятки, 10 цифр: например 9991234567. Если введёте с 7 или 8 в начале, мы поправим сами.</p>
+        <p>Это работает автоматически: ассистент сам предложит сохранить после изменений, а при открытии на другом устройстве спросит, если там есть более свежая версия. Кнопки «Файл-копия» и «Восстановить из файла» в меню — отдельный, ручной способ бэкапа на случай, если облако недоступно.</p>
+      </div>
     </div>
     <div class="field">
       <label>Телефон — логин (10 цифр, без +7 и 8)</label>
@@ -1811,6 +1830,11 @@ function openSheet(id) {
 }
 function closeSheet(id) {
   document.getElementById(id).classList.remove('open');
+}
+function toggleAboutMore(id, btn) {
+  const open = document.getElementById(id).classList.toggle('open');
+  btn.classList.toggle('open', open);
+  btn.firstChild.textContent = open ? 'Свернуть' : (id === 'aboutMore' ? 'Смотреть больше' : 'Подробнее');
 }
 function openFabSheet() {
   if (!data().stores.length) { openStoreSheet(); return; }
