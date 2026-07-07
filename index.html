@@ -2668,11 +2668,19 @@ function dispatchPrint(title) {
   const s = syncState();
   const isMobile = !window.matchMedia('(min-width:920px)').matches;
   if (isMobile && s.login && s.pin) openSheet('printDispatchSheet');
-  else window.print();
+  else printNow();
 }
 function printLocalNow() {
   closeSheet('printDispatchSheet');
-  window.print();
+  printNow();
+}
+// QR-картинки — это data:-URL, вставленные через innerHTML прямо перед печатью; браузеру нужно
+// время их отрисовать, иначе window.print() иногда захватывает кадр раньше и в этикетке пусто
+function printNow() {
+  const imgs = Array.from(document.querySelectorAll('#printSheet img'));
+  Promise.all(imgs.map(img => (img.complete && img.naturalWidth > 0) ? Promise.resolve() :
+    new Promise(res => { img.addEventListener('load', res, { once: true }); img.addEventListener('error', res, { once: true }); })
+  )).then(() => window.print());
 }
 function printRemoteNow() {
   const s = syncState();
@@ -2730,7 +2738,7 @@ function pollPrintJob() {
       document.getElementById('printPageStyle').textContent = res.job.pageStyle;
       document.getElementById('printSheet').innerHTML = res.job.html;
       toast(`Печатаю с телефона: ${res.job.title}`);
-      window.print();
+      printNow();
     })
     .catch(() => {});
 }
