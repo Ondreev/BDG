@@ -561,6 +561,11 @@ input[type=file]{display:none}
 .emp-pick-row .epr-sum{font-size:13.5px;font-weight:800;color:var(--red);white-space:nowrap}
 .inv-warn{margin-top:12px;padding:11px 14px;border-radius:14px;background:var(--amber-soft);color:var(--amber);font-size:12.5px;font-weight:600;line-height:1.5}
 
+/* ---------- QR scan sheet ---------- */
+.scan-viewport{position:relative;width:100%;aspect-ratio:1/1;background:#0B0F19;overflow:hidden}
+.scan-viewport video{width:100%;height:100%;object-fit:cover;display:block}
+.scan-frame{position:absolute;inset:14%;border:3px solid #fff;border-radius:18px;box-shadow:0 0 0 999px rgba(0,0,0,.4);pointer-events:none}
+
 /* ---------- inventory ---------- */
 .inv-table-inner{width:max-content;min-width:100%}
 .inv-row{display:flex;align-items:center;gap:8px;padding:10px 14px;border-bottom:1px solid var(--line)}
@@ -1111,9 +1116,14 @@ input[type=file]{display:none}
   <div class="sheet">
     <div class="grab"></div>
     <h2>Каталог товаров</h2>
-    <div class="search-wrap">
-      <span class="sic"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="6.5"/><path d="M20.2 20.2l-4.6-4.6"/></svg></span>
-      <input id="catSearch" type="text" placeholder="Название, цена или категория" autocomplete="off" oninput="renderCatalog()">
+    <div style="display:flex;gap:8px;align-items:center;margin-bottom:12px">
+      <div class="search-wrap" style="flex:1;margin-bottom:0">
+        <span class="sic"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="6.5"/><path d="M20.2 20.2l-4.6-4.6"/></svg></span>
+        <input id="catSearch" type="text" placeholder="Название, цена или категория" autocomplete="off" oninput="renderCatalog()">
+      </div>
+      <button class="icon-btn" onclick="openScanSheet()" aria-label="Сканировать QR-код">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#475569" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8V5.5A1.5 1.5 0 0 1 5.5 4H8M16 4h2.5A1.5 1.5 0 0 1 20 5.5V8M20 16v2.5a1.5 1.5 0 0 1-1.5 1.5H16M8 20H5.5A1.5 1.5 0 0 1 4 18.5V16"/><rect x="9" y="9" width="6" height="6" rx="1"/></svg>
+      </button>
     </div>
     <div class="chips" id="catChips"></div>
     <div class="chips" id="catLocChips"></div>
@@ -1152,7 +1162,15 @@ input[type=file]{display:none}
       <div class="chips" id="catProdLocChips"></div>
       <input id="catProdLoc" type="text" placeholder="Например: 2Г, линия 2А" autocomplete="off" oninput="renderCatProdLocChips()">
     </div>
+    <div class="field">
+      <label>ID / номер товара в кассе</label>
+      <input id="catProdSku" type="text" inputmode="numeric" placeholder="Например: 10234" autocomplete="off">
+    </div>
     <button class="btn btn-primary" id="catProdSaveBtn" onclick="saveCatProduct()">Добавить</button>
+    <button class="btn btn-ghost" id="catProdPrintBtn" onclick="printLabel(catEditProductId)" style="display:none">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V3.5h12V9M6 17H4.5A1.5 1.5 0 0 1 3 15.5v-5A1.5 1.5 0 0 1 4.5 9h15A1.5 1.5 0 0 1 21 10.5v5a1.5 1.5 0 0 1-1.5 1.5H18M6 14h12v6.5H6z"/></svg>
+      Печать этикетки 40×30
+    </button>
     <button class="btn btn-danger-ghost" id="catProdDeleteBtn" onclick="deleteCatProduct()" style="display:none">Удалить из каталога</button>
   </div>
 </div>
@@ -1186,6 +1204,21 @@ input[type=file]{display:none}
       <input id="catAddLoc" type="text" placeholder="Например: 2Г, линия 2А" autocomplete="off">
     </div>
     <button class="btn btn-primary" onclick="saveCatAdd()">Добавить в список</button>
+  </div>
+</div>
+
+<div class="sheet-wrap" id="scanSheet"><div class="backdrop" onclick="closeScanSheet()"></div>
+  <div class="sheet" style="padding-left:0;padding-right:0">
+    <div class="grab"></div>
+    <h2 style="padding:0 20px">Сканировать QR-код</h2>
+    <div class="scan-viewport">
+      <video id="scanVideo" autoplay playsinline muted></video>
+      <div class="scan-frame"></div>
+    </div>
+    <p id="scanStatus" style="color:var(--muted);font-size:13.5px;text-align:center;margin:14px 20px 0">Наведите камеру на QR-код на этикетке товара</p>
+    <div style="padding:0 20px">
+      <button class="btn btn-ghost" style="margin-top:16px" onclick="closeScanSheet()">Закрыть</button>
+    </div>
   </div>
 </div>
 
@@ -1450,7 +1483,10 @@ input[type=file]{display:none}
 
 <div class="print-sheet" id="printSheet"></div>
 <style id="printPageStyle">@media print{@page{size:A4 landscape;margin:10mm}}</style>
+<canvas id="scanCanvas" style="display:none"></canvas>
 
+<script src="qrcode.min.js"></script>
+<script src="jsqr.min.js"></script>
 <script>
 'use strict';
 /* ================= storage ================= */
@@ -1535,7 +1571,7 @@ function sanitizeCatalogDB(s) {
   s.catalogDB.categories = Array.isArray(s.catalogDB.categories) ? s.catalogDB.categories : [];
   s.catalogDB.products = Array.isArray(s.catalogDB.products) ? s.catalogDB.products : [];
   s.catalogDB.categories.forEach(c => { c.id = c.id || uid(); c.name = c.name || 'Категория'; });
-  s.catalogDB.products.forEach(p => { p.id = p.id || uid(); p.price = +p.price || 0; p.categoryId = p.categoryId || null; });
+  s.catalogDB.products.forEach(p => { p.id = p.id || uid(); p.price = +p.price || 0; p.categoryId = p.categoryId || null; p.sku = p.sku || ''; });
   // debts / staff / inventory modules
   s.debts = Array.isArray(s.debts) ? s.debts : [];
   s.debts.forEach(d => { d.id = d.id || uid(); d.amount = +d.amount || 0; d.paid = !!d.paid; });
@@ -2724,6 +2760,57 @@ function catAddClick(pid) {
   else openCatAddSheet(pid);
 }
 
+/* ---------- add a catalog item by scanning the QR code printed on its label ---------- */
+let scanStream = null, scanRAF = null;
+function openScanSheet() {
+  document.getElementById('scanStatus').textContent = 'Наведите камеру на QR-код на этикетке товара';
+  openSheet('scanSheet');
+  navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
+    .then(stream => {
+      scanStream = stream;
+      const video = document.getElementById('scanVideo');
+      video.srcObject = stream;
+      video.play();
+      scanRAF = requestAnimationFrame(scanTick);
+    })
+    .catch(() => {
+      document.getElementById('scanStatus').textContent = 'Нет доступа к камере — разрешите доступ в настройках браузера';
+    });
+}
+function scanTick() {
+  const video = document.getElementById('scanVideo');
+  if (video.readyState === video.HAVE_ENOUGH_DATA) {
+    const canvas = document.getElementById('scanCanvas');
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+    const img = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    const code = jsQR(img.data, img.width, img.height);
+    if (code && code.data) { handleScanResult(code.data.trim()); return; }
+  }
+  scanRAF = requestAnimationFrame(scanTick);
+}
+function handleScanResult(text) {
+  const p = state.catalogDB.products.find(x => (x.sku || '').trim() === text);
+  if (!p) {
+    document.getElementById('scanStatus').textContent = `Товар с ID «${text}» не найден в каталоге`;
+    vibrate(15);
+    scanRAF = requestAnimationFrame(scanTick);
+    return;
+  }
+  vibrate([15, 40, 15]);
+  closeScanSheet();
+  closeSheet('catalogSheet');
+  catAddClick(p.id);
+}
+function closeScanSheet() {
+  closeSheet('scanSheet');
+  if (scanRAF) cancelAnimationFrame(scanRAF);
+  scanRAF = null;
+  if (scanStream) { scanStream.getTracks().forEach(t => t.stop()); scanStream = null; }
+}
+
 function productMatches(p, q) {
   if (!q) return true;
   if (textMatch(p.name, q)) return true;
@@ -2769,7 +2856,7 @@ function renderCatalog() {
     <div class="cat-row">
       <div class="cat-info" onclick="openCatProductSheet('${p.id}')">
         <div class="cat-name">${esc(p.name)}</div>
-        <div class="cat-meta">${cat ? esc(cat.name) : 'Без категории'}${p.loc ? ' · ' + esc(p.loc) : ''}</div>
+        <div class="cat-meta">${cat ? esc(cat.name) : 'Без категории'}${p.loc ? ' · ' + esc(p.loc) : ''}${p.sku ? ' · #' + esc(p.sku) : ''}</div>
       </div>
       <span class="cat-price">${money(p.price)}</span>
       <button class="cat-add" onclick="catAddClick('${p.id}')" aria-label="Добавить">${ic('plus', 18)}</button>
@@ -2786,9 +2873,11 @@ function openCatProductSheet(id) {
   document.getElementById('catProductTitle').textContent = p ? 'Редактировать товар' : 'Товар каталога';
   document.getElementById('catProdSaveBtn').textContent = p ? 'Сохранить' : 'Добавить';
   document.getElementById('catProdDeleteBtn').style.display = p ? 'flex' : 'none';
+  document.getElementById('catProdPrintBtn').style.display = p ? 'flex' : 'none';
   document.getElementById('catProdName').value = p ? p.name : '';
   document.getElementById('catProdPrice').value = p ? (p.price || '') : '';
   document.getElementById('catProdLoc').value = p && p.loc ? p.loc : '';
+  document.getElementById('catProdSku').value = p && p.sku ? p.sku : '';
   renderCatProdLocChips();
   const sel = document.getElementById('catProdCategory');
   sel.innerHTML = `<option value="">Без категории</option>` +
@@ -2829,10 +2918,11 @@ function saveCatProduct() {
     categoryId = cat.id;
   }
   const loc = document.getElementById('catProdLoc').value.trim();
+  const sku = document.getElementById('catProdSku').value.trim();
   if (catEditProductId) {
-    Object.assign(prodById(catEditProductId), { name, price, categoryId, loc });
+    Object.assign(prodById(catEditProductId), { name, price, categoryId, loc, sku });
   } else {
-    state.catalogDB.products.push({ id: uid(), name, price, categoryId, loc });
+    state.catalogDB.products.push({ id: uid(), name, price, categoryId, loc, sku });
   }
   save(); renderCatalog(); renderInv(); closeSheet('catProductSheet'); vibrate(10);
 }
@@ -3450,6 +3540,25 @@ function printDoc(orientation, title, subtitle, bodyHtml) {
       </div>
       ${bodyHtml}
       <div style="margin-top:12px;font-size:11px;color:#94A3B8;font-weight:600">Сформировано в BDG · ${new Date().toLocaleDateString('ru-RU')}</div>
+    </div>`;
+  window.print();
+}
+
+/* ---------- print a 40x30mm sticker: name, QR of the SKU, SKU in large digits ---------- */
+function printLabel(id) {
+  const p = prodById(id);
+  if (!p) return;
+  if (!p.sku) { toast('Сначала укажите ID/номер товара'); return; }
+  const qr = qrcode(0, 'M');
+  qr.addData(p.sku);
+  qr.make();
+  const qrImg = qr.createDataURL(6, 2);
+  document.getElementById('printPageStyle').textContent = `@media print{@page{size:40mm 30mm;margin:0}}`;
+  document.getElementById('printSheet').innerHTML = `
+    <div style="width:40mm;height:30mm;box-sizing:border-box;padding:1.5mm;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;font-family:Arial,Helvetica,sans-serif;overflow:hidden;color:#000">
+      <div style="font-size:2.6mm;font-weight:800;line-height:1.15;max-height:8mm;overflow:hidden">${esc(p.name)}</div>
+      <img src="${qrImg}" style="width:15mm;height:15mm;margin:0.8mm 0">
+      <div style="font-size:4.2mm;font-weight:900;letter-spacing:.4mm">${esc(p.sku)}</div>
     </div>`;
   window.print();
 }
