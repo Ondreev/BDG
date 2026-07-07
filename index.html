@@ -1392,6 +1392,7 @@ input[type=file]{display:none}
         <button id="segSurplusYes" class="on" onclick="setInvAcceptSurplus(true)">Да</button>
         <button id="segSurplusNo" onclick="setInvAcceptSurplus(false)">Нет</button>
       </div>
+      <div style="font-size:12px;color:var(--muted);margin-top:6px">Учёт всегда обновится по факту. Влияет только на штраф: излишек уменьшает недостачу.</div>
     </div>
 
     <div class="field" id="invAcceptPenalizeField">
@@ -3664,7 +3665,11 @@ function invAction() {
 }
 
 /* ---------- accept fact as new baseline: surplus + shortage-penalty flow ---------- */
-let invAcceptSurplus = true, invAcceptPenalize = false, invAcceptEmpIds = new Set(), invAcceptShortage = 0;
+// when surpluses are counted, they offset the shortage before it's split into penalties
+let invAcceptSurplus = true, invAcceptPenalize = false, invAcceptEmpIds = new Set(), invAcceptShortage = 0, invAcceptSurplusTotal = 0;
+function invAcceptPenaltyBase() {
+  return Math.max(0, invAcceptShortage - (invAcceptSurplus ? invAcceptSurplusTotal : 0));
+}
 function openInvAcceptSheet() {
   const cnt = state.inventory.filter(r => r.actual !== null && r.actual !== undefined).length;
   if (!cnt) { toast('Сначала введите фактические остатки'); return; }
@@ -3675,6 +3680,7 @@ function openInvAcceptSheet() {
     if (c.diffSum < 0) shortage += c.diffSum; else surplus += c.diffSum;
   });
   invAcceptShortage = Math.abs(shortage);
+  invAcceptSurplusTotal = surplus;
   invAcceptSurplus = true;
   invAcceptPenalize = false;
   invAcceptEmpIds = new Set();
@@ -3691,6 +3697,7 @@ function setInvAcceptSurplus(v) {
   invAcceptSurplus = v;
   document.getElementById('segSurplusYes').classList.toggle('on', v);
   document.getElementById('segSurplusNo').classList.toggle('on', !v);
+  renderInvAcceptEmpList();
 }
 function setInvAcceptPenalize(v) {
   invAcceptPenalize = v;
@@ -3704,7 +3711,7 @@ function toggleInvAcceptEmp(id) {
 }
 function renderInvAcceptEmpList() {
   const emps = state.staff.employees;
-  const per = invAcceptEmpIds.size ? invAcceptShortage / invAcceptEmpIds.size : 0;
+  const per = invAcceptEmpIds.size ? invAcceptPenaltyBase() / invAcceptEmpIds.size : 0;
   document.getElementById('invAcceptEmpList').innerHTML = emps.length
     ? emps.map(e => {
         const on = invAcceptEmpIds.has(e.id);
@@ -3718,25 +3725,26 @@ function renderInvAcceptEmpList() {
     : '<div class="cat-empty">Сначала добавьте сотрудников в Графике</div>';
 }
 function applyInvAccept() {
-  if (invAcceptPenalize && invAcceptShortage > 0 && !invAcceptEmpIds.size) {
+  const penaltyBase = invAcceptPenaltyBase();
+  if (invAcceptPenalize && penaltyBase > 0 && !invAcceptEmpIds.size) {
     toast('Выберите хотя бы одного сотрудника');
     return;
   }
   const backupInv = JSON.stringify(state.inventory);
   const backupPen = JSON.stringify(state.staff.penalties);
+  // факт всегда становится новым учётом — «Учитывать излишки» влияет только на расчёт штрафа
   state.inventory.forEach(r => {
     if (r.actual === null || r.actual === undefined) return;
-    const c = invRowCalc(r);
-    if (!(c.diff > 0 && !invAcceptSurplus)) r.expected = +r.actual || 0;
+    r.expected = +r.actual || 0;
     r.actual = null;
   });
   let msg = 'Учёт обновлён';
-  if (invAcceptPenalize && invAcceptEmpIds.size && invAcceptShortage > 0) {
-    const per = Math.round((invAcceptShortage / invAcceptEmpIds.size) * 100) / 100;
+  if (invAcceptPenalize && invAcceptEmpIds.size && penaltyBase > 0) {
+    const per = Math.round((penaltyBase / invAcceptEmpIds.size) * 100) / 100;
     const wk = isoDate(weekStart(new Date()));
     const note = 'Инвентура ' + new Date().toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' });
     invAcceptEmpIds.forEach(empId => state.staff.penalties.push({ id: uid(), empId, wk, sum: per, note }));
-    msg = `Учёт обновлён. Штраф ${money(invAcceptShortage)} назначен (${invAcceptEmpIds.size} чел.)`;
+    msg = `Учёт обновлён. Штраф ${money(penaltyBase)} назначен (${invAcceptEmpIds.size} чел.)`;
   }
   save(); renderInv(); renderSched(); closeSheet('invAcceptSheet');
   snackbar(msg, () => {
