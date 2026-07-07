@@ -278,8 +278,9 @@ input,select{font-family:inherit}
 .day-badge.today{color:var(--red);background:var(--red-soft)}
 .loc-badge{
   font-size:11px;font-weight:700;color:var(--muted);background:var(--line);
-  padding:2px 7px;border-radius:99px;
+  padding:2px 7px;border-radius:99px;border:none;cursor:pointer;font-family:inherit;
 }
+.loc-badge.active{color:#fff;background:var(--accent)}
 .cat-head{
   display:flex;align-items:center;justify-content:space-between;gap:8px;
   padding:10px 18px 4px;font-size:11px;font-weight:800;letter-spacing:.06em;
@@ -1768,8 +1769,18 @@ function renderStores() {
   }).join('');
 }
 
-// items grouped by catalog category; uncategorized go last without their own header if they are alone
+// group by catalog category, or (toggled from a loc-badge tap) by shelf location
+let groupMode = localStorage.getItem('bdgGroupMode') === 'loc' ? 'loc' : 'cat';
+function toggleGroupMode() {
+  groupMode = groupMode === 'cat' ? 'loc' : 'cat';
+  localStorage.setItem('bdgGroupMode', groupMode);
+  renderStores();
+}
 function storeItemsHTML(s) {
+  return groupMode === 'loc' ? storeItemsByLoc(s) : storeItemsByCat(s);
+}
+// uncategorized/no-location items go last without their own header if they are alone
+function storeItemsByCat(s) {
   const order = new Map(state.catalogDB.categories.map((c, i) => [c.id, i]));
   const groups = new Map();
   s.items.forEach(it => {
@@ -1791,6 +1802,27 @@ function storeItemsHTML(s) {
     return head + groupItems.map(it => itemRowHTML(s.id, it)).join('');
   }).join('');
 }
+function storeItemsByLoc(s) {
+  const groups = new Map();
+  s.items.forEach(it => {
+    const k = (it.loc || '').trim();
+    if (!groups.has(k)) groups.set(k, []);
+    groups.get(k).push(it);
+  });
+  const keys = [...groups.keys()].sort((a, b) => {
+    if (a === '') return 1;
+    if (b === '') return -1;
+    return a.localeCompare(b, 'ru');
+  });
+  const showHeads = !(keys.length === 1 && keys[0] === '');
+  return keys.map(k => {
+    const groupItems = groups.get(k);
+    const groupSum = groupItems.reduce((t, it) => t + (+it.qty || 0) * (+it.price || 0), 0);
+    const head = showHeads
+      ? `<div class="cat-head"><span>${k ? esc(k) : 'Без места'}</span><span class="cat-head-sum">${money(groupSum)}</span></div>` : '';
+    return head + groupItems.map(it => itemRowHTML(s.id, it)).join('');
+  }).join('');
+}
 
 function itemRowHTML(sid, it) {
   const sum = (+it.qty || 0) * (+it.price || 0);
@@ -1808,7 +1840,7 @@ function itemRowHTML(sid, it) {
     </button>
     <div class="item-body" onclick="openItemSheet('${sid}','${it.id}')">
       <div class="item-name">${esc(it.name)}</div>
-      <div class="item-meta"><span>${fmt(it.qty)} × ${fmt(it.price)} ₽</span>${it.loc ? `<span class="loc-badge">${esc(it.loc)}</span>` : ''}${badge}</div>
+      <div class="item-meta"><span>${fmt(it.qty)} × ${fmt(it.price)} ₽</span>${it.loc ? `<span class="loc-badge ${groupMode === 'loc' ? 'active' : ''}" onclick="event.stopPropagation();toggleGroupMode()">${esc(it.loc)}</span>` : ''}${badge}</div>
     </div>
     <span class="item-total ${sum < 0 ? 'neg' : ''}">${money(sum)}</span>
     <button class="drag-handle" aria-label="Перетащить">
