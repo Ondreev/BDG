@@ -969,7 +969,12 @@ input[type=file]{display:none}
     <h2 id="itemSheetTitle">Новый товар</h2>
     <div class="field">
       <label>Название</label>
-      <input id="itemNameInput" type="text" placeholder="Например: Молоко" autocomplete="off" oninput="renderSuggest()" enterkeyhint="next">
+      <div style="display:flex;gap:8px;align-items:center">
+        <input id="itemNameInput" type="text" placeholder="Например: Молоко" autocomplete="off" oninput="renderSuggest()" enterkeyhint="next" style="flex:1">
+        <button type="button" class="icon-btn" onclick="openScanSheet('item')" aria-label="Сканировать QR-код">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#475569" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8V5.5A1.5 1.5 0 0 1 5.5 4H8M16 4h2.5A1.5 1.5 0 0 1 20 5.5V8M20 16v2.5a1.5 1.5 0 0 1-1.5 1.5H16M8 20H5.5A1.5 1.5 0 0 1 4 18.5V16"/><rect x="9" y="9" width="6" height="6" rx="1"/></svg>
+        </button>
+      </div>
     </div>
     <div class="suggest" id="suggestBox"></div>
     <div class="field-row">
@@ -2761,8 +2766,9 @@ function catAddClick(pid) {
 }
 
 /* ---------- add a catalog item by scanning the QR code printed on its label ---------- */
-let scanStream = null, scanRAF = null;
-function openScanSheet() {
+let scanStream = null, scanRAF = null, scanContext = 'catalog';
+function openScanSheet(context) {
+  scanContext = context || 'catalog';
   document.getElementById('scanStatus').textContent = 'Наведите камеру на QR-код на этикетке товара';
   openSheet('scanSheet');
   navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
@@ -2791,18 +2797,50 @@ function scanTick() {
   }
   scanRAF = requestAnimationFrame(scanTick);
 }
+function beepScan(ok) {
+  try {
+    const Ctx = window.AudioContext || window.webkitAudioContext;
+    const ctx = new Ctx();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'sine';
+    osc.frequency.value = ok ? 1500 : 300;
+    gain.gain.setValueAtTime(0.001, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.22, ctx.currentTime + 0.01);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + (ok ? 0.16 : 0.12));
+    osc.connect(gain); gain.connect(ctx.destination);
+    osc.start();
+    osc.stop(ctx.currentTime + 0.2);
+    osc.onended = () => ctx.close();
+  } catch (e) {}
+}
 function handleScanResult(text) {
   const p = state.catalogDB.products.find(x => (x.sku || '').trim() === text);
   if (!p) {
     document.getElementById('scanStatus').textContent = `Товар с ID «${text}» не найден в каталоге`;
+    beepScan(false);
     vibrate(15);
     scanRAF = requestAnimationFrame(scanTick);
     return;
   }
+  beepScan(true);
   vibrate([15, 40, 15]);
   closeScanSheet();
-  closeSheet('catalogSheet');
-  catAddClick(p.id);
+  if (scanContext === 'item') {
+    applyProductToItemForm(p);
+  } else {
+    closeSheet('catalogSheet');
+    catAddClick(p.id);
+  }
+}
+function applyProductToItemForm(p) {
+  document.getElementById('itemNameInput').value = p.name;
+  document.getElementById('itemPriceInput').value = p.price || '';
+  document.getElementById('itemQtyInput').value = 1;
+  if (p.loc) document.getElementById('itemLocInput').value = p.loc;
+  if (p.categoryId) document.getElementById('itemCatSelect').value = p.categoryId;
+  document.getElementById('suggestBox').innerHTML = '';
+  toast(`«${p.name}» найден — проверьте количество и сохраните`);
 }
 function closeScanSheet() {
   closeSheet('scanSheet');
@@ -3555,10 +3593,10 @@ function printLabel(id) {
   const qrImg = qr.createDataURL(6, 2);
   document.getElementById('printPageStyle').textContent = `@media print{@page{size:40mm 30mm;margin:0}}`;
   document.getElementById('printSheet').innerHTML = `
-    <div style="width:40mm;height:30mm;box-sizing:border-box;padding:1.5mm;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;font-family:Arial,Helvetica,sans-serif;overflow:hidden;color:#000">
-      <div style="font-size:2.6mm;font-weight:800;line-height:1.15;max-height:8mm;overflow:hidden">${esc(p.name)}</div>
-      <img src="${qrImg}" style="width:15mm;height:15mm;margin:0.8mm 0">
-      <div style="font-size:4.2mm;font-weight:900;letter-spacing:.4mm">${esc(p.sku)}</div>
+    <div style="width:40mm;height:30mm;box-sizing:border-box;padding:1mm;display:flex;flex-direction:column;align-items:center;font-family:Arial,Helvetica,sans-serif;overflow:hidden;color:#000">
+      <div style="height:7mm;width:100%;flex:none;display:flex;align-items:center;justify-content:center;font-size:2.2mm;font-weight:800;line-height:1.15;overflow:hidden;text-align:center">${esc(p.name)}</div>
+      <img src="${qrImg}" style="width:15mm;height:15mm;flex:none">
+      <div style="height:5mm;flex:none;display:flex;align-items:center;justify-content:center;font-size:4mm;font-weight:900;letter-spacing:.4mm">${esc(p.sku)}</div>
     </div>`;
   window.print();
 }
