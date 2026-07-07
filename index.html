@@ -434,8 +434,16 @@ input,select{font-family:inherit}
 }
 .about-toggle .chev{transition:transform .25s}
 .about-toggle.open .chev{transform:rotate(180deg)}
-.about-collapse{max-height:0;overflow:hidden;transition:max-height .35s ease}
-.about-collapse.open{max-height:600px}
+.about-collapse{max-height:0;overflow:hidden;transition:max-height .4s ease}
+.about-collapse.open{max-height:760px}
+.about-footer{margin-top:6px;padding-top:16px;border-top:1px solid var(--line);text-align:center}
+.about-footer .af-name{font-size:14px;font-weight:800;color:var(--text)}
+.about-footer .af-sub{font-size:10.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);margin-top:4px}
+.about-footer .af-copy{font-size:11.5px;color:var(--muted);margin-top:10px}
+.about-footer .af-contact{
+  display:inline-flex;align-items:center;gap:7px;margin-top:16px;padding:11px 18px;border-radius:99px;
+  background:var(--accent-soft);color:var(--accent);font-size:13px;font-weight:800;text-decoration:none;
+}
 input[type=file]{display:none}
 
 /* ---------- bottom navigation ---------- */
@@ -1058,6 +1066,15 @@ input[type=file]{display:none}
       <div class="about-collapse" id="aboutMore">
         <p>Помимо закупок — полноценный органайзер бизнеса: <b>Долги и кредиты</b> с датами платежей, <b>График</b> сотрудников с расчётом зарплаты и печатью на A4, <b>Инвентура</b> с планированием закупок, <b>План</b> — чек-листы дел.</p>
         <p>Данные синхронизируются между устройствами через облако, а встроенный ИИ-ассистент сам подскажет, когда пора сохраниться.</p>
+        <div class="about-footer">
+          <div class="af-name">Kirill Andreev</div>
+          <div class="af-sub">KIVI Business Tech&trade;</div>
+          <div class="af-sub">Powered by top-tier AI</div>
+          <div class="af-copy">&copy; All rights reserved &middot; Moscow, 2025</div>
+          <a class="af-contact" href="https://wa.me/74951400557" target="_blank" rel="noopener">
+            <span class="ic" data-icon="phone"></span>Пожелания и вопросы — в WhatsApp
+          </a>
+        </div>
       </div>
     </div>
     <button class="btn btn-ghost" onclick="closeSheet('aboutSheet')">Закрыть</button>
