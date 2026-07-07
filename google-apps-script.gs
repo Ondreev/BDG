@@ -16,11 +16,21 @@
  *
  * Скрипт сам создаст лист «users»: login | pin | updated | data1..data8.
  * Каждый пользователь видит только свои данные: строка отдаётся только при совпадении логина и PIN.
+ *
+ * Печать с телефона на компьютер использует тот же скрипт: задания складываются во
+ * временный лист «print_jobs» и удаляются оттуда сразу после того, как их заберёт
+ * компьютер. Если вы уже развернули более раннюю версию скрипта — вставьте этот файл
+ * заново и создайте новую версию развёртывания (Развернуть → Управление развертываниями →
+ * значок карандаша → Версия: «Новая версия» → Развернуть), иначе печать с телефона будет
+ * отвечать ошибкой bad_action.
  */
 
 var SHEET_NAME = 'users';
 var CHUNK = 45000;   // лимит ячейки Google Sheets — 50 000 символов
 var MAXCH = 8;       // до ~360 КБ данных на пользователя
+
+var PRINT_SHEET_NAME = 'print_jobs';
+var PRINT_MAXCH = 12; // до ~540 КБ на одно задание печати (документ + этикетки с QR)
 
 function doPost(e) {
   try {
@@ -66,6 +76,33 @@ function doPost(e) {
         });
       }
 
+      // печать с телефона на компьютер: задание кладётся в очередь и разбирается той же
+      // парой логин/PIN на другом устройстве — компьютер сам его печатает и удаляет из очереди
+      if (req.action === 'print_push') {
+        if (row === -1) return out({ ok: false, error: 'not_found' });
+        if (getPin(sh, row) !== pin) return out({ ok: false, error: 'wrong_pin' });
+        var pjson = JSON.stringify(req.payload || {});
+        if (pjson.length > CHUNK * PRINT_MAXCH) return out({ ok: false, error: 'too_big' });
+        var pchunks = [];
+        for (var j = 0; j < pjson.length; j += CHUNK) pchunks.push(pjson.slice(j, j + CHUNK));
+        while (pchunks.length < PRINT_MAXCH) pchunks.push('');
+        var psh = getPrintSheet();
+        psh.appendRow([login, new Date().toISOString()].concat(pchunks));
+        return out({ ok: true });
+      }
+
+      if (req.action === 'print_poll') {
+        if (row === -1) return out({ ok: false, error: 'not_found' });
+        if (getPin(sh, row) !== pin) return out({ ok: false, error: 'wrong_pin' });
+        var psh2 = getPrintSheet();
+        var prow = findRow(psh2, login);
+        if (prow === -1) return out({ ok: true, job: null });
+        var pvals = psh2.getRange(prow, 3, 1, PRINT_MAXCH).getDisplayValues()[0];
+        var pdata = pvals.join('');
+        psh2.deleteRow(prow);
+        return out({ ok: true, job: pdata ? JSON.parse(pdata) : null });
+      }
+
       return out({ ok: false, error: 'bad_action' });
     } finally {
       lock.releaseLock();
@@ -99,6 +136,18 @@ function findRow(sh, login) {
     if (String(logins[i][0]).replace(/\D/g, '') === login) return i + 2;
   }
   return -1;
+}
+
+function getPrintSheet() {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sh = ss.getSheetByName(PRINT_SHEET_NAME);
+  if (!sh) {
+    sh = ss.insertSheet(PRINT_SHEET_NAME);
+    var head = ['login', 'created'];
+    for (var i = 1; i <= PRINT_MAXCH; i++) head.push('chunk' + i);
+    sh.appendRow(head);
+  }
+  return sh;
 }
 
 function getPin(sh, row) {

@@ -515,7 +515,7 @@ input[type=file]{display:none}
 .sched-nav button:active{background:var(--bg)}
 .sched-nav .lbl{font-size:13.5px;font-weight:800;padding:0 8px;white-space:nowrap;text-transform:capitalize}
 .print-btn{
-  margin-left:auto;display:none;align-items:center;gap:8px;border:none;background:var(--card);
+  margin-left:auto;display:flex;align-items:center;gap:8px;border:none;background:var(--card);
   box-shadow:var(--shadow);border-radius:14px;padding:11px 16px;font-size:13.5px;font-weight:800;cursor:pointer;color:var(--text);
 }
 .table-card{padding:6px 0 0;overflow:hidden}
@@ -718,7 +718,6 @@ input[type=file]{display:none}
     position:static;transform:none;left:auto;bottom:auto;max-width:none;
     background:none;backdrop-filter:none;-webkit-backdrop-filter:none;box-shadow:none;padding:0;
   }
-  .print-btn{display:flex}
   .layout{display:grid;grid-template-columns:410px minmax(0,1fr);gap:26px;align-items:start}
   .side{position:sticky;top:96px}
   .main #stores .store-card:first-child{margin-top:6px}
@@ -1080,6 +1079,7 @@ input[type=file]{display:none}
       <button class="action-item" onclick="refreshFromCatalog()"><span class="ic" data-icon="refresh"></span><span>Обновить из каталога<small>Свежие цены и места для некупленного</small></span></button>
       <button class="action-item" onclick="shareList()"><span class="ic" data-icon="share"></span><span>Поделиться списком<small>Отправить текстом</small></span></button>
       <button class="action-item" onclick="openPrintListSheet()"><span class="ic" data-icon="printer"></span><span>Печать списка<small>Накладная A4 или этикетки 40×30</small></span></button>
+      <button class="action-item" onclick="openPrintReceiverSheet()"><span class="ic" data-icon="cloud"></span><span>Печать с телефона<small>Приём заданий на этом компьютере</small></span></button>
       <button class="action-item" onclick="exportData()"><span class="ic" data-icon="export"></span><span>Файл-копия на компьютер<small>Резервный JSON, работает без облака</small></span></button>
       <button class="action-item" onclick="document.getElementById('importFile').click()"><span class="ic" data-icon="import"></span><span>Восстановить из файла<small>Если нет доступа к облаку</small></span></button>
       <button class="action-item" onclick="closeSheet('menuSheet');openSheet('installSheet')"><span class="ic" data-icon="phone"></span><span>Установить на телефон</span></button>
@@ -1298,6 +1298,33 @@ input[type=file]{display:none}
     <button class="btn btn-primary" id="syncUpBtn" onclick="syncUpload(false)">Выгрузить в облако</button>
     <button class="btn btn-ghost" id="syncDownBtn" onclick="syncDownload()">Загрузить из облака</button>
     <div class="pay-sub" id="syncStatus" style="margin:12px 2px 0"></div>
+  </div>
+</div>
+
+<div class="sheet-wrap" id="printDispatchSheet"><div class="backdrop" onclick="closeSheet('printDispatchSheet')"></div>
+  <div class="sheet">
+    <div class="grab"></div>
+    <h2>Печать</h2>
+    <div class="action-list">
+      <button class="action-item" onclick="printLocalNow()"><span class="ic" data-icon="printer"></span><span>Напечатать с телефона<small>Открыть системное окно печати здесь</small></span></button>
+      <button class="action-item" onclick="printRemoteNow()"><span class="ic" data-icon="cloud"></span><span>Отправить на компьютер<small>Напечатается там, где включён приём</small></span></button>
+    </div>
+  </div>
+</div>
+
+<div class="sheet-wrap" id="printReceiverSheet"><div class="backdrop" onclick="closeSheet('printReceiverSheet')"></div>
+  <div class="sheet">
+    <div class="grab"></div>
+    <h2>Печать с телефона</h2>
+    <div class="about">
+      <p>Включите на компьютере рядом с принтером. Пока эта вкладка открыта, задания на печать, отправленные с телефона, будут запускаться здесь автоматически.</p>
+    </div>
+    <div class="seg seg-wide">
+      <button id="prOff" onclick="setPrintReceiver(false)">Выключено</button>
+      <button id="prOn" onclick="setPrintReceiver(true)">Включено</button>
+    </div>
+    <p id="printReceiverStatus" style="color:var(--muted);font-size:12.5px;margin:10px 4px 0"></p>
+    <button class="btn btn-ghost" style="margin-top:16px" onclick="closeSheet('printReceiverSheet')">Закрыть</button>
   </div>
 </div>
 
@@ -2632,6 +2659,82 @@ function scheduleAutoSync() {
   autoSyncTimer = setTimeout(aiAskSave, 17000);
 }
 
+/* ================= печать с телефона на компьютер (через то же облако) ================= */
+let pendingPrintTitle = '';
+// каждая функция печати сначала кладёт разметку в #printSheet/#printPageStyle, а печатает через эту точку —
+// на телефоне (если облако настроено) вместо мгновенной печати предлагаем выбор устройства
+function dispatchPrint(title) {
+  pendingPrintTitle = title || 'Документ';
+  const s = syncState();
+  const isMobile = !window.matchMedia('(min-width:920px)').matches;
+  if (isMobile && s.login && s.pin) openSheet('printDispatchSheet');
+  else window.print();
+}
+function printLocalNow() {
+  closeSheet('printDispatchSheet');
+  window.print();
+}
+function printRemoteNow() {
+  const s = syncState();
+  const creds = { login: s.login, pin: s.pin, url: s.url || DEFAULT_SYNC_URL };
+  const payload = {
+    title: pendingPrintTitle,
+    pageStyle: document.getElementById('printPageStyle').textContent,
+    html: document.getElementById('printSheet').innerHTML
+  };
+  closeSheet('printDispatchSheet');
+  toast('Отправляю на компьютер…');
+  syncCall(creds, 'print_push', payload)
+    .then(() => toast('Отправлено — откройте BDG на компьютере с включённым приёмом печати'))
+    .catch(err => toast(errToMsg(err)));
+}
+
+// приём заданий на этом устройстве (компьютер у принтера держит вкладку открытой)
+function printReceiverOn() { return localStorage.getItem('bdgPrintReceiver') === '1'; }
+let printReceiverTimer = null;
+function startPrintReceiver() {
+  if (printReceiverTimer) return;
+  pollPrintJob();
+  printReceiverTimer = setInterval(pollPrintJob, 6000);
+}
+function stopPrintReceiver() {
+  clearInterval(printReceiverTimer);
+  printReceiverTimer = null;
+}
+function setPrintReceiver(on) {
+  localStorage.setItem('bdgPrintReceiver', on ? '1' : '0');
+  renderPrintReceiverSheet();
+  if (on) startPrintReceiver(); else stopPrintReceiver();
+}
+function openPrintReceiverSheet() {
+  closeSheet('menuSheet');
+  renderPrintReceiverSheet();
+  openSheet('printReceiverSheet');
+}
+function renderPrintReceiverSheet() {
+  const on = printReceiverOn();
+  document.getElementById('prOn').classList.toggle('on', on);
+  document.getElementById('prOff').classList.toggle('on', !on);
+  const s = syncState();
+  document.getElementById('printReceiverStatus').textContent = (!s.login || !s.pin)
+    ? 'Сначала настройте Облако в меню — без него компьютер не сможет получать задания.'
+    : (on ? 'Ждём заданий с телефона — держите эту вкладку открытой.' : 'Приём выключен.');
+}
+function pollPrintJob() {
+  const s = syncState();
+  if (!s.login || !s.pin) return;
+  if (document.querySelector('.sheet-wrap.open')) return; // не мешаем работе за компьютером
+  syncCall({ login: s.login, pin: s.pin, url: s.url || DEFAULT_SYNC_URL }, 'print_poll')
+    .then(res => {
+      if (!res.job) return;
+      document.getElementById('printPageStyle').textContent = res.job.pageStyle;
+      document.getElementById('printSheet').innerHTML = res.job.html;
+      toast(`Печатаю с телефона: ${res.job.title}`);
+      window.print();
+    })
+    .catch(() => {});
+}
+
 /* ================= ИИ-ассистент ================= */
 const AI_ASKS = [
   'Ты всё или ещё потужишься? Может, сохраню, чтобы ничего не пропало?',
@@ -3646,7 +3749,7 @@ function printDoc(orientation, title, subtitle, bodyHtml) {
       ${bodyHtml}
       <div style="margin-top:12px;font-size:11px;color:#94A3B8;font-weight:600">Сформировано в BDG · ${new Date().toLocaleDateString('ru-RU')}</div>
     </div>`;
-  window.print();
+  dispatchPrint(title);
 }
 
 /* ---------- print a 40x30mm sticker: name, QR of the SKU, SKU in large digits ---------- */
@@ -3667,7 +3770,7 @@ function printLabel(id) {
   qr.make();
   document.getElementById('printPageStyle').textContent = `@media print{@page{size:40mm 30mm;margin:0}}`;
   document.getElementById('printSheet').innerHTML = labelHtml(p.name, p.sku, qr.createDataURL(6, 2));
-  window.print();
+  dispatchPrint('Этикетка: ' + p.name);
 }
 function printLabelsBatch(items) {
   document.getElementById('printPageStyle').textContent = `@media print{@page{size:40mm 30mm;margin:0}}`;
@@ -3682,7 +3785,8 @@ function printLabelsBatch(items) {
   document.getElementById('printSheet').innerHTML = pages
     .map((html, i) => i < pages.length - 1 ? `<div style="page-break-after:always">${html}</div>` : html)
     .join('');
-  window.print();
+  const total = items.reduce((t, it) => t + it.qty, 0);
+  dispatchPrint(`Этикетки (${total} шт.)`);
 }
 
 /* ---------- print current purchase list: A4 invoice or batch 40x30 labels ---------- */
@@ -4328,6 +4432,7 @@ desktopNavMQ.addEventListener('change', placeBottomNav);
 
 load();
 render();
+if (printReceiverOn()) startPrintReceiver(); // приём переживает перезагрузку страницы на этом устройстве
 
 // ассистент включается после старта: первые сохранения при загрузке не считаются
 setTimeout(() => { window.__bdgReady = true; }, 2500);
