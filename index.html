@@ -1272,7 +1272,7 @@ input[type=file]{display:none}
     <div style="display:flex;gap:8px;align-items:center;margin-bottom:12px">
       <div class="search-wrap" style="flex:1;margin-bottom:0">
         <span class="sic"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="6.5"/><path d="M20.2 20.2l-4.6-4.6"/></svg></span>
-        <input id="catSearch" type="text" placeholder="Название, цена или категория" autocomplete="off" oninput="renderCatalog()">
+        <input id="catSearch" type="text" placeholder="Название, цена или категория" autocomplete="off" oninput="renderCatalog()" onkeydown="if(event.key==='Enter')catSearchEnter()">
       </div>
       <button class="icon-btn" onclick="openScanSheet()" aria-label="Сканировать QR-код">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#475569" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8V5.5A1.5 1.5 0 0 1 5.5 4H8M16 4h2.5A1.5 1.5 0 0 1 20 5.5V8M20 16v2.5a1.5 1.5 0 0 1-1.5 1.5H16M8 20H5.5A1.5 1.5 0 0 1 4 18.5V16"/><rect x="9" y="9" width="6" height="6" rx="1"/></svg>
@@ -1380,6 +1380,20 @@ input[type=file]{display:none}
     <div style="padding:0 20px">
       <button class="btn btn-ghost" style="margin-top:16px" onclick="closeScanSheet()">Закрыть</button>
     </div>
+  </div>
+</div>
+
+<div class="sheet-wrap" id="termScanSheet"><div class="backdrop" onclick="closeScanSheet()"></div>
+  <div class="sheet">
+    <div class="grab"></div>
+    <h2>Сканировать ID</h2>
+    <p style="color:var(--muted);font-size:13.5px;margin:0 0 12px">Наведите курсор на поле и отсканируйте штрихкод/QR терминалом — или введите ID вручную и нажмите Enter</p>
+    <div class="field">
+      <label>ID товара</label>
+      <input id="termScanInput" type="text" inputmode="numeric" autocomplete="off" placeholder="Например: 12345" onkeydown="if(event.key==='Enter'){event.preventDefault();submitTermScan();}">
+    </div>
+    <p id="termScanStatus" style="color:var(--red);font-size:13px;min-height:16px;margin:-6px 0 12px"></p>
+    <button class="btn btn-primary" onclick="submitTermScan()">Найти</button>
   </div>
 </div>
 
@@ -3369,6 +3383,9 @@ function catAddClick(pid) {
 let scanStream = null, scanRAF = null, scanContext = 'catalog';
 function openScanSheet(context) {
   scanContext = context || 'catalog';
+  // на десктопе камеры обычно нет под рукой, зато есть терминал-сканер на кассе —
+  // он просто "печатает" код как клавиатура, поэтому даём под это отдельное поле
+  if (window.matchMedia('(min-width:920px)').matches) { openTermScanSheet(); return; }
   document.getElementById('scanStatus').textContent = 'Наведите камеру на QR-код на этикетке товара';
   openSheet('scanSheet');
   navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
@@ -3382,6 +3399,17 @@ function openScanSheet(context) {
     .catch(() => {
       document.getElementById('scanStatus').textContent = 'Нет доступа к камере — разрешите доступ в настройках браузера';
     });
+}
+function openTermScanSheet() {
+  document.getElementById('termScanStatus').textContent = '';
+  document.getElementById('termScanInput').value = '';
+  openSheet('termScanSheet');
+  setTimeout(() => document.getElementById('termScanInput').focus(), 320);
+}
+function submitTermScan() {
+  const v = document.getElementById('termScanInput').value.trim();
+  if (!v) return;
+  handleScanResult(v);
 }
 function scanTick() {
   const video = document.getElementById('scanVideo');
@@ -3416,11 +3444,19 @@ function beepScan(ok) {
 }
 function handleScanResult(text) {
   const p = state.catalogDB.products.find(x => (x.sku || '').trim() === text);
+  const viaTerm = document.getElementById('termScanSheet').classList.contains('open');
   if (!p) {
-    document.getElementById('scanStatus').textContent = `Товар с ID «${text}» не найден в каталоге`;
+    const msg = `Товар с ID «${text}» не найден в каталоге`;
     beepScan(false);
-    vibrate(15);
-    scanRAF = requestAnimationFrame(scanTick);
+    if (viaTerm) {
+      document.getElementById('termScanStatus').textContent = msg;
+      const inp = document.getElementById('termScanInput');
+      inp.select(); inp.focus();
+    } else {
+      document.getElementById('scanStatus').textContent = msg;
+      vibrate(15);
+      scanRAF = requestAnimationFrame(scanTick);
+    }
     return;
   }
   beepScan(true);
@@ -3448,6 +3484,7 @@ function applyProductToItemForm(p) {
 }
 function closeScanSheet() {
   closeSheet('scanSheet');
+  closeSheet('termScanSheet');
   if (scanRAF) cancelAnimationFrame(scanRAF);
   scanRAF = null;
   if (scanStream) { scanStream.getTracks().forEach(t => t.stop()); scanStream = null; }
@@ -3455,11 +3492,13 @@ function closeScanSheet() {
 
 function productMatches(p, q) {
   if (!q) return true;
+  const qn = q.replace(/\s/g, '');
+  if (p.sku && qn && p.sku.includes(qn)) return true; // ID/штрихкод — в т.ч. со сканера-терминала
   if (smartMatch(p.name, q)) return true;
   const cat = catById(p.categoryId);
   if (cat && smartMatch(cat.name, q)) return true;
-  const qn = q.replace(',', '.').replace(/\s/g, '');
-  if (/^\d+(\.\d+)?$/.test(qn) && String(p.price).includes(qn)) return true;
+  const qp = q.replace(',', '.').replace(/\s/g, '');
+  if (/^\d+(\.\d+)?$/.test(qp) && String(p.price).includes(qp)) return true;
   return false;
 }
 
@@ -3489,9 +3528,17 @@ function renderCatalog() {
     : '';
 
   // product rows
+  const qn = q.replace(/\s/g, '');
   const prods = db.products
     .filter(p => (!catFilter || p.categoryId === catFilter) && (!catLocFilter || (p.loc || '').trim() === catLocFilter) && productMatches(p, q))
-    .sort((a, b) => a.name.localeCompare(b.name, 'ru'));
+    .sort((a, b) => {
+      if (qn) { // точный/частичный ID — в приоритете (для скана терминалом/поиска по коду)
+        const ah = a.sku === qn ? 2 : (a.sku && a.sku.includes(qn) ? 1 : 0);
+        const bh = b.sku === qn ? 2 : (b.sku && b.sku.includes(qn) ? 1 : 0);
+        if (ah !== bh) return bh - ah;
+      }
+      return a.name.localeCompare(b.name, 'ru');
+    });
   document.getElementById('catList').innerHTML = prods.length ? prods.map(p => {
     const cat = catById(p.categoryId);
     return `
@@ -3508,6 +3555,19 @@ function renderCatalog() {
 }
 function setCatFilter(id) { catFilter = id === catFilter ? null : id; renderCatalog(); }
 function setCatLocFilter(loc) { catLocFilter = loc === catLocFilter ? null : loc; renderCatalog(); }
+// Enter в поиске каталога — если ID точно совпал (например, со сканера-терминала на кассе),
+// сразу добавляем товар и очищаем поле для следующего скана
+function catSearchEnter() {
+  const input = document.getElementById('catSearch');
+  const qn = input.value.trim().replace(/\s/g, '');
+  if (!qn) return;
+  const exact = state.catalogDB.products.find(p => p.sku && p.sku === qn);
+  if (!exact) return;
+  catAddClick(exact.id);
+  input.value = '';
+  renderCatalog();
+  input.focus();
+}
 
 /* ---------- catalog product add / edit ---------- */
 function openCatProductSheet(id) {
