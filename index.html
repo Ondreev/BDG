@@ -1425,28 +1425,28 @@ input[type=file]{display:none}
 <div class="sheet-wrap" id="syncSheet"><div class="backdrop" onclick="closeSheet('syncSheet')"></div>
   <div class="sheet">
     <div class="grab"></div>
-    <h2>Облако — копия данных</h2>
+    <h2 data-i18n="sync_sheet_title">Облако — копия данных</h2>
     <div class="about">
-      <p>Данные сохраняются в защищённое облако по вашему номеру и PIN — надёжно и видно только вам.</p>
+      <p data-i18n="sync_intro">Данные сохраняются в защищённое облако по вашему номеру и PIN — надёжно и видно только вам.</p>
       <button class="about-toggle" onclick="toggleAboutMore('syncAboutMore', this)">
-        Подробнее<svg class="chev" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+        <span data-i18n="btn_more">Подробнее</span><svg class="chev" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
       </button>
       <div class="about-collapse" id="syncAboutMore">
-        <p>Все данные (списки, каталог, бюджет, долги, график, инвентура) защищены логином и PIN — другие пользователи их не видят. При первой выгрузке аккаунт создаётся автоматически.</p>
-        <p><b>Номер вводите без +7 и без 8</b> — сразу с девятки, 10 цифр: например 9991234567. Если введёте с 7 или 8 в начале, мы поправим сами.</p>
-        <p>Это работает автоматически: ассистент сам предложит сохранить после изменений, а при открытии на другом устройстве спросит, если там есть более свежая версия. Кнопки «Файл-копия» и «Восстановить из файла» в меню — отдельный, ручной способ бэкапа на случай, если облако недоступно.</p>
+        <p data-i18n="sync_about_1">Все данные (списки, каталог, бюджет, долги, график, инвентура) защищены логином и PIN — другие пользователи их не видят. При первой выгрузке аккаунт создаётся автоматически.</p>
+        <p data-i18n-html="sync_about_2"><b>Номер вводите без +7 и без 8</b> — сразу с девятки, 10 цифр: например 9991234567. Если введёте с 7 или 8 в начале, мы поправим сами.</p>
+        <p data-i18n="sync_about_3">Это работает автоматически: ассистент сам предложит сохранить после изменений, а при открытии на другом устройстве спросит, если там есть более свежая версия. Кнопки «Файл-копия» и «Восстановить из файла» в меню — отдельный, ручной способ бэкапа на случай, если облако недоступно.</p>
       </div>
     </div>
     <div class="field">
-      <label>Телефон — логин (10 цифр, без +7 и 8)</label>
+      <label data-i18n="sync_login_label">Телефон — логин (10 цифр, без +7 и 8)</label>
       <input id="syncLogin" type="tel" inputmode="numeric" placeholder="9991234567" autocomplete="off">
     </div>
     <div class="field">
-      <label>PIN — 4 цифры</label>
+      <label data-i18n="sync_pin_label">PIN — 4 цифры</label>
       <input id="syncPin" type="password" inputmode="numeric" maxlength="4" placeholder="••••" autocomplete="off">
     </div>
-    <button class="btn btn-primary" id="syncUpBtn" onclick="syncUpload(false)">Выгрузить в облако</button>
-    <button class="btn btn-ghost" id="syncDownBtn" onclick="syncDownload()">Загрузить из облака</button>
+    <button class="btn btn-primary" id="syncUpBtn" onclick="syncUpload(false)" data-i18n="sync_upload_btn">Выгрузить в облако</button>
+    <button class="btn btn-ghost" id="syncDownBtn" onclick="syncDownload()" data-i18n="sync_download_btn">Загрузить из облака</button>
     <div class="pay-sub" id="syncStatus" style="margin:12px 2px 0"></div>
   </div>
 </div>
@@ -2045,7 +2045,40 @@ const I18N = {
     btn_undo: 'Отменить',
     cat_add_to_list_btn: 'Добавить в список',
     item_qty_now: '«{name}» — теперь {qty} шт.',
-    item_in_list: '«{name}» — в списке'
+    item_in_list: '«{name}» — в списке',
+
+    sync_upload_btn: 'Выгрузить в облако',
+    sync_uploading_btn: 'Выгружаю…',
+    sync_download_btn: 'Загрузить из облака',
+    sync_downloading_btn: 'Загружаю…',
+    sync_download_confirm_title: 'Загрузить из облака?',
+    sync_download_confirm_text: 'Текущие данные на этом устройстве будут заменены копией из облака.',
+    sync_no_cloud_data: 'В облаке пока нет данных',
+    sync_downloaded_toast: 'Данные загружены из облака',
+
+    sync_sheet_title: 'Облако — копия данных',
+    sync_intro: 'Данные сохраняются в защищённое облако по вашему номеру и PIN — надёжно и видно только вам.',
+    btn_more: 'Подробнее',
+    btn_less: 'Свернуть',
+    btn_show_more: 'Смотреть больше',
+    sync_about_1: 'Все данные (списки, каталог, бюджет, долги, график, инвентура) защищены логином и PIN — другие пользователи их не видят. При первой выгрузке аккаунт создаётся автоматически.',
+    sync_about_2: '<b>Номер вводите без +7 и без 8</b> — сразу с девятки, 10 цифр: например 9991234567. Если введёте с 7 или 8 в начале, мы поправим сами.',
+    sync_about_3: 'Это работает автоматически: ассистент сам предложит сохранить после изменений, а при открытии на другом устройстве спросит, если там есть более свежая версия. Кнопки «Файл-копия» и «Восстановить из файла» в меню — отдельный, ручной способ бэкапа на случай, если облако недоступно.',
+    sync_login_label: 'Телефон — логин (10 цифр, без +7 и 8)',
+    sync_pin_label: 'PIN — 4 цифры',
+    sync_last_upload: 'Последняя выгрузка: {date}',
+    sync_never_uploaded: 'Данные ещё не выгружались',
+    sync_login_invalid: 'Номер — 10 цифр, без +7 и 8: 9991234567',
+    sync_pin_invalid: 'PIN — ровно 4 цифры',
+    sync_not_configured: 'Облако не настроено',
+    sync_err_wrong_pin: 'Неверный PIN',
+    sync_err_not_found: 'Аккаунт не найден — сначала выгрузите данные',
+    sync_err_bad_login: 'Неверный формат логина',
+    sync_err_bad_pin: 'PIN — 4 цифры',
+    sync_err_too_big: 'Данные слишком большие для облака',
+    sync_err_generic: 'Ошибка облака: {code}',
+    sync_err_no_connection: 'Нет связи с облаком — проверьте интернет и адрес скрипта',
+    sync_download_confirm_btn: 'Заменить и загрузить'
   },
   en: {
     lang_sheet_title: 'Language',
@@ -2187,7 +2220,40 @@ const I18N = {
     btn_undo: 'Undo',
     cat_add_to_list_btn: 'Add to list',
     item_qty_now: '«{name}» — now {qty} pcs.',
-    item_in_list: '«{name}» — added to the list'
+    item_in_list: '«{name}» — added to the list',
+
+    sync_upload_btn: 'Upload to cloud',
+    sync_uploading_btn: 'Uploading…',
+    sync_download_btn: 'Download from cloud',
+    sync_downloading_btn: 'Downloading…',
+    sync_download_confirm_title: 'Download from cloud?',
+    sync_download_confirm_text: 'The current data on this device will be replaced with the copy from the cloud.',
+    sync_no_cloud_data: 'There’s no data in the cloud yet',
+    sync_downloaded_toast: 'Data downloaded from the cloud',
+
+    sync_sheet_title: 'Cloud — data backup',
+    sync_intro: 'Data is saved to a protected cloud using your phone number and PIN — secure and visible only to you.',
+    btn_more: 'More details',
+    btn_less: 'Collapse',
+    btn_show_more: 'Show more',
+    sync_about_1: 'All data (lists, catalog, budget, debts, schedule, inventory) is protected by your login and PIN — other users can’t see it. The account is created automatically on the first upload.',
+    sync_about_2: '<b>Enter the number without the country code</b> — 10 digits starting from the first significant digit, e.g. 9991234567. If you include a leading 7 or 8, we’ll fix it automatically.',
+    sync_about_3: 'This works automatically: the assistant will suggest saving after changes, and will ask when opening on another device if a newer version exists there. The “File backup” and “Restore from file” buttons in the menu are a separate, manual backup option for when the cloud is unavailable.',
+    sync_login_label: 'Phone — login (10 digits, no country code)',
+    sync_pin_label: 'PIN — 4 digits',
+    sync_last_upload: 'Last upload: {date}',
+    sync_never_uploaded: 'Data hasn’t been uploaded yet',
+    sync_login_invalid: 'Number — 10 digits, no country code: 9991234567',
+    sync_pin_invalid: 'PIN — exactly 4 digits',
+    sync_not_configured: 'Cloud isn’t set up',
+    sync_err_wrong_pin: 'Wrong PIN',
+    sync_err_not_found: 'Account not found — upload data first',
+    sync_err_bad_login: 'Invalid login format',
+    sync_err_bad_pin: 'PIN — 4 digits',
+    sync_err_too_big: 'Data is too large for the cloud',
+    sync_err_generic: 'Cloud error: {code}',
+    sync_err_no_connection: 'No connection to the cloud — check your internet and the script URL',
+    sync_download_confirm_btn: 'Replace and download'
   }
 };
 function t(key) {
@@ -2746,7 +2812,7 @@ function closeSheet(id) {
 function toggleAboutMore(id, btn) {
   const open = document.getElementById(id).classList.toggle('open');
   btn.classList.toggle('open', open);
-  btn.firstChild.textContent = open ? 'Свернуть' : (id === 'aboutMore' ? 'Смотреть больше' : 'Подробнее');
+  btn.firstChild.textContent = open ? t('btn_less') : (id === 'aboutMore' ? t('btn_show_more') : t('btn_more'));
 }
 function openFabSheet() {
   if (!data().stores.length) { openStoreSheet(); return; }
@@ -3199,8 +3265,8 @@ function openSyncSheet() {
 function renderSyncStatus() {
   const s = syncState();
   document.getElementById('syncStatus').textContent = s.last
-    ? 'Последняя выгрузка: ' + new Date(s.last).toLocaleString('ru-RU')
-    : 'Данные ещё не выгружались';
+    ? tf('sync_last_upload', { date: new Date(s.last).toLocaleString(appLang === 'en' ? 'en-GB' : 'ru-RU') })
+    : t('sync_never_uploaded');
 }
 
 function readSyncCreds() {
@@ -3212,9 +3278,9 @@ function readSyncCreds() {
   }
   const pin = document.getElementById('syncPin').value.replace(/\D/g, '');
   const url = (syncState().url || DEFAULT_SYNC_URL);
-  if (login.length < 10 || login.length > 15) { toast('Номер — 10 цифр, без +7 и 8: 9991234567'); return null; }
-  if (pin.length !== 4) { toast('PIN — ровно 4 цифры'); return null; }
-  if (!url) { toast('Облако не настроено'); return null; }
+  if (login.length < 10 || login.length > 15) { toast(t('sync_login_invalid')); return null; }
+  if (pin.length !== 4) { toast(t('sync_pin_invalid')); return null; }
+  if (!url) { toast(t('sync_not_configured')); return null; }
   Object.assign(syncState(), { login, pin, url });
   save();
   return { login, pin, url };
@@ -3222,12 +3288,12 @@ function readSyncCreds() {
 
 function syncErrMsg(code) {
   return {
-    wrong_pin: 'Неверный PIN',
-    not_found: 'Аккаунт не найден — сначала выгрузите данные',
-    bad_login: 'Неверный формат логина',
-    bad_pin: 'PIN — 4 цифры',
-    too_big: 'Данные слишком большие для облака'
-  }[code] || 'Ошибка облака: ' + code;
+    wrong_pin: t('sync_err_wrong_pin'),
+    not_found: t('sync_err_not_found'),
+    bad_login: t('sync_err_bad_login'),
+    bad_pin: t('sync_err_bad_pin'),
+    too_big: t('sync_err_too_big')
+  }[code] || tf('sync_err_generic', { code });
 }
 
 function syncCall(creds, action, payload) {
@@ -3262,13 +3328,13 @@ function syncUpload(silent) {
     : readSyncCreds();
   if (!creds) return;
   const btn = document.getElementById('syncUpBtn');
-  if (!silent) { btn.textContent = 'Выгружаю…'; btn.disabled = true; }
+  if (!silent) { btn.textContent = t('sync_uploading_btn'); btn.disabled = true; }
   performUpload(creds)
     .then(() => {
       if (!silent) { closeSheet('syncSheet'); stampShow(); setTimeout(() => aiSay(pickT('ai_ok'), [], 4200), 1500); }
     })
     .catch(err => { if (!silent) toast(errToMsg(err)); })
-    .finally(() => { if (!silent) { btn.textContent = 'Выгрузить в облако'; btn.disabled = false; } });
+    .finally(() => { if (!silent) { btn.textContent = t('sync_upload_btn'); btn.disabled = false; } });
 }
 
 // общая логика применения скачанных данных — и ручная кнопка, и подсказка ИИ о новых данных
@@ -3282,20 +3348,20 @@ function applyRemotePayload(payload, creds, at) {
 function syncDownload() {
   const creds = readSyncCreds();
   if (!creds) return;
-  confirmAction('Загрузить из облака?', 'Текущие данные на этом устройстве будут заменены копией из облака.', () => {
+  confirmAction(t('sync_download_confirm_title'), t('sync_download_confirm_text'), () => {
     const btn = document.getElementById('syncDownBtn');
-    btn.textContent = 'Загружаю…'; btn.disabled = true;
+    btn.textContent = t('sync_downloading_btn'); btn.disabled = true;
     syncCall(creds, 'load')
       .then(res => {
         const s = res.payload;
-        if (!s || !Array.isArray(s.lists) || !s.lists.length) { toast('В облаке пока нет данных'); return; }
+        if (!s || !Array.isArray(s.lists) || !s.lists.length) { toast(t('sync_no_cloud_data')); return; }
         applyRemotePayload(s, creds, res.at);
         closeSheet('syncSheet');
-        toast('Данные загружены из облака');
+        toast(t('sync_downloaded_toast'));
       })
       .catch(err => toast(errToMsg(err)))
-      .finally(() => { btn.textContent = 'Загрузить из облака'; btn.disabled = false; });
-  }, 'Заменить и загрузить');
+      .finally(() => { btn.textContent = t('sync_download_btn'); btn.disabled = false; });
+  }, t('sync_download_confirm_btn'));
 }
 
 /* ---------- обнаружение новых данных с другого устройства ---------- */
@@ -3339,7 +3405,7 @@ function applyPendingRemote() {
 function errToMsg(err) {
   const m = String(err && err.message || err);
   if (m.startsWith('#')) return syncErrMsg(m.slice(1));
-  return 'Нет связи с облаком — проверьте интернет и адрес скрипта';
+  return t('sync_err_no_connection');
 }
 function renderSyncStatusSafe() {
   if (document.getElementById('syncSheet').classList.contains('open')) renderSyncStatus();
