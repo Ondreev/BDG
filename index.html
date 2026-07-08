@@ -986,7 +986,7 @@ input[type=file]{display:none}
       </div>
       <button class="print-btn" onclick="printSchedule()">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V3.5h12V9M6 17H4.5A1.5 1.5 0 0 1 3 15.5v-5A1.5 1.5 0 0 1 4.5 9h15A1.5 1.5 0 0 1 21 10.5v5a1.5 1.5 0 0 1-1.5 1.5H18M6 14h12v6.5H6z"/></svg>
-        Печать A4
+        <span data-i18n="print_a4">Печать A4</span>
       </button>
     </div>
     <section class="store-card table-card" id="schedCard"><div class="table-scroll" id="schedGrid"></div></section>
@@ -995,16 +995,16 @@ input[type=file]{display:none}
   <div class="view" id="view-inv">
     <div class="sched-bar" style="margin-top:14px">
       <div class="seg" style="flex:1">
-        <button id="isegInv" class="on" style="flex:1" onclick="setInvMode('inv')">Инвентаризация</button>
-        <button id="isegBuy" style="flex:1" onclick="setInvMode('buy')">Закупка</button>
+        <button id="isegInv" class="on" style="flex:1" onclick="setInvMode('inv')" data-i18n="inv_seg_stocktake">Инвентаризация</button>
+        <button id="isegBuy" style="flex:1" onclick="setInvMode('buy')" data-i18n="inv_seg_buy">Закупка</button>
       </div>
       <button class="print-btn" onclick="printInventory()">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V3.5h12V9M6 17H4.5A1.5 1.5 0 0 1 3 15.5v-5A1.5 1.5 0 0 1 4.5 9h15A1.5 1.5 0 0 1 21 10.5v5a1.5 1.5 0 0 1-1.5 1.5H18M6 14h12v6.5H6z"/></svg>
-        Печать A4
+        <span data-i18n="print_a4">Печать A4</span>
       </button>
     </div>
     <button class="fav-banner" id="invFavBanner" onclick="openInvFavSheet()" style="display:none">
-      <span class="ic" data-icon="star"></span><span>Добавить избранные товары</span><span class="fav-cnt" id="invFavCount"></span>
+      <span class="ic" data-icon="star"></span><span data-i18n="inv_fav_banner">Добавить избранные товары</span><span class="fav-cnt" id="invFavCount"></span>
     </button>
     <section class="budget-card" style="margin-top:14px">
       <div class="stats" id="invStats"></div>
@@ -1017,7 +1017,7 @@ input[type=file]{display:none}
         </div>
       </div>
     </section>
-    <button class="btn btn-primary" id="invActionBtn" style="margin-top:12px" onclick="invAction()">В список закупок</button>
+    <button class="btn btn-primary" id="invActionBtn" style="margin-top:12px" onclick="invAction()" data-i18n="inv_to_shopping_list">В список закупок</button>
   </div>
 
   <div class="view" id="view-plan">
@@ -1670,62 +1670,62 @@ input[type=file]{display:none}
 <div class="sheet-wrap" id="invStoreSheet"><div class="backdrop" onclick="closeSheet('invStoreSheet')"></div>
   <div class="sheet">
     <div class="grab"></div>
-    <h2>В список закупок</h2>
+    <h2 data-i18n="inv_to_shopping_list">В список закупок</h2>
     <p style="color:var(--muted);font-size:14px;margin:0 0 14px" id="invStoreInfo"></p>
     <div class="field">
-      <label>Магазин</label>
+      <label data-i18n="field_store">Магазин</label>
       <select id="invStoreSelect"></select>
     </div>
-    <button class="btn btn-primary" onclick="invTransfer()">Добавить</button>
+    <button class="btn btn-primary" onclick="invTransfer()" data-i18n="btn_add">Добавить</button>
   </div>
 </div>
 
 <div class="sheet-wrap" id="invFavSheet"><div class="backdrop" onclick="closeSheet('invFavSheet')"></div>
   <div class="sheet">
     <div class="grab"></div>
-    <h2>Избранные товары</h2>
-    <p style="color:var(--muted);font-size:13.5px;margin:0 0 12px">Отметьте, что добавить в инвентуру</p>
+    <h2 data-i18n="inv_fav_sheet_title">Избранные товары</h2>
+    <p style="color:var(--muted);font-size:13.5px;margin:0 0 12px" data-i18n="inv_fav_sheet_sub">Отметьте, что добавить в инвентуру</p>
     <div id="invFavRows"></div>
-    <button class="btn btn-primary" onclick="addSelectedFavoritesToInv()">Добавить</button>
+    <button class="btn btn-primary" onclick="addSelectedFavoritesToInv()" data-i18n="btn_add">Добавить</button>
   </div>
 </div>
 
 <div class="sheet-wrap" id="invAcceptSheet"><div class="backdrop" onclick="closeSheet('invAcceptSheet')"></div>
   <div class="sheet">
     <div class="grab"></div>
-    <h2>Принять факт как учёт</h2>
+    <h2 data-i18n="inv_accept_title">Принять факт как учёт</h2>
     <p style="color:var(--muted);font-size:14px;margin:0 0 16px" id="invAcceptInfo"></p>
 
     <div class="field" id="invAcceptSurplusField">
-      <label>Учитывать излишки?</label>
+      <label data-i18n="inv_accept_surplus_label">Учитывать излишки?</label>
       <div class="seg seg-wide">
-        <button id="segSurplusYes" class="on" onclick="setInvAcceptSurplus(true)">Да</button>
-        <button id="segSurplusNo" onclick="setInvAcceptSurplus(false)">Нет</button>
+        <button id="segSurplusYes" class="on" onclick="setInvAcceptSurplus(true)" data-i18n="btn_yes">Да</button>
+        <button id="segSurplusNo" onclick="setInvAcceptSurplus(false)" data-i18n="btn_no">Нет</button>
       </div>
-      <div style="font-size:12px;color:var(--muted);margin-top:6px">Излишки сократят сумму недостачи. Если излишки не учесть — недостача останется полной.</div>
+      <div style="font-size:12px;color:var(--muted);margin-top:6px" data-i18n="inv_accept_surplus_hint">Излишки сократят сумму недостачи. Если излишки не учесть — недостача останется полной.</div>
     </div>
 
     <div class="field" id="invAcceptPenalizeField">
-      <label>Назначить штраф за недостачу?</label>
+      <label data-i18n="inv_accept_penalize_label">Назначить штраф за недостачу?</label>
       <div class="seg seg-wide">
-        <button id="segPenalizeYes" onclick="setInvAcceptPenalize(true)">Да</button>
-        <button id="segPenalizeNo" class="on" onclick="setInvAcceptPenalize(false)">Нет</button>
+        <button id="segPenalizeYes" onclick="setInvAcceptPenalize(true)" data-i18n="btn_yes">Да</button>
+        <button id="segPenalizeNo" class="on" onclick="setInvAcceptPenalize(false)" data-i18n="btn_no">Нет</button>
       </div>
-      <div style="font-size:12px;color:var(--muted);margin-top:6px">Сумма штрафа разделится поровну между выбранными сотрудниками.</div>
+      <div style="font-size:12px;color:var(--muted);margin-top:6px" data-i18n="inv_accept_penalize_hint">Сумма штрафа разделится поровну между выбранными сотрудниками.</div>
     </div>
 
     <div class="field" id="invAcceptEmpBlock" style="display:none">
-      <label>Кто виноват</label>
+      <label data-i18n="inv_accept_who_blame">Кто виноват</label>
       <div class="emp-pick-list" id="invAcceptEmpList"></div>
-      <div class="inv-warn">По ТК РФ недостачу можно удержать только из премии — с оклада без решения суда нельзя. При крупной сумме лучше рассмотреть увольнение. Решение за вами, но предупредить обязаны.</div>
+      <div class="inv-warn" data-i18n="inv_accept_legal_warn">По ТК РФ недостачу можно удержать только из премии — с оклада без решения суда нельзя. При крупной сумме лучше рассмотреть увольнение. Решение за вами, но предупредить обязаны.</div>
     </div>
 
-    <button class="btn btn-primary" onclick="applyInvAccept()">Применить</button>
+    <button class="btn btn-primary" onclick="applyInvAccept()" data-i18n="btn_apply">Применить</button>
   </div>
 </div>
 
 <div class="ai-panel" id="aiPanel">
-  <button class="ai-close" onclick="aiCloseBtn()" aria-label="Закрыть">✕</button>
+  <button class="ai-close" onclick="aiCloseBtn()" aria-label="Закрыть" data-i18n-aria="btn_close">✕</button>
   <div class="ai-avatar">
     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4.5" y="7" width="15" height="12" rx="4"/><path d="M12 7V4M9 4h6"/><circle cx="9.2" cy="12.4" r="1" fill="#fff" stroke="none"/><circle cx="14.8" cy="12.4" r="1" fill="#fff" stroke="none"/><path d="M9.5 15.6c1.6 1.2 3.4 1.2 5 0"/></svg>
   </div>
@@ -1739,7 +1739,7 @@ input[type=file]{display:none}
   <div class="stamp">
     <div class="ring"></div>
     <svg width="46" height="46" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 12.5l5 5 10-11"/></svg>
-    <div class="big">СОХРАНЕНО</div>
+    <div class="big" data-i18n="stamp_saved">СОХРАНЕНО</div>
     <div class="small" id="stampDate"></div>
   </div>
 </div>
@@ -2217,7 +2217,59 @@ const I18N = {
     refresh_updated_snack: 'Обновлено позиций: {n}',
     export_done: 'Резервная копия скачана',
     import_bad_file: 'Файл не похож на копию BDG',
-    import_done: 'Данные восстановлены'
+    import_done: 'Данные восстановлены',
+    stamp_saved: 'СОХРАНЕНО',
+
+    inv_seg_stocktake: 'Инвентаризация',
+    inv_seg_buy: 'Закупка',
+    print_a4: 'Печать A4',
+    inv_fav_banner: 'Добавить избранные товары',
+    inv_to_shopping_list: 'В список закупок',
+    inv_fav_sheet_title: 'Избранные товары',
+    inv_fav_sheet_sub: 'Отметьте, что добавить в инвентуру',
+    inv_accept_title: 'Принять факт как учёт',
+    inv_accept_surplus_label: 'Учитывать излишки?',
+    btn_yes: 'Да',
+    btn_no: 'Нет',
+    inv_accept_surplus_hint: 'Излишки сократят сумму недостачи. Если излишки не учесть — недостача останется полной.',
+    inv_accept_penalize_label: 'Назначить штраф за недостачу?',
+    inv_accept_penalize_hint: 'Сумма штрафа разделится поровну между выбранными сотрудниками.',
+    inv_accept_who_blame: 'Кто виноват',
+    inv_accept_legal_warn: 'По ТК РФ недостачу можно удержать только из премии — с оклада без решения суда нельзя. При крупной сумме лучше рассмотреть увольнение. Решение за вами, но предупредить обязаны.',
+    btn_apply: 'Применить',
+
+    inv_col_expected: 'Учёт',
+    inv_col_actual: 'Факт',
+    inv_col_diff: 'Разница',
+    inv_col_remaining: 'Остаток',
+    inv_col_to_buy: 'Купить',
+    inv_col_sum: 'Сумма',
+    inv_empty: 'Добавьте товары из каталога — и сверяйте остатки или планируйте закупку',
+    inv_fav_none: 'Нет избранных товаров',
+    inv_added_toast: 'Добавлено в инвентуру: {n}',
+    inv_stat_positions: 'Позиции',
+    inv_stat_shortage: 'Недостача',
+    inv_stat_surplus: 'Излишек',
+    inv_stat_to_buy_count: 'Позиций к закупке',
+    inv_stat_buy_sum: 'Сумма закупки',
+    inv_removed_snack: '«{name}» убрана',
+    inv_position_fallback: 'Позиция',
+    inv_already_listed: 'Уже в списке инвентуры',
+    inv_added_single: '«{name}» — в инвентуре',
+    inv_need_qty: 'Укажите количество к закупке',
+    inv_need_store: 'В списке нет магазинов — добавьте магазин',
+    inv_transfer_info: '{n} позиций на {sum} — в какой магазин текущего списка добавить?',
+    inv_need_actuals: 'Сначала введите фактические остатки',
+    inv_accept_info: 'Фактические остатки ({n} поз.) станут новыми учётными, поле «факт» очистится. Недостача: {shortage} · Излишек: {surplus}',
+    inv_need_employees: 'Сначала добавьте сотрудников в Графике',
+    inv_need_employee_select: 'Выберите хотя бы одного сотрудника',
+    inv_updated: 'Учёт обновлён',
+    inv_note_date: 'Инвентура {date}',
+    inv_updated_with_penalty: 'Учёт обновлён. Штраф {sum} назначен ({n} чел.)',
+    inv_print_empty: 'В инвентуре пока нет товаров',
+    inv_print_buy_title: 'Список закупки',
+    inv_print_total_buy: 'Итого закупка: {sum}',
+    inv_transfer_toast: 'Добавлено в «{store}»: {n} поз.'
   },
   en: {
     lang_sheet_title: 'Language',
@@ -2531,7 +2583,59 @@ const I18N = {
     refresh_updated_snack: 'Items updated: {n}',
     export_done: 'Backup downloaded',
     import_bad_file: 'This file doesn’t look like a BDG backup',
-    import_done: 'Data restored'
+    import_done: 'Data restored',
+    stamp_saved: 'SAVED',
+
+    inv_seg_stocktake: 'Stocktake',
+    inv_seg_buy: 'Purchase',
+    print_a4: 'Print A4',
+    inv_fav_banner: 'Add favorite products',
+    inv_to_shopping_list: 'To shopping list',
+    inv_fav_sheet_title: 'Favorite products',
+    inv_fav_sheet_sub: 'Check what to add to inventory',
+    inv_accept_title: 'Accept fact as baseline',
+    inv_accept_surplus_label: 'Count surpluses?',
+    btn_yes: 'Yes',
+    btn_no: 'No',
+    inv_accept_surplus_hint: 'Surpluses will reduce the shortage amount. If not counted, the shortage stays full.',
+    inv_accept_penalize_label: 'Assign a penalty for the shortage?',
+    inv_accept_penalize_hint: 'The penalty amount will be split evenly among the selected employees.',
+    inv_accept_who_blame: 'Who’s responsible',
+    inv_accept_legal_warn: 'Under Russian labor law, a shortage can only be withheld from a bonus — not from base salary without a court decision. For a large amount, consider dismissal instead. The decision is yours, but you must inform the employee.',
+    btn_apply: 'Apply',
+
+    inv_col_expected: 'Expected',
+    inv_col_actual: 'Actual',
+    inv_col_diff: 'Diff',
+    inv_col_remaining: 'Remaining',
+    inv_col_to_buy: 'To buy',
+    inv_col_sum: 'Sum',
+    inv_empty: 'Add products from the catalog — track stock or plan a purchase',
+    inv_fav_none: 'No favorite products',
+    inv_added_toast: 'Added to inventory: {n}',
+    inv_stat_positions: 'Items',
+    inv_stat_shortage: 'Shortage',
+    inv_stat_surplus: 'Surplus',
+    inv_stat_to_buy_count: 'Items to buy',
+    inv_stat_buy_sum: 'Purchase amount',
+    inv_removed_snack: '«{name}» removed',
+    inv_position_fallback: 'Item',
+    inv_already_listed: 'Already in the inventory list',
+    inv_added_single: '«{name}» — added to inventory',
+    inv_need_qty: 'Set the quantity to buy',
+    inv_need_store: 'No stores in the list — add a store',
+    inv_transfer_info: '{n} items for {sum} — which store in the current list should they go to?',
+    inv_need_actuals: 'Enter the actual stock first',
+    inv_accept_info: 'The actual stock ({n} items) will become the new baseline, and the "actual" field will clear. Shortage: {shortage} · Surplus: {surplus}',
+    inv_need_employees: 'Add employees in Schedule first',
+    inv_need_employee_select: 'Select at least one employee',
+    inv_updated: 'Baseline updated',
+    inv_note_date: 'Stocktake {date}',
+    inv_updated_with_penalty: 'Baseline updated. Penalty {sum} assigned ({n} people)',
+    inv_print_empty: 'No products in inventory yet',
+    inv_print_buy_title: 'Purchase list',
+    inv_print_total_buy: 'Purchase total: {sum}',
+    inv_transfer_toast: 'Added to «{store}»: {n} items'
   }
 };
 function t(key) {
@@ -3996,8 +4100,9 @@ function aiDoSave() {
 /* штамп «СОХРАНЕНО» */
 function stampShow() {
   const w = document.getElementById('stampWrap');
+  const loc = appLang === 'en' ? 'en-GB' : 'ru-RU';
   document.getElementById('stampDate').textContent =
-    new Date().toLocaleDateString('ru-RU') + ' · ' + new Date().toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+    new Date().toLocaleDateString(loc) + ' · ' + new Date().toLocaleTimeString(loc, { hour: '2-digit', minute: '2-digit' });
   w.classList.remove('out');
   w.classList.add('show');
   vibrate([15, 60, 25]);
@@ -5380,9 +5485,9 @@ function invRowCalc(r) {
 function renderInv() {
   const rows = state.inventory;
   document.getElementById('invCols').innerHTML = '<span class="ic-drag"></span><span class="ic-name"></span><div class="inv-right">' + (invMode === 'inv'
-    ? '<span>Учёт</span><span>Факт</span><span class="sp">Разница</span>'
-    : '<span>Остаток</span><span>Купить</span><span class="sp">Сумма</span>') + '<span class="ic-del"></span></div>';
-  document.getElementById('invActionBtn').textContent = invMode === 'inv' ? 'Принять факт как учёт' : 'В список закупок';
+    ? `<span>${t('inv_col_expected')}</span><span>${t('inv_col_actual')}</span><span class="sp">${t('inv_col_diff')}</span>`
+    : `<span>${t('inv_col_remaining')}</span><span>${t('inv_col_to_buy')}</span><span class="sp">${t('inv_col_sum')}</span>`) + '<span class="ic-del"></span></div>';
+  document.getElementById('invActionBtn').textContent = invMode === 'inv' ? t('inv_accept_title') : t('inv_to_shopping_list');
 
   document.getElementById('invRows').innerHTML = rows.length ? rows.map(r => {
     const c = invRowCalc(r);
@@ -5403,7 +5508,7 @@ function renderInv() {
     }
     return `
     <div class="inv-row" data-id="${r.id}">
-      <button class="drag-handle" aria-label="Перетащить">
+      <button class="drag-handle" aria-label="${t('aria_drag')}">
         <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor"><circle cx="9" cy="6" r="1.7"/><circle cx="15" cy="6" r="1.7"/><circle cx="9" cy="12" r="1.7"/><circle cx="15" cy="12" r="1.7"/><circle cx="9" cy="18" r="1.7"/><circle cx="15" cy="18" r="1.7"/></svg>
       </button>
       <div class="inv-info" onclick="openCatProductSheet('${c.p.id}')">
@@ -5415,7 +5520,7 @@ function renderInv() {
         <button class="inv-del" onclick="invRemove('${r.id}')">${ic('trash', 15)}</button>
       </div>
     </div>`;
-  }).join('') : '<div class="empty-items">Добавьте товары из каталога — и сверяйте остатки или планируйте закупку</div>';
+  }).join('') : `<div class="empty-items">${t('inv_empty')}</div>`;
   renderInvStats();
   renderInvFavBanner();
 }
@@ -5436,14 +5541,14 @@ function openInvFavSheet() {
   favPicked = new Set();
   document.getElementById('invFavRows').innerHTML = cands.length ? cands.map(p => `
     <div class="fav-pick-row" id="favPick-${p.id}">
-      <button class="check" onclick="toggleFavPick('${p.id}')" aria-label="Выбрать">
+      <button class="check" onclick="toggleFavPick('${p.id}')" aria-label="${t('btn_choose')}">
         <span class="box"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 12.5l5 5 10-11"/></svg></span>
       </button>
       <div style="flex:1;min-width:0;cursor:pointer" onclick="toggleFavPick('${p.id}')">
         <div class="inv-name">${esc(p.name)}</div>
         <div class="fav-pick-price">${money(p.price)}</div>
       </div>
-    </div>`).join('') : '<div class="cat-empty">Нет избранных товаров</div>';
+    </div>`).join('') : `<div class="cat-empty">${t('inv_fav_none')}</div>`;
   openSheet('invFavSheet');
 }
 function toggleFavPick(id) {
@@ -5460,7 +5565,7 @@ function addSelectedFavoritesToInv() {
   });
   const n = favPicked.size;
   save(); renderInv(); closeSheet('invFavSheet'); vibrate(10);
-  toast(`Добавлено в инвентуру: ${n}`);
+  toast(tf('inv_added_toast', { n }));
 }
 function renderInvStats() {
   const rows = state.inventory;
@@ -5473,9 +5578,9 @@ function renderInvStats() {
       if (c.diffSum < 0) shortage += c.diffSum; else surplus += c.diffSum;
     });
     document.getElementById('invStats').innerHTML = `
-      <div class="stat"><div class="k">Позиции</div><div class="v">${counted} из ${rows.length}</div></div>
-      <div class="stat"><div class="k">Недостача</div><div class="v ${shortage < 0 ? 'neg' : ''}">${money(shortage)}</div></div>
-      <div class="stat"><div class="k">Излишек</div><div class="v ${surplus > 0 ? 'pos' : ''}">${money(surplus)}</div></div>`;
+      <div class="stat"><div class="k">${t('inv_stat_positions')}</div><div class="v">${tf('shop_bought_of', { a: counted, b: rows.length })}</div></div>
+      <div class="stat"><div class="k">${t('inv_stat_shortage')}</div><div class="v ${shortage < 0 ? 'neg' : ''}">${money(shortage)}</div></div>
+      <div class="stat"><div class="k">${t('inv_stat_surplus')}</div><div class="v ${surplus > 0 ? 'pos' : ''}">${money(surplus)}</div></div>`;
   } else {
     let total = 0, count = 0;
     rows.forEach(r => {
@@ -5483,8 +5588,8 @@ function renderInvStats() {
       if (+r.buy > 0) { total += r.buy * c.price; count++; }
     });
     document.getElementById('invStats').innerHTML = `
-      <div class="stat"><div class="k">Позиций к закупке</div><div class="v">${count}</div></div>
-      <div class="stat"><div class="k">Сумма закупки</div><div class="v">${money(total)}</div></div>`;
+      <div class="stat"><div class="k">${t('inv_stat_to_buy_count')}</div><div class="v">${count}</div></div>
+      <div class="stat"><div class="k">${t('inv_stat_buy_sum')}</div><div class="v">${money(total)}</div></div>`;
   }
 }
 function invInput(id, field, val) {
@@ -5519,27 +5624,27 @@ function invRemove(id) {
   const removed = state.inventory.splice(idx, 1)[0];
   save(); renderInv();
   const p = prodById(removed.productId);
-  snackbar(`«${p ? p.name : 'Позиция'}» убрана`, () => {
+  snackbar(tf('inv_removed_snack', { name: p ? p.name : t('inv_position_fallback') }), () => {
     state.inventory.splice(Math.min(idx, state.inventory.length), 0, removed);
     save(); renderInv();
   });
 }
 function invAddProduct(productId) {
-  if (state.inventory.some(r => r.productId === productId)) { toast('Уже в списке инвентуры'); return; }
+  if (state.inventory.some(r => r.productId === productId)) { toast(t('inv_already_listed')); return; }
   state.inventory.push({ id: uid(), productId, expected: 0, actual: null, buy: 0 });
   save(); renderInv();
   const p = prodById(productId);
-  toast(`«${p.name}» — в инвентуре`);
+  toast(tf('inv_added_single', { name: p.name }));
 }
 function invAction() {
   if (invMode === 'inv') {
     openInvAcceptSheet();
   } else {
     const picks = state.inventory.filter(r => +r.buy > 0);
-    if (!picks.length) { toast('Укажите количество к закупке'); return; }
-    if (!data().stores.length) { toast('В списке нет магазинов — добавьте магазин'); switchView('shop'); openStoreSheet(); return; }
+    if (!picks.length) { toast(t('inv_need_qty')); return; }
+    if (!data().stores.length) { toast(t('inv_need_store')); switchView('shop'); openStoreSheet(); return; }
     const total = picks.reduce((t, r) => t + r.buy * invRowCalc(r).price, 0);
-    document.getElementById('invStoreInfo').textContent = `${picks.length} позиций на ${money(total)} — в какой магазин текущего списка добавить?`;
+    document.getElementById('invStoreInfo').textContent = tf('inv_transfer_info', { n: picks.length, sum: money(total) });
     document.getElementById('invStoreSelect').innerHTML = data().stores.map((s, i) =>
       `<option value="${s.id}" ${i === 0 ? 'selected' : ''}>${esc(s.name)}</option>`).join('');
     openSheet('invStoreSheet');
@@ -5554,7 +5659,7 @@ function invAcceptPenaltyBase() {
 }
 function openInvAcceptSheet() {
   const cnt = state.inventory.filter(r => r.actual !== null && r.actual !== undefined).length;
-  if (!cnt) { toast('Сначала введите фактические остатки'); return; }
+  if (!cnt) { toast(t('inv_need_actuals')); return; }
   let shortage = 0, surplus = 0;
   state.inventory.forEach(r => {
     const c = invRowCalc(r);
@@ -5567,7 +5672,7 @@ function openInvAcceptSheet() {
   invAcceptPenalize = false;
   invAcceptEmpIds = new Set();
   document.getElementById('invAcceptInfo').textContent =
-    `Фактические остатки (${cnt} поз.) станут новыми учётными, поле «факт» очистится. Недостача: ${money(invAcceptShortage)} · Излишек: ${money(surplus)}`;
+    tf('inv_accept_info', { n: cnt, shortage: money(invAcceptShortage), surplus: money(surplus) });
   document.getElementById('invAcceptSurplusField').style.display = surplus > 0 ? 'block' : 'none';
   document.getElementById('invAcceptPenalizeField').style.display = invAcceptShortage > 0 ? 'block' : 'none';
   setInvAcceptSurplus(true);
@@ -5604,12 +5709,12 @@ function renderInvAcceptEmpList() {
           ${on ? `<span class="epr-sum">${money(per)}</span>` : ''}
         </button>`;
       }).join('')
-    : '<div class="cat-empty">Сначала добавьте сотрудников в Графике</div>';
+    : `<div class="cat-empty">${t('inv_need_employees')}</div>`;
 }
 function applyInvAccept() {
   const penaltyBase = invAcceptPenaltyBase();
   if (invAcceptPenalize && penaltyBase > 0 && !invAcceptEmpIds.size) {
-    toast('Выберите хотя бы одного сотрудника');
+    toast(t('inv_need_employee_select'));
     return;
   }
   const backupInv = JSON.stringify(state.inventory);
@@ -5620,13 +5725,13 @@ function applyInvAccept() {
     r.expected = +r.actual || 0;
     r.actual = null;
   });
-  let msg = 'Учёт обновлён';
+  let msg = t('inv_updated');
   if (invAcceptPenalize && invAcceptEmpIds.size && penaltyBase > 0) {
     const per = Math.round((penaltyBase / invAcceptEmpIds.size) * 100) / 100;
     const wk = isoDate(weekStart(new Date()));
-    const note = 'Инвентура ' + new Date().toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' });
+    const note = tf('inv_note_date', { date: new Date().toLocaleDateString(appLang === 'en' ? 'en-GB' : 'ru-RU', { day: 'numeric', month: 'long' }) });
     invAcceptEmpIds.forEach(empId => state.staff.penalties.push({ id: uid(), empId, wk, sum: per, note }));
-    msg = `Учёт обновлён. Штраф ${money(penaltyBase)} назначен (${invAcceptEmpIds.size} чел.)`;
+    msg = tf('inv_updated_with_penalty', { sum: money(penaltyBase), n: invAcceptEmpIds.size });
   }
   save(); renderInv(); renderSched(); closeSheet('invAcceptSheet');
   snackbar(msg, () => {
@@ -5638,8 +5743,8 @@ function applyInvAccept() {
 /* ---------- print inventory (A4, портретная) ---------- */
 function printInventory() {
   const rows = state.inventory.map(r => ({ r, c: invRowCalc(r) })).filter(x => x.c.p);
-  if (!rows.length) { toast('В инвентуре пока нет товаров'); return; }
-  const today = new Date().toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' });
+  if (!rows.length) { toast(t('inv_print_empty')); return; }
+  const today = new Date().toLocaleDateString(appLang === 'en' ? 'en-GB' : 'ru-RU', { day: 'numeric', month: 'long', year: 'numeric' });
   if (invMode === 'inv') {
     let shortage = 0, surplus = 0;
     const body = rows.map(({ r, c }) => {
@@ -5653,16 +5758,16 @@ function printInventory() {
         <td style="${PTD};text-align:right;font-weight:700;color:${c.diffSum < 0 ? '#DC2626' : '#1E293B'}">${c.diff === null ? '—' : money(c.diffSum)}</td>
       </tr>`;
     }).join('');
-    printDoc('portrait', 'Инвентаризация', today, `
+    printDoc('portrait', t('inv_seg_stocktake'), today, `
       <table style="border-collapse:collapse;width:100%">
         <tr>
-          <th style="${PTH};text-align:left">Товар</th><th style="${PTH}">Цена</th>
-          <th style="${PTH}">Учёт</th><th style="${PTH}">Факт</th>
-          <th style="${PTH}">Разница</th><th style="${PTH}">Сумма</th>
+          <th style="${PTH};text-align:left">${t('print_col_item')}</th><th style="${PTH}">${t('print_col_price')}</th>
+          <th style="${PTH}">${t('inv_col_expected')}</th><th style="${PTH}">${t('inv_col_actual')}</th>
+          <th style="${PTH}">${t('inv_col_diff')}</th><th style="${PTH}">${t('inv_col_sum')}</th>
         </tr>${body}
       </table>
       <div style="margin-top:12px;font-size:14px;font-weight:800">
-        Недостача: <span style="color:#DC2626">${money(shortage)}</span> · Излишек: <span style="color:#059669">${money(surplus)}</span>
+        ${t('inv_stat_shortage')}: <span style="color:#DC2626">${money(shortage)}</span> · ${t('inv_stat_surplus')}: <span style="color:#059669">${money(surplus)}</span>
       </div>`);
   } else {
     const picks = rows.filter(({ r }) => +r.buy > 0);
@@ -5680,14 +5785,14 @@ function printInventory() {
         <td style="${PTD};text-align:right;font-weight:700">${sum ? money(sum) : ''}</td>
       </tr>`;
     }).join('');
-    printDoc('portrait', 'Список закупки', today, `
+    printDoc('portrait', t('inv_print_buy_title'), today, `
       <table style="border-collapse:collapse;width:100%">
         <tr>
-          <th style="${PTH}"></th><th style="${PTH};text-align:left">Товар</th><th style="${PTH}">Цена</th>
-          <th style="${PTH}">Остаток</th><th style="${PTH}">Купить</th><th style="${PTH}">Сумма</th>
+          <th style="${PTH}"></th><th style="${PTH};text-align:left">${t('print_col_item')}</th><th style="${PTH}">${t('print_col_price')}</th>
+          <th style="${PTH}">${t('inv_col_remaining')}</th><th style="${PTH}">${t('inv_col_to_buy')}</th><th style="${PTH}">${t('inv_col_sum')}</th>
         </tr>${body}
       </table>
-      <div style="margin-top:12px;font-size:15px;font-weight:900">Итого закупка: ${money(total)}</div>`);
+      <div style="margin-top:12px;font-size:15px;font-weight:900">${tf('inv_print_total_buy', { sum: money(total) })}</div>`);
   }
 }
 
@@ -5702,7 +5807,7 @@ function invTransfer() {
     r.buy = 0;
   });
   save(); render(); renderInv(); closeSheet('invStoreSheet');
-  toast(`Добавлено в «${store.name}»: ${picks.length} поз.`);
+  toast(tf('inv_transfer_toast', { store: store.name, n: picks.length }));
   switchView('shop');
 }
 
