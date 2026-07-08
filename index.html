@@ -848,7 +848,7 @@ input[type=file]{display:none}
     <div class="brand">
       <div class="brand-badge">₽</div>
       <button class="list-switch" onclick="openListsSheet()">
-        <span class="app-name">BDG · закупки</span>
+        <span class="app-name" data-i18n="app_brand_label">BDG · закупки</span>
         <span class="list-name"><span id="listName">Мой список</span>
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#94A3B8" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
         </span>
@@ -859,13 +859,13 @@ input[type=file]{display:none}
       <button class="print-top-btn view-shop" id="printTopBtn" onclick="openPrintListSheet()" aria-label="Печать списка" data-i18n-aria="print_top_aria">
         <span class="ic" data-icon="printer"></span><span data-i18n="btn_print">Печать</span>
       </button>
-      <button class="curr-top-btn" id="currTopBtn" onclick="openCurrencySheet()" aria-label="Курсы валют">
+      <button class="curr-top-btn" id="currTopBtn" onclick="openCurrencySheet()" aria-label="Курсы валют" data-i18n-aria="curr_sheet_rates_title">
         <span class="ctc">$</span><span id="currTopRate">…</span>
       </button>
-      <button class="icon-btn" id="catalogBtn" onclick="openCatalogSheet()" aria-label="Каталог товаров">
+      <button class="icon-btn" id="catalogBtn" onclick="openCatalogSheet()" aria-label="Каталог товаров" data-i18n-aria="cat_sheet_title">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#475569" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.2 13.6 13.6 20.2a1.9 1.9 0 0 1-2.7 0L4 13.3V4h9.3l6.9 6.9a1.9 1.9 0 0 1 0 2.7z"/><circle cx="8.7" cy="8.7" r="1.3"/></svg>
       </button>
-      <button class="icon-btn" id="menuBtn" onclick="openSheet('menuSheet')" aria-label="Меню">
+      <button class="icon-btn" id="menuBtn" onclick="openSheet('menuSheet')" aria-label="Меню" data-i18n-aria="menu_title">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#475569" stroke-width="2.6" stroke-linecap="round"><circle cx="12" cy="5" r="1.1" fill="#475569"/><circle cx="12" cy="12" r="1.1" fill="#475569"/><circle cx="12" cy="19" r="1.1" fill="#475569"/></svg>
       </button>
     </div>
@@ -1062,7 +1062,7 @@ input[type=file]{display:none}
     <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5.5" y="4.5" width="13" height="17" rx="2.4"/><path d="M9.3 4.5a2.7 2.7 0 0 1 5.4 0M9 13l2.1 2.1L15 11"/></svg>
     <span data-i18n="nav_inv">Инвентура</span>
   </button>
-  <button class="nav-btn" id="nav-lang" onclick="openLangSheet()" aria-label="Язык и валюта">
+  <button class="nav-btn" id="nav-lang" onclick="openLangSheet()" aria-label="Язык и валюта" data-i18n-aria="nav_lang_aria">
     <span id="langFlag" style="font-size:19px;line-height:1.15">🇷🇺</span>
     <span id="langCode">RUS</span>
   </button>
@@ -1106,7 +1106,7 @@ input[type=file]{display:none}
       <label data-i18n="field_name">Название</label>
       <div style="display:flex;gap:8px;align-items:center">
         <input id="itemNameInput" type="text" placeholder="Например: Молоко" data-i18n-ph="item_name_ph" autocomplete="off" oninput="renderSuggest();renderCatHint('item')" enterkeyhint="next" style="flex:1">
-        <button type="button" class="icon-btn" onclick="openScanSheet('item')" aria-label="Сканировать QR-код">
+        <button type="button" class="icon-btn" onclick="openScanSheet('item')" aria-label="Сканировать QR-код" data-i18n-aria="aria_scan">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#475569" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8V5.5A1.5 1.5 0 0 1 5.5 4H8M16 4h2.5A1.5 1.5 0 0 1 20 5.5V8M20 16v2.5a1.5 1.5 0 0 1-1.5 1.5H16M8 20H5.5A1.5 1.5 0 0 1 4 18.5V16"/><rect x="9" y="9" width="6" height="6" rx="1"/></svg>
         </button>
       </div>
@@ -1125,7 +1125,7 @@ input[type=file]{display:none}
     <div class="field-row">
       <div class="field">
         <label data-i18n-cur="lbl_item_price">Цена, ₽ (минус — долг)</label>
-        <input id="itemPriceInput" type="number" inputmode="decimal" step="any" placeholder="0 или −500">
+        <input id="itemPriceInput" type="number" inputmode="decimal" step="any" placeholder="0 или −500" data-i18n-ph="item_price_ph">
       </div>
       <div class="field">
         <label data-i18n="field_category">Категория</label>
@@ -1750,8 +1750,8 @@ input[type=file]{display:none}
     <div class="tt" id="tourText"></div>
     <div class="tour-foot">
       <div class="tour-dots" id="tourDots"></div>
-      <button class="tour-btn sec" onclick="endTour()">Хватит</button>
-      <button class="tour-btn pri" id="tourNextBtn" onclick="tourNext()">Дальше</button>
+      <button class="tour-btn sec" onclick="endTour()" data-i18n="tour_btn_skip">Хватит</button>
+      <button class="tour-btn pri" id="tourNextBtn" onclick="tourNext()" data-i18n="tour_btn_next">Дальше</button>
     </div>
   </div>
 </div>
@@ -2367,7 +2367,21 @@ const I18N = {
     sched_hours_col: 'Часы',
     unit_per_hour: '/час',
     weekdays_short: ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'],
-    weekdays_full: ['Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота', 'Воскресенье']
+    weekdays_full: ['Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота', 'Воскресенье'],
+
+    nav_lang_aria: 'Язык и валюта',
+    item_price_ph: '0 или −500',
+    page_title: 'BDG — Планировщик закупок',
+    app_brand_label: 'BDG · закупки',
+    tour_step1: 'Это твой бюджет. Введи сумму — я сам посчитаю потрачено, остаток и предупрежу о перерасходе.',
+    tour_step2: 'Главная кнопка. Добавляй магазины и товары — всё отсюда, одним пальцем.',
+    tour_step3: 'Каталог товаров: цены закупки, категории, места на складе. Из него товары летят в списки в один тап.',
+    tour_step4: 'Меню: облако (телефон + PIN — и данные не пропадут никогда), экспорт и «поделиться».',
+    tour_step5: 'А тут вся империя: Долги и кредиты, График сотрудников с зарплатами, Инвентура с недостачами.',
+    tour_step6: 'И да, чувак: в десктопной версии ты станешь королём своего бизнеса 👑 Полная автоматизация: печать графика смен и списков закупки на А4, инвентура с актами, зарплаты — всё на большом экране. Открой BDG на компе и убедись.',
+    tour_btn_skip: 'Хватит',
+    tour_btn_next: 'Дальше',
+    tour_btn_done: 'Понятно!'
   },
   en: {
     lang_sheet_title: 'Language',
@@ -2831,7 +2845,21 @@ const I18N = {
     sched_hours_col: 'Hours',
     unit_per_hour: '/h',
     weekdays_short: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
-    weekdays_full: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+    weekdays_full: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'],
+
+    nav_lang_aria: 'Language & currency',
+    item_price_ph: '0 or −500',
+    page_title: 'BDG — Shopping Planner',
+    app_brand_label: 'BDG · shopping',
+    tour_step1: 'This is your budget. Enter the amount — I\'ll calculate what\'s spent, what\'s left, and warn you about overspending.',
+    tour_step2: 'The main button. Add stores and items — all from here, with one tap.',
+    tour_step3: 'Product catalog: purchase prices, categories, storage locations. Items fly into your lists from here in one tap.',
+    tour_step4: 'Menu: cloud backup (phone + PIN — your data never gets lost), export and "share".',
+    tour_step5: 'And here\'s the whole empire: Debts & credits, staff Schedule with salaries, Inventory with shortages.',
+    tour_step6: 'And yeah, buddy: on desktop you\'ll become the king of your business 👑 Full automation: printing shift schedules and shopping lists on A4, inventory with reports, salaries — all on the big screen. Open BDG on your computer and see for yourself.',
+    tour_btn_skip: 'Skip',
+    tour_btn_next: 'Next',
+    tour_btn_done: 'Got it!'
   }
 };
 function t(key) {
@@ -2856,6 +2884,7 @@ function applyI18n() {
   renderLangTopBadge();
   const budgetSym = document.getElementById('budgetCurSym');
   if (budgetSym) budgetSym.textContent = currSym();
+  document.title = t('page_title');
 }
 function renderLangTopBadge() {
   const l = LANGUAGES.find(x => x.code === appLang) || LANGUAGES[0];
@@ -4308,12 +4337,12 @@ function stampShow() {
 
 /* ================= экскурсия для новичков ================= */
 const TOUR_STEPS = [
-  { el: '.budget-card', text: 'Это твой бюджет. Введи сумму — я сам посчитаю потрачено, остаток и предупрежу о перерасходе.' },
-  { el: '.fab', text: 'Главная кнопка. Добавляй магазины и товары — всё отсюда, одним пальцем.' },
-  { el: '#catalogBtn', text: 'Каталог товаров: цены закупки, категории, места на складе. Из него товары летят в списки в один тап.' },
-  { el: '#menuBtn', text: 'Меню: облако (телефон + PIN — и данные не пропадут никогда), экспорт и «поделиться».' },
-  { el: '.bottom-nav', text: 'А тут вся империя: Долги и кредиты, График сотрудников с зарплатами, Инвентура с недостачами.' },
-  { el: null, text: 'И да, чувак: в десктопной версии ты станешь королём своего бизнеса 👑 Полная автоматизация: печать графика смен и списков закупки на А4, инвентура с актами, зарплаты — всё на большом экране. Открой BDG на компе и убедись.' }
+  { el: '.budget-card' },
+  { el: '.fab' },
+  { el: '#catalogBtn' },
+  { el: '#menuBtn' },
+  { el: '.bottom-nav' },
+  { el: null }
 ];
 let tourStep = 0;
 window.__tourActive = false;
@@ -4329,10 +4358,10 @@ function tourShow() {
   const step = TOUR_STEPS[tourStep];
   const hole = document.getElementById('tourHole');
   const tip = document.getElementById('tourTip');
-  document.getElementById('tourText').textContent = step.text;
+  document.getElementById('tourText').textContent = t('tour_step' + (tourStep + 1));
   document.getElementById('tourDots').innerHTML =
     TOUR_STEPS.map((_, i) => `<i class="${i === tourStep ? 'on' : ''}"></i>`).join('');
-  document.getElementById('tourNextBtn').textContent = tourStep === TOUR_STEPS.length - 1 ? 'Понятно!' : 'Дальше';
+  document.getElementById('tourNextBtn').textContent = tourStep === TOUR_STEPS.length - 1 ? t('tour_btn_done') : t('tour_btn_next');
   const place = () => {
     const vw = innerWidth, vh = innerHeight;
     if (!step.el) {
