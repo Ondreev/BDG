@@ -378,8 +378,17 @@ input,select{font-family:inherit}
 .field-row .field{flex:1;min-width:0}
 .field.field-empty input,.field.field-empty select{background:#FEF9C3;border-color:#FDE68A}
 .field.field-empty input:focus,.field.field-empty select:focus{background:#fff;border-color:var(--accent)}
-.cat-hint{margin-top:7px;font-size:12.5px;font-weight:600;color:var(--accent);cursor:pointer}
-.cat-hint b{font-weight:800;text-decoration:underline}
+.cat-hint{
+  display:none;align-items:center;gap:8px;margin-top:9px;padding:8px 8px 8px 12px;border-radius:14px;
+  background:linear-gradient(90deg,var(--accent-soft),rgba(20,184,166,.14));
+  animation:hintIn .35s cubic-bezier(.34,1.56,.64,1) both;
+}
+.cat-hint .chi{flex:none;color:var(--accent);display:flex}
+.cat-hint .cht{flex:1;min-width:0;font-size:12.5px;font-weight:600;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cat-hint .cht b{font-weight:800}
+.cat-hint .chb{flex:none;border:none;background:var(--accent);color:#fff;font-size:12px;font-weight:800;padding:7px 12px;border-radius:99px;cursor:pointer}
+.cat-hint .chb:active{transform:scale(.94)}
+@keyframes hintIn{from{opacity:0;transform:translateY(-4px) scale(.97)}to{opacity:1;transform:translateY(0) scale(1)}}
 
 .stepper{display:flex;align-items:center;gap:8px}
 .stepper button{
@@ -389,13 +398,17 @@ input,select{font-family:inherit}
 .stepper button:active{background:#DDE0FD}
 .stepper input{text-align:center;padding:14px 6px !important}
 
-.suggest{display:flex;gap:8px;flex-wrap:wrap;margin:-4px 0 14px}
+.suggest{max-height:0;overflow:hidden;margin:0;border-radius:16px;transition:max-height .25s ease}
+.suggest.show{max-height:230px;overflow-y:auto;margin:-4px 0 14px;box-shadow:var(--shadow);background:var(--card)}
 .suggest button{
-  border:none;background:var(--accent-soft);color:var(--accent);font-size:13.5px;font-weight:700;
-  padding:9px 14px;border-radius:99px;cursor:pointer;max-width:100%;
-  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  display:flex;width:100%;align-items:center;gap:10px;text-align:left;
+  border:none;background:none;color:var(--text);font-size:14px;font-weight:600;
+  padding:11px 14px;cursor:pointer;border-bottom:1px solid var(--line);
 }
-.suggest button:active{background:#DDE0FD}
+.suggest button:last-child{border-bottom:none}
+.suggest button span:first-child{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.suggest button .sprice{flex:none;color:var(--muted);font-weight:700;font-size:13px}
+.suggest button:active{background:var(--bg)}
 
 .btn{
   display:flex;align-items:center;justify-content:center;gap:8px;width:100%;
@@ -1036,21 +1049,19 @@ input[type=file]{display:none}
         <input id="itemPriceInput" type="number" inputmode="decimal" step="any" placeholder="0 или −500">
       </div>
       <div class="field">
-        <label>День месяца</label>
-        <input id="itemDayInput" type="number" inputmode="numeric" min="1" max="31" placeholder="—">
-      </div>
-    </div>
-    <div class="field-row">
-      <div class="field">
-        <label>Место (ряд, полка)</label>
-        <div class="chips" id="itemLocChips"></div>
-        <input id="itemLocInput" type="text" placeholder="Например: 2Г, линия 2А" autocomplete="off" oninput="renderItemLocChips()">
-      </div>
-      <div class="field">
         <label>Категория</label>
         <select id="itemCatSelect" onchange="renderCatHint('item')"></select>
-        <div class="cat-hint" id="itemCatHint" style="display:none"></div>
       </div>
+    </div>
+    <div class="cat-hint" id="itemCatHint" style="display:none"></div>
+    <div class="field">
+      <label>Место (ряд, полка)</label>
+      <div class="chips" id="itemLocChips"></div>
+      <input id="itemLocInput" type="text" placeholder="Например: 2Г, линия 2А" autocomplete="off" oninput="renderItemLocChips()">
+    </div>
+    <div class="field">
+      <label>ID / номер товара в кассе</label>
+      <input id="itemSkuInput" type="text" inputmode="numeric" placeholder="Например: 10234" autocomplete="off">
     </div>
     <div class="field">
       <label>Магазин</label>
@@ -1221,9 +1232,9 @@ input[type=file]{display:none}
       <div class="field">
         <label>Категория</label>
         <select id="catProdCategory" onchange="onCatProdCategoryChange();renderCatHint('catalog')"></select>
-        <div class="cat-hint" id="catProdCatHint" style="display:none"></div>
       </div>
     </div>
+    <div class="cat-hint" id="catProdCatHint" style="display:none"></div>
     <div class="field" id="catProdNewCatField" style="display:none">
       <label>Название новой категории</label>
       <input id="catProdNewCat" type="text" placeholder="Например: Молочка" autocomplete="off">
@@ -2264,8 +2275,9 @@ function openItemSheet(sid, itemId) {
   document.getElementById('itemNameInput').value = it ? it.name : '';
   document.getElementById('itemQtyInput').value = it ? it.qty : 1;
   document.getElementById('itemPriceInput').value = it ? (it.price || '') : '';
-  document.getElementById('itemDayInput').value = it && it.day ? it.day : '';
   document.getElementById('itemLocInput').value = it && it.loc ? it.loc : '';
+  const matchedProd = it ? state.catalogDB.products.find(x => x.name.toLowerCase() === it.name.toLowerCase()) : null;
+  document.getElementById('itemSkuInput').value = matchedProd && matchedProd.sku ? matchedProd.sku : '';
 
   document.getElementById('itemCatSelect').innerHTML =
     `<option value="">Без категории</option>` +
@@ -2295,17 +2307,18 @@ function stepQty(dir) {
 function renderSuggest() {
   const box = document.getElementById('suggestBox');
   const v = document.getElementById('itemNameInput').value.trim();
-  if (v.length < 1) { box.innerHTML = ''; return; }
+  if (v.length < 1) { box.innerHTML = ''; box.classList.remove('show'); return; }
   // catalog products first, then per-list history; dedupe by name
   const map = new Map();
   state.catalogDB.products.forEach(p => map.set(p.name.toLowerCase(),
-    { name: p.name, price: p.price, qty: 1, day: null, catId: p.categoryId, loc: p.loc || '' }));
+    { name: p.name, price: p.price, qty: 1, catId: p.categoryId, loc: p.loc || '', sku: p.sku || '' }));
   data().catalog.forEach(c => { const k = (c.name || '').toLowerCase(); if (!map.has(k)) map.set(k, c); });
   const sugg = [...map.values()]
     .filter(c => c.name.toLowerCase() !== v.toLowerCase() && smartMatch(c.name, v))
     .slice(0, 6);
+  box.classList.toggle('show', sugg.length > 0);
   box.innerHTML = sugg.map((c, i) =>
-    `<button type="button" onclick="applySuggest(${i})">${esc(c.name)} · ${fmt(c.price)} ₽</button>`).join('');
+    `<button type="button" onclick="applySuggest(${i})"><span>${esc(c.name)}</span><span class="sprice">${fmt(c.price)} ₽</span></button>`).join('');
   box._sugg = sugg;
 }
 function applySuggest(i) {
@@ -2314,10 +2327,12 @@ function applySuggest(i) {
   document.getElementById('itemNameInput').value = c.name;
   document.getElementById('itemPriceInput').value = c.price || '';
   document.getElementById('itemQtyInput').value = c.qty || 1;
-  if (c.day) document.getElementById('itemDayInput').value = c.day;
   if (c.loc) document.getElementById('itemLocInput').value = c.loc;
+  if (c.sku) document.getElementById('itemSkuInput').value = c.sku;
   if (c.catId) document.getElementById('itemCatSelect').value = c.catId;
-  document.getElementById('suggestBox').innerHTML = '';
+  const box = document.getElementById('suggestBox');
+  box.innerHTML = '';
+  box.classList.remove('show');
   renderItemLocChips();
   renderCatHint('item');
   markEmptyFields('itemSheet');
@@ -2327,9 +2342,8 @@ function saveItemSheet() {
   const name = document.getElementById('itemNameInput').value.trim();
   const qty = parseFloat(document.getElementById('itemQtyInput').value);
   const price = parseFloat(document.getElementById('itemPriceInput').value) || 0;
-  let day = parseInt(document.getElementById('itemDayInput').value) || null;
-  if (day && (day < 1 || day > 31)) day = null;
   const loc = document.getElementById('itemLocInput').value.trim();
+  const sku = document.getElementById('itemSkuInput').value.trim();
   const catId = document.getElementById('itemCatSelect').value || null;
   const targetSid = document.getElementById('itemStoreSelect').value || itemSheetStore;
   if (!name || isNaN(qty) || qty <= 0) {
@@ -2340,22 +2354,22 @@ function saveItemSheet() {
     const fromStore = findStore(itemSheetStore);
     const idx = fromStore.items.findIndex(i => i.id === itemSheetEditId);
     const it = fromStore.items[idx];
-    Object.assign(it, { name, qty, price, day, loc, catId });
+    Object.assign(it, { name, qty, price, loc, catId }); // день месяца убран из формы — существующее значение не трогаем
     if (targetSid !== itemSheetStore) {
       fromStore.items.splice(idx, 1);
       findStore(targetSid).items.push(it);
     }
   } else {
-    findStore(targetSid).items.push({ id: uid(), name, qty, price, day, loc, catId, bought: false });
+    findStore(targetSid).items.push({ id: uid(), name, qty, price, day: null, loc, catId, bought: false });
   }
   // history upsert (per-list autocomplete)
   const cat = data().catalog;
   const existing = cat.find(c => (c.name || '').toLowerCase() === name.toLowerCase());
-  if (existing) Object.assign(existing, { name, qty, price, day });
-  else cat.push({ name, qty, price, day });
+  if (existing) Object.assign(existing, { name, qty, price });
+  else cat.push({ name, qty, price });
   if (cat.length > 300) cat.splice(0, cat.length - 300);
   // global catalog upsert — the catalog builds itself as you add items
-  upsertCatalogProduct(name, price, catId, loc);
+  upsertCatalogProduct(name, price, catId, loc, sku);
 
   save(); render(); closeSheet('itemSheet'); vibrate(10);
 }
@@ -3029,14 +3043,15 @@ function sortLocsByMatch(locs, q) {
   return [...locs].sort((a, b) => locMatchScore(a, q) - locMatchScore(b, q));
 }
 
-function upsertCatalogProduct(name, price, categoryId, loc) {
+function upsertCatalogProduct(name, price, categoryId, loc, sku) {
   const p = state.catalogDB.products.find(x => x.name.toLowerCase() === name.toLowerCase());
   if (p) {
     if (price) p.price = price;
     if (categoryId) p.categoryId = categoryId;
     if (loc) p.loc = loc;
+    if (sku) p.sku = sku;
   } else {
-    state.catalogDB.products.push({ id: uid(), name, price: +price || 0, categoryId: categoryId || null, loc: loc || '' });
+    state.catalogDB.products.push({ id: uid(), name, price: +price || 0, categoryId: categoryId || null, loc: loc || '', sku: sku || '' });
   }
 }
 
@@ -3127,6 +3142,7 @@ function applyProductToItemForm(p) {
   document.getElementById('itemPriceInput').value = p.price || '';
   document.getElementById('itemQtyInput').value = 1;
   if (p.loc) document.getElementById('itemLocInput').value = p.loc;
+  if (p.sku) document.getElementById('itemSkuInput').value = p.sku;
   if (p.categoryId) document.getElementById('itemCatSelect').value = p.categoryId;
   document.getElementById('suggestBox').innerHTML = '';
   renderItemLocChips();
@@ -3260,9 +3276,12 @@ function renderCatHint(ctx) {
   if (!name || catSel.value) { hint.style.display = 'none'; return; }
   const cat = suggestCategoryFor(name);
   if (!cat) { hint.style.display = 'none'; return; }
-  hint.style.display = 'block';
-  hint.innerHTML = `Похоже, это «${esc(cat.name)}» — <b>выбрать категорию?</b>`;
-  hint.onclick = () => {
+  if (hint.style.display === 'flex' && hint.dataset.catId === cat.id) return; // уже показываем этот же вариант — не перезапускаем анимацию
+  hint.dataset.catId = cat.id;
+  hint.style.display = 'flex';
+  hint.style.animation = 'none'; hint.offsetWidth; hint.style.animation = '';
+  hint.innerHTML = `<span class="chi">${ic('tag', 15)}</span><span class="cht">Похоже, это <b>«${esc(cat.name)}»</b></span><button type="button" class="chb">Выбрать</button>`;
+  hint.querySelector('.chb').onclick = () => {
     catSel.value = cat.id;
     if (ctx === 'catalog') onCatProdCategoryChange();
     hint.style.display = 'none';
