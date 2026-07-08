@@ -243,7 +243,20 @@ input,select{font-family:inherit}
   color:var(--accent);cursor:pointer;display:flex;align-items:center;justify-content:center;
 }
 .cat-add:active{background:#DDE0FD}
+.cat-fav{width:34px;height:42px;flex:none;border:none;background:none;cursor:pointer;display:flex;align-items:center;justify-content:center}
 .cat-empty{text-align:center;color:var(--muted);font-size:13.5px;padding:26px 0}
+.fav-banner{
+  display:flex;align-items:center;gap:9px;width:100%;margin-top:14px;padding:12px 14px;border:none;border-radius:16px;
+  background:linear-gradient(90deg,#FFFBEB,#FEF3C7);color:#92400E;font-size:13.5px;font-weight:800;cursor:pointer;text-align:left;
+}
+.fav-banner .ic{color:#D97706;flex:none;display:flex}
+.fav-banner span:nth-child(2){flex:1}
+.fav-cnt{flex:none;background:rgba(217,119,6,.18);border-radius:99px;padding:2px 9px;font-size:12px}
+.fav-pick-row{display:flex;align-items:center;gap:4px;padding:2px 8px;border-bottom:1px solid var(--line)}
+.fav-pick-row:last-child{border-bottom:none}
+.fav-pick-price{font-size:12.5px;color:var(--muted);margin-top:1px}
+.fav-pick-row.picked .check .box{background:var(--green);border-color:var(--green)}
+.fav-pick-row.picked .check .box svg{opacity:1;transform:scale(1)}
 @media(hover:hover){
   .cat-add:hover{background:#DDE0FD}
   .chip:hover{color:var(--text)}
@@ -982,6 +995,9 @@ input[type=file]{display:none}
         Печать A4
       </button>
     </div>
+    <button class="fav-banner" id="invFavBanner" onclick="openInvFavSheet()" style="display:none">
+      <span class="ic" data-icon="star"></span><span>Добавить избранные товары</span><span class="fav-cnt" id="invFavCount"></span>
+    </button>
     <section class="budget-card" style="margin-top:14px">
       <div class="stats" id="invStats"></div>
     </section>
@@ -1275,7 +1291,10 @@ input[type=file]{display:none}
 <div class="sheet-wrap" id="catProductSheet"><div class="backdrop" onclick="closeSheet('catProductSheet')"></div>
   <div class="sheet">
     <div class="grab"></div>
-    <h2 id="catProductTitle">Товар каталога</h2>
+    <div class="sku-head">
+      <h2 id="catProductTitle" style="margin:0">Товар каталога</h2>
+      <button class="icon-btn" id="catProdFavBtn" onclick="toggleFavorite(catEditProductId)" aria-label="Избранное" style="width:38px;height:38px;border-radius:12px"></button>
+    </div>
     <div class="field">
       <label>Название</label>
       <input id="catProdName" type="text" placeholder="Например: Молоко 3,2%" autocomplete="off" oninput="renderCatHint('catalog')">
@@ -1617,6 +1636,16 @@ input[type=file]{display:none}
   </div>
 </div>
 
+<div class="sheet-wrap" id="invFavSheet"><div class="backdrop" onclick="closeSheet('invFavSheet')"></div>
+  <div class="sheet">
+    <div class="grab"></div>
+    <h2>Избранные товары</h2>
+    <p style="color:var(--muted);font-size:13.5px;margin:0 0 12px">Отметьте, что добавить в инвентуру</p>
+    <div id="invFavRows"></div>
+    <button class="btn btn-primary" onclick="addSelectedFavoritesToInv()">Добавить</button>
+  </div>
+</div>
+
 <div class="sheet-wrap" id="invAcceptSheet"><div class="backdrop" onclick="closeSheet('invAcceptSheet')"></div>
   <div class="sheet">
     <div class="grab"></div>
@@ -1773,7 +1802,7 @@ function sanitizeCatalogDB(s) {
   s.catalogDB.categories = Array.isArray(s.catalogDB.categories) ? s.catalogDB.categories : [];
   s.catalogDB.products = Array.isArray(s.catalogDB.products) ? s.catalogDB.products : [];
   s.catalogDB.categories.forEach(c => { c.id = c.id || uid(); c.name = c.name || 'Категория'; });
-  s.catalogDB.products.forEach(p => { p.id = p.id || uid(); p.price = +p.price || 0; p.categoryId = p.categoryId || null; p.sku = p.sku || ''; });
+  s.catalogDB.products.forEach(p => { p.id = p.id || uid(); p.price = +p.price || 0; p.categoryId = p.categoryId || null; p.sku = p.sku || ''; p.favorite = !!p.favorite; });
   // debts / staff / inventory modules
   s.debts = Array.isArray(s.debts) ? s.debts : [];
   s.debts.forEach(d => { d.id = d.id || uid(); d.amount = +d.amount || 0; d.paid = !!d.paid; });
@@ -1940,7 +1969,8 @@ const ICONS = {
   megaphone: '<path d="M3 10.5v3a1.5 1.5 0 0 0 1.5 1.5H7l7 4.5v-15L7 9H4.5A1.5 1.5 0 0 0 3 10.5z"/><path d="M17.5 9.5a4 4 0 0 1 0 5"/>',
   refresh: '<path d="M20 12a8 8 0 1 1-2.4-5.7M20 4v4.5h-4.5"/>',
   printer: '<path d="M7 8.5V4h10v4.5M7 17.5H5.5A1.5 1.5 0 0 1 4 16v-5a1.5 1.5 0 0 1 1.5-1.5h13A1.5 1.5 0 0 1 20 11v5a1.5 1.5 0 0 1-1.5 1.5H17M7 14.5h10v6H7z"/>',
-  currency: '<path d="M4 8.5h11M4 8.5l3.5-3.5M4 8.5l3.5 3.5M20 15.5H9M20 15.5l-3.5-3.5M20 15.5l-3.5 3.5"/>'
+  currency: '<path d="M4 8.5h11M4 8.5l3.5-3.5M4 8.5l3.5 3.5M20 15.5H9M20 15.5l-3.5-3.5M20 15.5l-3.5 3.5"/>',
+  star: '<path d="M12 3.6l2.5 5.1 5.6.8-4 4 1 5.6-5.1-2.7-5.1 2.7 1-5.6-4-4 5.6-.8z"/>'
 };
 function ic(name, size) {
   return `<svg width="${size || 19}" height="${size || 19}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${ICONS[name] || ''}</svg>`;
@@ -2466,6 +2496,7 @@ function saveItemSheet() {
   upsertCatalogProduct(name, price, catId, loc, sku);
 
   save(); render(); closeSheet('itemSheet'); vibrate(10);
+  maybeSuggestFavorite(catId);
 }
 
 function deleteItemFromSheet() {
@@ -3152,7 +3183,7 @@ function aiHide() { document.getElementById('aiPanel').classList.remove('show');
 function aiAskSave() {
   if (Date.now() < aiSnoozeUntil) return;
   if (window.__tourActive) return;
-  if (document.querySelector('.sheet-wrap.open')) { // не мешаем, пока открыта шторка
+  if (document.querySelector('.sheet-wrap.open') || document.getElementById('aiPanel').classList.contains('show')) { // не мешаем, пока открыта шторка или уже показана другая подсказка
     clearTimeout(autoSyncTimer);
     autoSyncTimer = setTimeout(aiAskSave, 8000);
     return;
@@ -3272,6 +3303,16 @@ let catFilter = null, catLocFilter = null, catEditProductId = null, catAddProduc
 
 const catById = id => state.catalogDB.categories.find(c => c.id === id);
 const prodById = id => state.catalogDB.products.find(p => p.id === id);
+function favStarSvg(on) {
+  return `<svg width="18" height="18" viewBox="0 0 24 24" fill="${on ? '#F59E0B' : 'none'}" stroke="${on ? '#F59E0B' : '#94A3B8'}" stroke-width="1.7" stroke-linejoin="round">${ICONS.star}</svg>`;
+}
+function toggleFavorite(id) {
+  const p = prodById(id); if (!p) return;
+  p.favorite = !p.favorite;
+  save(); renderCatalog(); renderInv();
+  const btn = document.getElementById('catProdFavBtn');
+  if (btn && catEditProductId === id) btn.innerHTML = favStarSvg(p.favorite);
+}
 const distinctLocations = () => [...new Set(state.catalogDB.products.map(p => (p.loc || '').trim()).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'ru'));
 // while typing a new location, bubble up the closest existing ones first so duplicates are easy to spot
 function locMatchScore(loc, q) {
@@ -3449,6 +3490,7 @@ function renderCatalog() {
         <div class="cat-meta">${cat ? esc(cat.name) : 'Без категории'}${p.loc ? ' · ' + esc(p.loc) : ''}${p.sku ? ' · #' + esc(p.sku) : ''}</div>
       </div>
       <span class="cat-price">${money(p.price)}</span>
+      <button class="cat-fav" onclick="event.stopPropagation();toggleFavorite('${p.id}')" aria-label="Избранное">${favStarSvg(p.favorite)}</button>
       <button class="cat-add" onclick="catAddClick('${p.id}')" aria-label="Добавить">${ic('plus', 18)}</button>
     </div>`;
   }).join('') : `<div class="cat-empty">${db.products.length ? 'Ничего не найдено' : 'Каталог пуст — добавьте товары вручную или загрузите из Google Таблицы'}</div>`;
@@ -3464,6 +3506,9 @@ function openCatProductSheet(id) {
   document.getElementById('catProdSaveBtn').textContent = p ? 'Сохранить' : 'Добавить';
   document.getElementById('catProdDeleteBtn').style.display = p ? 'flex' : 'none';
   document.getElementById('catProdPrintBtn').style.display = p ? 'flex' : 'none';
+  const favBtn = document.getElementById('catProdFavBtn');
+  favBtn.style.display = p ? 'flex' : 'none';
+  favBtn.innerHTML = p ? favStarSvg(p.favorite) : '';
   document.getElementById('catProdName').value = p ? p.name : '';
   document.getElementById('catProdPrice').value = p ? (p.price || '') : '';
   document.getElementById('catProdLoc').value = p && p.loc ? p.loc : '';
@@ -3652,6 +3697,36 @@ function saveCatAdd() {
   if (addLoc && addLoc !== (p.loc || '')) { p.loc = addLoc; }
   save(); render(); closeSheet('catAddSheet'); vibrate(10);
   toast(`«${p.name}» — в списке`);
+  maybeSuggestFavorite(p.categoryId);
+}
+
+/* ---------- ненавязчивая подсказка «вы часто заказываете...» при составлении списка ---------- */
+let favSnoozeUntil = 0;
+let favDeclinedIds = new Set();
+let favSuggestTimer = null;
+function listedProductNames() {
+  const names = new Set();
+  data().stores.forEach(s => s.items.forEach(it => names.add((it.name || '').toLowerCase())));
+  return names;
+}
+function maybeSuggestFavorite(catId) {
+  clearTimeout(favSuggestTimer);
+  favSuggestTimer = setTimeout(() => trySuggestFavorite(catId), 1400);
+}
+function trySuggestFavorite(catId) {
+  if (Date.now() < favSnoozeUntil) return;
+  if (window.__tourActive) return;
+  if (document.querySelector('.sheet-wrap.open')) return; // не мешаем открытой шторке
+  if (document.getElementById('aiPanel').classList.contains('show')) return; // не перебиваем другую подсказку
+  const inList = listedProductNames();
+  const pool = state.catalogDB.products.filter(p => p.favorite && !inList.has((p.name || '').toLowerCase()) && !favDeclinedIds.has(p.id));
+  if (!pool.length) return;
+  const pick = (catId && pool.find(p => p.categoryId === catId)) || pool[Math.floor(Math.random() * pool.length)];
+  aiSay(`Вы часто заказываете «${pick.name}» — добавить?`, [
+    { label: 'Добавить', pri: true, fn: () => openCatAddSheet(pick.id) },
+    { label: 'Не сейчас', fn: () => { favDeclinedIds.add(pick.id); clearTimeout(favSuggestTimer); favSuggestTimer = setTimeout(() => trySuggestFavorite(catId), 45000); } },
+    { label: 'Отстань', fn: () => { favSnoozeUntil = Date.now() + 10 * 60000; } }
+  ]);
 }
 
 /* ---------- categories ---------- */
@@ -4504,6 +4579,50 @@ function renderInv() {
     </div>`;
   }).join('') : '<div class="empty-items">Добавьте товары из каталога — и сверяйте остатки или планируйте закупку</div>';
   renderInvStats();
+  renderInvFavBanner();
+}
+function favCandidates() {
+  const inInv = new Set(state.inventory.map(r => r.productId));
+  return state.catalogDB.products.filter(p => p.favorite && !inInv.has(p.id));
+}
+function renderInvFavBanner() {
+  const banner = document.getElementById('invFavBanner');
+  if (!banner) return;
+  const n = favCandidates().length;
+  banner.style.display = n ? 'flex' : 'none';
+  document.getElementById('invFavCount').textContent = n || '';
+}
+let favPicked = new Set();
+function openInvFavSheet() {
+  const cands = favCandidates();
+  favPicked = new Set();
+  document.getElementById('invFavRows').innerHTML = cands.length ? cands.map(p => `
+    <div class="fav-pick-row" id="favPick-${p.id}">
+      <button class="check" onclick="toggleFavPick('${p.id}')" aria-label="Выбрать">
+        <span class="box"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 12.5l5 5 10-11"/></svg></span>
+      </button>
+      <div style="flex:1;min-width:0;cursor:pointer" onclick="toggleFavPick('${p.id}')">
+        <div class="inv-name">${esc(p.name)}</div>
+        <div class="fav-pick-price">${money(p.price)}</div>
+      </div>
+    </div>`).join('') : '<div class="cat-empty">Нет избранных товаров</div>';
+  openSheet('invFavSheet');
+}
+function toggleFavPick(id) {
+  if (favPicked.has(id)) favPicked.delete(id); else favPicked.add(id);
+  const row = document.getElementById('favPick-' + id);
+  if (row) row.classList.toggle('picked', favPicked.has(id));
+}
+function addSelectedFavoritesToInv() {
+  if (!favPicked.size) { closeSheet('invFavSheet'); return; }
+  favPicked.forEach(id => {
+    if (!state.inventory.some(r => r.productId === id)) {
+      state.inventory.push({ id: uid(), productId: id, expected: 0, actual: null, buy: 0 });
+    }
+  });
+  const n = favPicked.size;
+  save(); renderInv(); closeSheet('invFavSheet'); vibrate(10);
+  toast(`Добавлено в инвентуру: ${n}`);
 }
 function renderInvStats() {
   const rows = state.inventory;
