@@ -93,6 +93,21 @@ input,select{font-family:inherit}
 .curr-top-btn .ctc{color:var(--accent);font-weight:900}
 .curr-top-btn:active{transform:scale(.94)}
 @media(max-width:380px){.curr-top-btn{padding:0 9px;font-size:12.5px}}
+.lang-top-btn{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;border:none;background:var(--card);
+  box-shadow:var(--shadow);border-radius:14px;width:44px;height:44px;cursor:pointer;flex:none;transition:transform .12s;
+}
+.lang-top-btn span:first-child{font-size:16px;line-height:1.1}
+.lang-top-btn span:last-child{font-size:8.5px;font-weight:800;color:var(--muted);letter-spacing:.03em;margin-top:1px}
+.lang-top-btn:active{transform:scale(.92)}
+.lang-row{
+  display:flex;align-items:center;gap:12px;width:100%;padding:12px 6px;border:none;background:none;
+  border-bottom:1px solid var(--line);cursor:pointer;text-align:left;font-size:15px;font-weight:700;color:var(--text);
+}
+.lang-row:last-child{border-bottom:none}
+.lang-row .lang-flag{font-size:22px;flex:none;line-height:1}
+.lang-row .lang-name{flex:1}
+.lang-row .lang-check{flex:none;color:var(--accent)}
 
 /* ---------- budget card ---------- */
 .budget-card{
@@ -854,6 +869,9 @@ input[type=file]{display:none}
       <button class="curr-top-btn" id="currTopBtn" onclick="openCurrencySheet()" aria-label="Курсы валют">
         <span class="ctc">$</span><span id="currTopRate">…</span>
       </button>
+      <button class="lang-top-btn" id="langTopBtn" onclick="openLangSheet()" aria-label="Язык и валюта">
+        <span id="langFlag">🇷🇺</span><span id="langCode">RUS</span>
+      </button>
       <button class="icon-btn" id="catalogBtn" onclick="openCatalogSheet()" aria-label="Каталог товаров">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#475569" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.2 13.6 13.6 20.2a1.9 1.9 0 0 1-2.7 0L4 13.3V4h9.3l6.9 6.9a1.9 1.9 0 0 1 0 2.7z"/><circle cx="8.7" cy="8.7" r="1.3"/></svg>
       </button>
@@ -872,7 +890,7 @@ input[type=file]{display:none}
         <div class="budget-label">Бюджет</div>
         <div class="budget-input-wrap">
           <input id="budgetInput" type="number" inputmode="decimal" min="0" placeholder="0">
-          <span class="rub">₽</span>
+          <span class="rub" id="budgetCurSym">₽</span>
         </div>
       </div>
       <div class="remaining-block">
@@ -1112,7 +1130,7 @@ input[type=file]{display:none}
     </div>
     <div class="field-row">
       <div class="field">
-        <label>Цена, ₽ (минус — долг)</label>
+        <label data-i18n-cur="lbl_item_price">Цена, ₽ (минус — долг)</label>
         <input id="itemPriceInput" type="number" inputmode="decimal" step="any" placeholder="0 или −500">
       </div>
       <div class="field">
@@ -1301,7 +1319,7 @@ input[type=file]{display:none}
     </div>
     <div class="field-row">
       <div class="field">
-        <label>Цена закупки, ₽</label>
+        <label data-i18n-cur="lbl_catprod_price">Цена закупки, ₽</label>
         <input id="catProdPrice" type="number" inputmode="decimal" min="0" step="any" placeholder="0">
       </div>
       <div class="field">
@@ -1352,7 +1370,7 @@ input[type=file]{display:none}
     </div>
     <div class="field-row">
       <div class="field">
-        <label>Цена, ₽ (минус — долг)</label>
+        <label data-i18n-cur="lbl_catadd_price">Цена, ₽ (минус — долг)</label>
         <input id="catAddPrice" type="number" inputmode="decimal" step="any" placeholder="0">
       </div>
       <div class="field">
@@ -1495,6 +1513,24 @@ input[type=file]{display:none}
   </div>
 </div>
 
+<div class="sheet-wrap" id="langSheet"><div class="backdrop" onclick="closeSheet('langSheet')"></div>
+  <div class="sheet">
+    <div class="grab"></div>
+    <h2 data-i18n="lang_sheet_title">Язык</h2>
+    <p style="color:var(--muted);font-size:13.5px;margin:0 0 12px" data-i18n="lang_sheet_sub">Выберите язык интерфейса</p>
+    <div id="langRows"></div>
+  </div>
+</div>
+
+<div class="sheet-wrap" id="currPickSheet"><div class="backdrop" onclick="closeSheet('currPickSheet')"></div>
+  <div class="sheet">
+    <div class="grab"></div>
+    <h2 data-i18n="curr_sheet_title">Валюта</h2>
+    <p style="color:var(--muted);font-size:13.5px;margin:0 0 12px" data-i18n="curr_sheet_sub">Как показывать суммы — без пересчёта, только знак</p>
+    <div id="currPickRows"></div>
+  </div>
+</div>
+
 <div class="sheet-wrap" id="debtSheet"><div class="backdrop" onclick="closeSheet('debtSheet')"></div>
   <div class="sheet">
     <div class="grab"></div>
@@ -1513,7 +1549,7 @@ input[type=file]{display:none}
     </div>
     <div class="field-row">
       <div class="field">
-        <label>Сумма, ₽</label>
+        <label data-i18n-cur="lbl_debt_amount">Сумма, ₽</label>
         <input id="debtAmount" type="number" inputmode="decimal" step="any" placeholder="0">
       </div>
       <div class="field">
@@ -1585,7 +1621,7 @@ input[type=file]{display:none}
         <input id="empRole" type="text" placeholder="Повар, кассир…" autocomplete="off">
       </div>
       <div class="field">
-        <label>Ставка, ₽/час</label>
+        <label data-i18n-cur="lbl_emp_rate">Ставка, ₽/час</label>
         <input id="empRate" type="number" inputmode="decimal" min="0" step="any" placeholder="0">
       </div>
     </div>
@@ -1850,6 +1886,130 @@ const data = () => list().data;
 const curPlan = () => state.plans.find(p => p.id === state.currentPlanId);
 const findStore = id => data().stores.find(s => s.id === id);
 
+/* ================= язык интерфейса и валюта отображения ================= */
+// это настройки устройства, а не список — не кладём в синхронизируемый state,
+// чтобы у разных устройств одного аккаунта могли быть разные язык/валюта
+const LANGUAGES = [
+  { code: 'ru', short: 'RUS', flag: '🇷🇺', name: 'Русский' },
+  { code: 'en', short: 'ENG', flag: '🇬🇧', name: 'English' }
+];
+// суммы не пересчитываются — меняется только отображаемый знак валюты
+const DISPLAY_CURRENCIES = [
+  { code: 'RUB', symbol: '₽', flag: '🇷🇺', name: 'Российский рубль' },
+  { code: 'USD', symbol: '$', flag: '🇺🇸', name: 'Доллар США' },
+  { code: 'EUR', symbol: '€', flag: '🇪🇺', name: 'Евро' },
+  { code: 'KGS', symbol: 'сом', flag: '🇰🇬', name: 'Киргизский сом' },
+  { code: 'KZT', symbol: '₸', flag: '🇰🇿', name: 'Казахстанский тенге' },
+  { code: 'UAH', symbol: '₴', flag: '🇺🇦', name: 'Украинская гривна' }
+];
+let appLang = localStorage.getItem('bdgLang') || 'ru';
+let appCurrency = localStorage.getItem('bdgCurrency') || 'RUB';
+function currSym() {
+  const c = DISPLAY_CURRENCIES.find(x => x.code === appCurrency);
+  return c ? c.symbol : '₽';
+}
+// ключ → фраза; {cur} в строке подставляется текущим символом валюты через tc().
+// Переведён пока сам переключатель языка/валюты — остальной интерфейс переводится по разделам отдельными этапами.
+const I18N = {
+  ru: {
+    lang_sheet_title: 'Язык',
+    lang_sheet_sub: 'Выберите язык интерфейса',
+    curr_ask_title: 'Изменить валюту?',
+    curr_ask_text: 'Суммы не пересчитываются — меняется только знак валюты. Оставить рубль или выбрать другую?',
+    curr_ask_yes: 'Выбрать валюту',
+    curr_ask_no: 'Оставить рубль',
+    curr_sheet_title: 'Валюта',
+    curr_sheet_sub: 'Как показывать суммы — без пересчёта, только знак',
+    lbl_item_price: 'Цена, {cur} (минус — долг)',
+    lbl_catprod_price: 'Цена закупки, {cur}',
+    lbl_catadd_price: 'Цена, {cur} (минус — долг)',
+    lbl_debt_amount: 'Сумма, {cur}',
+    lbl_emp_rate: 'Ставка, {cur}/час'
+  },
+  en: {
+    lang_sheet_title: 'Language',
+    lang_sheet_sub: 'Choose the interface language',
+    curr_ask_title: 'Change currency?',
+    curr_ask_text: 'Amounts aren’t recalculated — only the currency sign changes. Keep ruble or pick another one?',
+    curr_ask_yes: 'Choose currency',
+    curr_ask_no: 'Keep ruble',
+    curr_sheet_title: 'Currency',
+    curr_sheet_sub: 'How to display amounts — no recalculation, just the sign',
+    lbl_item_price: 'Price, {cur} (negative — debt)',
+    lbl_catprod_price: 'Purchase price, {cur}',
+    lbl_catadd_price: 'Price, {cur} (negative — debt)',
+    lbl_debt_amount: 'Amount, {cur}',
+    lbl_emp_rate: 'Rate, {cur}/hour'
+  }
+};
+function t(key) {
+  const dict = I18N[appLang] || I18N.ru;
+  return dict[key] !== undefined ? dict[key] : (I18N.ru[key] !== undefined ? I18N.ru[key] : key);
+}
+const tc = key => t(key).replace('{cur}', currSym());
+// применяет переводы к статичной разметке: data-i18n — textContent, data-i18n-ph — placeholder, data-i18n-aria — aria-label
+function applyI18n() {
+  document.querySelectorAll('[data-i18n]').forEach(el => { el.textContent = t(el.dataset.i18n); });
+  document.querySelectorAll('[data-i18n-ph]').forEach(el => { el.placeholder = t(el.dataset.i18nPh); });
+  document.querySelectorAll('[data-i18n-aria]').forEach(el => { el.setAttribute('aria-label', t(el.dataset.i18nAria)); });
+  document.querySelectorAll('[data-i18n-cur]').forEach(el => { el.textContent = tc(el.dataset.i18nCur); }); // текст с {cur} — символ текущей валюты
+  renderLangTopBadge();
+  const budgetSym = document.getElementById('budgetCurSym');
+  if (budgetSym) budgetSym.textContent = currSym();
+}
+function renderLangTopBadge() {
+  const l = LANGUAGES.find(x => x.code === appLang) || LANGUAGES[0];
+  document.getElementById('langFlag').textContent = l.flag;
+  document.getElementById('langCode').textContent = l.short;
+}
+const langCheckSvg = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 12.5l5 5 10-11"/></svg>';
+function openLangSheet() {
+  closeSheet('menuSheet');
+  renderLangRows();
+  openSheet('langSheet');
+}
+function renderLangRows() {
+  document.getElementById('langRows').innerHTML = LANGUAGES.map(l => `
+    <button class="lang-row ${l.code === appLang ? 'on' : ''}" onclick="selectLang('${l.code}')">
+      <span class="lang-flag">${l.flag}</span><span class="lang-name">${esc(l.name)}</span>
+      ${l.code === appLang ? `<span class="lang-check">${langCheckSvg}</span>` : ''}
+    </button>`).join('');
+}
+function selectLang(code) {
+  const changed = code !== appLang;
+  appLang = code;
+  localStorage.setItem('bdgLang', code);
+  applyI18n();
+  render();
+  closeSheet('langSheet');
+  if (changed) {
+    setTimeout(() => {
+      confirmAction(t('curr_ask_title'), t('curr_ask_text'), openCurrPickSheet, t('curr_ask_yes'), true);
+    }, 250);
+  }
+}
+function openCurrPickSheet() {
+  renderCurrRows();
+  openSheet('currPickSheet');
+}
+function renderCurrRows() {
+  document.getElementById('currPickRows').innerHTML = DISPLAY_CURRENCIES.map(c => `
+    <button class="lang-row ${c.code === appCurrency ? 'on' : ''}" onclick="selectCurrency('${c.code}')">
+      <span class="lang-flag">${c.flag}</span><span class="lang-name">${esc(c.name)} · ${c.symbol}</span>
+      ${c.code === appCurrency ? `<span class="lang-check">${langCheckSvg}</span>` : ''}
+    </button>`).join('');
+}
+function selectCurrency(code) {
+  appCurrency = code;
+  localStorage.setItem('bdgCurrency', code);
+  applyI18n();
+  render();
+  renderCatalog();
+  renderInv();
+  closeSheet('currPickSheet');
+  closeSheet('langSheet');
+}
+
 /* ================= helpers ================= */
 const esc = s => String(s).replace(/[&<>"']/g, c =>
   ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -1858,7 +2018,7 @@ function fmt(n) {
   const r = Math.round((+n || 0) * 100) / 100;
   return r.toLocaleString('ru-RU', { maximumFractionDigits: 2 });
 }
-const money = n => fmt(n) + ' ₽';
+const money = n => fmt(n) + ' ' + currSym();
 // low-value currencies (e.g. UZS) round away to nothing at 2 decimals — give those more precision
 const fmtRate = n => (n > 0 && n < 0.1) ? n.toLocaleString('ru-RU', { minimumFractionDigits: 4, maximumFractionDigits: 4 }) : fmt(n);
 
@@ -2287,7 +2447,7 @@ function itemRowHTML(sid, it) {
     </button>
     <div class="item-body" onclick="openItemSheet('${sid}','${it.id}')">
       <div class="item-name">${esc(it.name)}</div>
-      <div class="item-meta"><span>${fmt(it.qty)} × ${fmt(it.price)} ₽</span>${it.loc ? `<span class="loc-badge ${groupMode === 'loc' ? 'active' : ''}" onclick="event.stopPropagation();toggleGroupMode()">${esc(it.loc)}</span>` : ''}${badge}</div>
+      <div class="item-meta"><span>${fmt(it.qty)} × ${fmt(it.price)} ${currSym()}</span>${it.loc ? `<span class="loc-badge ${groupMode === 'loc' ? 'active' : ''}" onclick="event.stopPropagation();toggleGroupMode()">${esc(it.loc)}</span>` : ''}${badge}</div>
     </div>
     <span class="item-total ${sum < 0 ? 'neg' : ''}">${money(sum)}</span>
     <button class="drag-handle" aria-label="Перетащить">
@@ -2455,7 +2615,7 @@ function renderSuggest() {
     .slice(0, 6);
   box.classList.toggle('show', sugg.length > 0);
   box.innerHTML = sugg.map((c, i) =>
-    `<button type="button" onclick="applySuggest(${i})"><span>${esc(c.name)}</span><span class="sprice">${fmt(c.price)} ₽</span></button>`).join('');
+    `<button type="button" onclick="applySuggest(${i})"><span>${esc(c.name)}</span><span class="sprice">${fmt(c.price)} ${currSym()}</span></button>`).join('');
   box._sugg = sugg;
 }
 function applySuggest(i) {
@@ -2669,7 +2829,7 @@ function shareList() {
     s.items.forEach(it => {
       const sum = (+it.qty || 0) * (+it.price || 0);
       lines.push((it.bought ? '  ✓ ' : '  – ') + it.name +
-        ((+it.qty || 1) !== 1 ? ' ' + fmt(it.qty) + ' × ' + fmt(it.price) + ' ₽' : '') +
+        ((+it.qty || 1) !== 1 ? ' ' + fmt(it.qty) + ' × ' + fmt(it.price) + ' ' + currSym() : '') +
         ' — ' + money(sum) + (it.loc ? ' [' + it.loc + ']' : '') + (it.day ? ' (платёж ' + it.day + '-го)' : ''));
     });
     lines.push('');
@@ -4291,7 +4451,7 @@ function renderEmpPay(id) {
     <div class="row"><span>Неделя</span><b>${range}</b></div>
     <div class="row"><span>Отработано часов</span><b>${st.hours} ч</b></div>
     <div class="row"><span>Начислено</span><b>${money(st.salary)}</b></div>
-    <div class="row"><span>Штрафы</span><b style="color:var(--red)">${st.pen ? '−' + money(st.pen) : '0 ₽'}</b></div>
+    <div class="row"><span>Штрафы</span><b style="color:var(--red)">${st.pen ? '−' + money(st.pen) : money(0)}</b></div>
     <div class="row"><span>Выплачено</span><b>${money(st.paid)}</b></div>
     ${Math.abs(carry) > 0.01 ? `<div class="row"><span>Перенос с прошлых недель</span><b style="color:${carry > 0 ? 'var(--red)' : 'var(--green)'}">${money(carry)}</b></div>` : ''}
     <div class="row total"><span>Долг по ЗП</span><b style="color:${total <= 0.01 ? 'var(--green)' : 'var(--red)'}">${total <= 0.01 ? 'погашен' : money(total)}</b></div>`;
@@ -4604,14 +4764,14 @@ function printEmpCard() {
     : `<tr><td style="${PTD}" colspan="2">Нет операций за эту неделю</td></tr>`;
 
   printDoc('portrait', esc(e.name), range, `
-    ${e.role ? `<div style="font-size:12px;color:#64748B;font-weight:700;text-transform:uppercase;letter-spacing:.05em;margin:-8px 0 14px">${esc(e.role)}${e.rate ? ' · ' + fmt(e.rate) + ' ₽/час' : ''}</div>` : ''}
+    ${e.role ? `<div style="font-size:12px;color:#64748B;font-weight:700;text-transform:uppercase;letter-spacing:.05em;margin:-8px 0 14px">${esc(e.role)}${e.rate ? ' · ' + fmt(e.rate) + ' ' + currSym() + '/час' : ''}</div>` : ''}
     <table style="border-collapse:collapse;width:100%;margin-bottom:16px">
       <tr>${dayCells}</tr>
     </table>
     <table style="border-collapse:collapse;width:100%;margin-bottom:16px">
       <tr><td style="${PTD}">Отработано часов</td><td style="${PTD};text-align:right;font-weight:700">${st.hours} ч</td></tr>
       <tr><td style="${PTD}">Начислено за неделю</td><td style="${PTD};text-align:right;font-weight:700">${money(st.salary)}</td></tr>
-      <tr><td style="${PTD}">Штрафы</td><td style="${PTD};text-align:right;font-weight:700;color:#DC2626">${st.pen ? '−' + money(st.pen) : '0 ₽'}</td></tr>
+      <tr><td style="${PTD}">Штрафы</td><td style="${PTD};text-align:right;font-weight:700;color:#DC2626">${st.pen ? '−' + money(st.pen) : money(0)}</td></tr>
       <tr><td style="${PTD}">Выплачено</td><td style="${PTD};text-align:right;font-weight:700">${money(st.paid)}</td></tr>
       ${Math.abs(carry) > 0.01 ? `<tr><td style="${PTD}">Перенос с прошлых недель</td><td style="${PTD};text-align:right;font-weight:700;color:${carry > 0 ? '#DC2626' : '#059669'}">${money(carry)}</td></tr>` : ''}
       <tr><td style="${PTD};font-weight:800">Долг по ЗП</td><td style="${PTD};text-align:right;font-weight:900;color:${total <= 0.01 ? '#059669' : '#DC2626'}">${total <= 0.01 ? 'погашен' : money(total)}</td></tr>
@@ -5142,6 +5302,7 @@ placeBottomNav();
 desktopNavMQ.addEventListener('change', placeBottomNav);
 
 load();
+applyI18n();
 render();
 if (printReceiverOn()) startPrintReceiver(); // приём переживает перезагрузку страницы на этом устройстве
 renderCurrTopBadge();
