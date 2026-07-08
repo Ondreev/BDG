@@ -376,6 +376,10 @@ input,select{font-family:inherit}
 .field input:focus,.field select:focus{border-color:var(--accent);background:#fff}
 .field-row{display:flex;gap:10px}
 .field-row .field{flex:1;min-width:0}
+.field.field-empty input,.field.field-empty select{background:#FEF9C3;border-color:#FDE68A}
+.field.field-empty input:focus,.field.field-empty select:focus{background:#fff;border-color:var(--accent)}
+.cat-hint{margin-top:7px;font-size:12.5px;font-weight:600;color:var(--accent);cursor:pointer}
+.cat-hint b{font-weight:800;text-decoration:underline}
 
 .stepper{display:flex;align-items:center;gap:8px}
 .stepper button{
@@ -1009,7 +1013,7 @@ input[type=file]{display:none}
     <div class="field">
       <label>Название</label>
       <div style="display:flex;gap:8px;align-items:center">
-        <input id="itemNameInput" type="text" placeholder="Например: Молоко" autocomplete="off" oninput="renderSuggest()" enterkeyhint="next" style="flex:1">
+        <input id="itemNameInput" type="text" placeholder="Например: Молоко" autocomplete="off" oninput="renderSuggest();renderCatHint('item')" enterkeyhint="next" style="flex:1">
         <button type="button" class="icon-btn" onclick="openScanSheet('item')" aria-label="Сканировать QR-код">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#475569" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8V5.5A1.5 1.5 0 0 1 5.5 4H8M16 4h2.5A1.5 1.5 0 0 1 20 5.5V8M20 16v2.5a1.5 1.5 0 0 1-1.5 1.5H16M8 20H5.5A1.5 1.5 0 0 1 4 18.5V16"/><rect x="9" y="9" width="6" height="6" rx="1"/></svg>
         </button>
@@ -1039,11 +1043,13 @@ input[type=file]{display:none}
     <div class="field-row">
       <div class="field">
         <label>Место (ряд, полка)</label>
-        <input id="itemLocInput" type="text" placeholder="Например: 2Г, линия 2А" autocomplete="off">
+        <div class="chips" id="itemLocChips"></div>
+        <input id="itemLocInput" type="text" placeholder="Например: 2Г, линия 2А" autocomplete="off" oninput="renderItemLocChips()">
       </div>
       <div class="field">
         <label>Категория</label>
-        <select id="itemCatSelect"></select>
+        <select id="itemCatSelect" onchange="renderCatHint('item')"></select>
+        <div class="cat-hint" id="itemCatHint" style="display:none"></div>
       </div>
     </div>
     <div class="field">
@@ -1205,7 +1211,7 @@ input[type=file]{display:none}
     <h2 id="catProductTitle">Товар каталога</h2>
     <div class="field">
       <label>Название</label>
-      <input id="catProdName" type="text" placeholder="Например: Молоко 3,2%" autocomplete="off">
+      <input id="catProdName" type="text" placeholder="Например: Молоко 3,2%" autocomplete="off" oninput="renderCatHint('catalog')">
     </div>
     <div class="field-row">
       <div class="field">
@@ -1214,7 +1220,8 @@ input[type=file]{display:none}
       </div>
       <div class="field">
         <label>Категория</label>
-        <select id="catProdCategory" onchange="onCatProdCategoryChange()"></select>
+        <select id="catProdCategory" onchange="onCatProdCategoryChange();renderCatHint('catalog')"></select>
+        <div class="cat-hint" id="catProdCatHint" style="display:none"></div>
       </div>
     </div>
     <div class="field" id="catProdNewCatField" style="display:none">
@@ -1740,6 +1747,76 @@ function textMatch(hay, q) {
   return variants.some(x => x && (h.includes(x) || hl.includes(phon(trLat(x)))));
 }
 
+/* ---------- word-aware search: tokenize + light stemming + fuzzy fallback,
+   so "носки мужские" / "носок" / different word order all find each other ---------- */
+function tokenizeWords(s) { return String(s).toLowerCase().split(/[^a-zа-яё0-9]+/i).filter(Boolean); }
+const RU_SUFFIXES = ['иями', 'иях', 'ями', 'ами', 'его', 'ому', 'ему', 'ыми', 'ими', 'ого', 'ая', 'яя', 'ое', 'ее', 'ых', 'их', 'ым', 'им', 'ом', 'ем', 'ой', 'ей', 'ую', 'юю', 'ов', 'ев', 'ий', 'ый', 'а', 'я', 'о', 'е', 'и', 'ы', 'у', 'ю', 'й', 'ь'];
+function ruStem(w) {
+  for (const suf of RU_SUFFIXES) {
+    if (w.length - suf.length >= 3 && w.endsWith(suf)) return w.slice(0, -suf.length);
+  }
+  return w;
+}
+function levenshtein(a, b) {
+  if (!a.length) return b.length;
+  if (!b.length) return a.length;
+  let prev = Array.from({ length: b.length + 1 }, (_, j) => j);
+  for (let i = 1; i <= a.length; i++) {
+    const cur = [i];
+    for (let j = 1; j <= b.length; j++) {
+      cur[j] = a[i - 1] === b[j - 1] ? prev[j - 1] : 1 + Math.min(prev[j], cur[j - 1], prev[j - 1]);
+    }
+    prev = cur;
+  }
+  return prev[b.length];
+}
+// distance budget scales with length so short words stay strict (avoids random false hits)
+function fuzzyOk(a, b) {
+  const m = Math.max(a.length, b.length);
+  if (m >= 6) return levenshtein(a, b) <= 2;
+  if (m >= 4) return levenshtein(a, b) <= 1;
+  return false;
+}
+function wordsMatch(hw, qw) {
+  if (textMatch(hw, qw)) return true;
+  const hs = ruStem(hw), qs = ruStem(qw);
+  if (hs.length >= 3 && qs.length >= 3) {
+    if (hs === qs || hs.includes(qs) || qs.includes(hs)) return true;
+    // noun/adjective derivation (молоко/молочный) usually leaves stems 1-2 letters apart
+    if (fuzzyOk(hs, qs)) return true;
+  }
+  return fuzzyOk(hw, qw);
+}
+// every word of the query must be found among the haystack's words — any order, plural/case/ending-agnostic
+function smartMatch(hay, q) {
+  if (!q) return true;
+  if (textMatch(hay, q)) return true;
+  const qWords = tokenizeWords(q);
+  if (!qWords.length) return true;
+  const hWords = tokenizeWords(hay);
+  return qWords.every(qw => hWords.some(hw => wordsMatch(hw, qw)));
+}
+// guess an existing category from a product name, e.g. "Молоко" -> «Молочка»
+function suggestCategoryFor(name) {
+  const words = tokenizeWords(name);
+  if (!words.length) return null;
+  for (const cat of state.catalogDB.categories) {
+    const catWords = tokenizeWords(cat.name);
+    if (catWords.some(cw => words.some(w => wordsMatch(cw, w)))) return cat;
+  }
+  const counts = new Map();
+  state.catalogDB.products.forEach(p => {
+    if (!p.categoryId) return;
+    const pWords = tokenizeWords(p.name);
+    if (pWords.some(pw => words.some(w => wordsMatch(pw, w)))) {
+      counts.set(p.categoryId, (counts.get(p.categoryId) || 0) + 1);
+    }
+  });
+  if (!counts.size) return null;
+  const bestId = [...counts.entries()].sort((a, b) => b[1] - a[1])[0][0];
+  return catById(bestId) || null;
+}
+
 /* ---------- icon set (strict line icons, no emoji) ---------- */
 const ICONS = {
   cart: '<circle cx="9" cy="20" r="1.4"/><circle cx="17" cy="20" r="1.4"/><path d="M3 4h2l2.3 11h10.4l2-8H6.2"/>',
@@ -2200,6 +2277,9 @@ function openItemSheet(sid, itemId) {
     `<option value="${s.id}" ${s.id === sid ? 'selected' : ''}>${esc(s.name)}</option>`).join('');
 
   renderSuggest();
+  renderItemLocChips();
+  renderCatHint('item');
+  markEmptyFields('itemSheet');
   openSheet('itemSheet');
   if (!editing) setTimeout(() => document.getElementById('itemNameInput').focus(), 320);
 }
@@ -2222,7 +2302,7 @@ function renderSuggest() {
     { name: p.name, price: p.price, qty: 1, day: null, catId: p.categoryId, loc: p.loc || '' }));
   data().catalog.forEach(c => { const k = (c.name || '').toLowerCase(); if (!map.has(k)) map.set(k, c); });
   const sugg = [...map.values()]
-    .filter(c => c.name.toLowerCase() !== v.toLowerCase() && textMatch(c.name, v))
+    .filter(c => c.name.toLowerCase() !== v.toLowerCase() && smartMatch(c.name, v))
     .slice(0, 6);
   box.innerHTML = sugg.map((c, i) =>
     `<button type="button" onclick="applySuggest(${i})">${esc(c.name)} · ${fmt(c.price)} ₽</button>`).join('');
@@ -2238,6 +2318,9 @@ function applySuggest(i) {
   if (c.loc) document.getElementById('itemLocInput').value = c.loc;
   if (c.catId) document.getElementById('itemCatSelect').value = c.catId;
   document.getElementById('suggestBox').innerHTML = '';
+  renderItemLocChips();
+  renderCatHint('item');
+  markEmptyFields('itemSheet');
 }
 
 function saveItemSheet() {
@@ -2932,6 +3015,19 @@ let catFilter = null, catLocFilter = null, catEditProductId = null, catAddProduc
 const catById = id => state.catalogDB.categories.find(c => c.id === id);
 const prodById = id => state.catalogDB.products.find(p => p.id === id);
 const distinctLocations = () => [...new Set(state.catalogDB.products.map(p => (p.loc || '').trim()).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'ru'));
+// while typing a new location, bubble up the closest existing ones first so duplicates are easy to spot
+function locMatchScore(loc, q) {
+  const l = loc.toLowerCase(), x = q.toLowerCase();
+  if (l === x) return 0;
+  if (l.startsWith(x)) return 1;
+  if (l.includes(x)) return 2;
+  if (textMatch(loc, q)) return 3;
+  return 4;
+}
+function sortLocsByMatch(locs, q) {
+  if (!q) return locs;
+  return [...locs].sort((a, b) => locMatchScore(a, q) - locMatchScore(b, q));
+}
 
 function upsertCatalogProduct(name, price, categoryId, loc) {
   const p = state.catalogDB.products.find(x => x.name.toLowerCase() === name.toLowerCase());
@@ -3033,6 +3129,9 @@ function applyProductToItemForm(p) {
   if (p.loc) document.getElementById('itemLocInput').value = p.loc;
   if (p.categoryId) document.getElementById('itemCatSelect').value = p.categoryId;
   document.getElementById('suggestBox').innerHTML = '';
+  renderItemLocChips();
+  renderCatHint('item');
+  markEmptyFields('itemSheet');
   toast(`«${p.name}» найден — проверьте количество и сохраните`);
 }
 function closeScanSheet() {
@@ -3044,9 +3143,9 @@ function closeScanSheet() {
 
 function productMatches(p, q) {
   if (!q) return true;
-  if (textMatch(p.name, q)) return true;
+  if (smartMatch(p.name, q)) return true;
   const cat = catById(p.categoryId);
-  if (cat && textMatch(cat.name, q)) return true;
+  if (cat && smartMatch(cat.name, q)) return true;
   const qn = q.replace(',', '.').replace(/\s/g, '');
   if (/^\d+(\.\d+)?$/.test(qn) && String(p.price).includes(qn)) return true;
   return false;
@@ -3117,6 +3216,8 @@ function openCatProductSheet(id) {
     `<option value="__new">+ Новая категория…</option>`;
   if (!p && catFilter) sel.value = catFilter;
   onCatProdCategoryChange();
+  renderCatHint('catalog');
+  markEmptyFields('catProductSheet');
   openSheet('catProductSheet');
   if (!p) setTimeout(() => document.getElementById('catProdName').focus(), 320);
 }
@@ -3125,16 +3226,56 @@ function onCatProdCategoryChange() {
   document.getElementById('catProdNewCatField').style.display = isNew ? 'block' : 'none';
 }
 function renderCatProdLocChips() {
-  const locs = distinctLocations();
+  const cur = document.getElementById('catProdLoc').value.trim();
+  const locs = sortLocsByMatch(distinctLocations(), cur);
   const chips = document.getElementById('catProdLocChips');
   chips.style.display = locs.length ? 'flex' : 'none';
-  const cur = document.getElementById('catProdLoc').value.trim();
   chips.innerHTML = locs.map(l =>
-    `<button type="button" class="chip ${cur === l ? 'on' : ''}" data-loc="${esc(l)}" onclick="pickCatProdLoc(this.dataset.loc)">${esc(l)}</button>`).join('');
+    `<button type="button" class="chip ${cur.toLowerCase() === l.toLowerCase() ? 'on' : ''}" data-loc="${esc(l)}" onclick="pickCatProdLoc(this.dataset.loc)">${esc(l)}</button>`).join('');
 }
 function pickCatProdLoc(loc) {
   document.getElementById('catProdLoc').value = loc;
   renderCatProdLocChips();
+  markEmptyFields('catProductSheet');
+}
+function renderItemLocChips() {
+  const cur = document.getElementById('itemLocInput').value.trim();
+  const locs = sortLocsByMatch(distinctLocations(), cur);
+  const chips = document.getElementById('itemLocChips');
+  chips.style.display = locs.length ? 'flex' : 'none';
+  chips.innerHTML = locs.map(l =>
+    `<button type="button" class="chip ${cur.toLowerCase() === l.toLowerCase() ? 'on' : ''}" data-loc="${esc(l)}" onclick="pickItemLoc(this.dataset.loc)">${esc(l)}</button>`).join('');
+}
+function pickItemLoc(loc) {
+  document.getElementById('itemLocInput').value = loc;
+  renderItemLocChips();
+  markEmptyFields('itemSheet');
+}
+// gentle, non-blocking category suggestion based on the product name typed so far
+function renderCatHint(ctx) {
+  const nameEl = document.getElementById(ctx === 'item' ? 'itemNameInput' : 'catProdName');
+  const catSel = document.getElementById(ctx === 'item' ? 'itemCatSelect' : 'catProdCategory');
+  const hint = document.getElementById(ctx === 'item' ? 'itemCatHint' : 'catProdCatHint');
+  const name = nameEl.value.trim();
+  if (!name || catSel.value) { hint.style.display = 'none'; return; }
+  const cat = suggestCategoryFor(name);
+  if (!cat) { hint.style.display = 'none'; return; }
+  hint.style.display = 'block';
+  hint.innerHTML = `Похоже, это «${esc(cat.name)}» — <b>выбрать категорию?</b>`;
+  hint.onclick = () => {
+    catSel.value = cat.id;
+    if (ctx === 'catalog') onCatProdCategoryChange();
+    hint.style.display = 'none';
+    markEmptyFields(ctx === 'item' ? 'itemSheet' : 'catProductSheet');
+  };
+}
+// highlight empty fields in yellow so it's obvious what's left to fill in
+function markEmptyFields(sheetId) {
+  document.querySelectorAll(`#${sheetId} .field`).forEach(f => {
+    const input = f.querySelector('input, select');
+    if (!input) return;
+    f.classList.toggle('field-empty', !input.value);
+  });
 }
 function saveCatProduct() {
   const name = document.getElementById('catProdName').value.trim();
@@ -4432,6 +4573,13 @@ document.getElementById('budgetInput').addEventListener('input', e => {
 // Enter closes single-input sheets
 document.getElementById('storeNameInput').addEventListener('keydown', e => { if (e.key === 'Enter') saveStoreSheet(); });
 document.getElementById('listNameInput').addEventListener('keydown', e => { if (e.key === 'Enter') saveListNameSheet(); });
+
+// keep the empty-field highlight live as the user fills in the item/catalog-product forms
+['itemSheet', 'catProductSheet'].forEach(id => {
+  const el = document.getElementById(id);
+  el.addEventListener('input', () => markEmptyFields(id));
+  el.addEventListener('change', () => markEmptyFields(id));
+});
 
 // save on leaving the page, just in case
 window.addEventListener('pagehide', save);
