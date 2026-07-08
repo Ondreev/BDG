@@ -2488,6 +2488,7 @@ function saveItemSheet() {
     document.getElementById(!name ? 'itemNameInput' : 'itemQtyInput').focus();
     return;
   }
+  let merged = null;
   if (itemSheetEditId) {
     const fromStore = findStore(itemSheetStore);
     const idx = fromStore.items.findIndex(i => i.id === itemSheetEditId);
@@ -2498,7 +2499,16 @@ function saveItemSheet() {
       findStore(targetSid).items.push(it);
     }
   } else {
-    findStore(targetSid).items.push({ id: uid(), name, qty, price, day: null, loc, catId, bought: false });
+    const store = findStore(targetSid);
+    // тот же товар по той же цене в этом магазине — не плодим вторую строку, складываем количество
+    merged = store.items.find(i => !i.bought && i.name.toLowerCase() === name.toLowerCase() && (+i.price || 0) === price);
+    if (merged) {
+      merged.qty = (parseFloat(merged.qty) || 0) + qty;
+      if (loc) merged.loc = loc;
+      if (catId) merged.catId = catId;
+    } else {
+      store.items.push({ id: uid(), name, qty, price, day: null, loc, catId, bought: false });
+    }
   }
   // history upsert (per-list autocomplete)
   const cat = data().catalog;
@@ -2510,6 +2520,7 @@ function saveItemSheet() {
   upsertCatalogProduct(name, price, catId, loc, sku);
 
   save(); render(); closeSheet('itemSheet'); vibrate(10);
+  if (merged) toast(`«${name}» — теперь ${fmt(merged.qty)} шт.`);
   maybeSuggestFavorite(catId);
 }
 
@@ -3771,10 +3782,17 @@ function saveCatAdd() {
   const store = findStore(document.getElementById('catAddStore').value);
   if (!store || isNaN(qty) || qty <= 0) return;
   const addLoc = document.getElementById('catAddLoc').value.trim();
-  store.items.push({ id: uid(), name: p.name, qty, price, day: null, loc: addLoc, catId: p.categoryId || null, bought: false });
+  // тот же товар по той же цене в этом магазине — не плодим вторую строку, складываем количество
+  const merged = store.items.find(i => !i.bought && i.name.toLowerCase() === p.name.toLowerCase() && (+i.price || 0) === price);
+  if (merged) {
+    merged.qty = (parseFloat(merged.qty) || 0) + qty;
+    if (addLoc) merged.loc = addLoc;
+  } else {
+    store.items.push({ id: uid(), name: p.name, qty, price, day: null, loc: addLoc, catId: p.categoryId || null, bought: false });
+  }
   if (addLoc && addLoc !== (p.loc || '')) { p.loc = addLoc; }
   save(); render(); closeSheet('catAddSheet'); vibrate(10);
-  toast(`«${p.name}» — в списке`);
+  toast(merged ? `«${p.name}» — теперь ${fmt(merged.qty)} шт.` : `«${p.name}» — в списке`);
   maybeSuggestFavorite(p.categoryId);
 }
 
