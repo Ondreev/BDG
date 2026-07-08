@@ -1785,7 +1785,7 @@ function save(skipAutoSync) {
     localStorage.setItem(KEY, json);
     localStorage.setItem(BAK, json);
   } catch (e) {
-    toast('Не удалось сохранить данные');
+    toast(t('save_failed_toast'));
   }
   if (!skipAutoSync) { try { scheduleAutoSync(); } catch (e) {} }
 }
@@ -2381,7 +2381,10 @@ const I18N = {
     tour_step6: 'И да, чувак: в десктопной версии ты станешь королём своего бизнеса 👑 Полная автоматизация: печать графика смен и списков закупки на А4, инвентура с актами, зарплаты — всё на большом экране. Открой BDG на компе и убедись.',
     tour_btn_skip: 'Хватит',
     tour_btn_next: 'Дальше',
-    tour_btn_done: 'Понятно!'
+    tour_btn_done: 'Понятно!',
+    save_failed_toast: 'Не удалось сохранить данные',
+    copy_suffix: ' (копия)',
+    list_dup_toast: 'Копия создана — отметки покупок сброшены'
   },
   en: {
     lang_sheet_title: 'Language',
@@ -2859,7 +2862,10 @@ const I18N = {
     tour_step6: 'And yeah, buddy: on desktop you\'ll become the king of your business 👑 Full automation: printing shift schedules and shopping lists on A4, inventory with reports, salaries — all on the big screen. Open BDG on your computer and see for yourself.',
     tour_btn_skip: 'Skip',
     tour_btn_next: 'Next',
-    tour_btn_done: 'Got it!'
+    tour_btn_done: 'Got it!',
+    save_failed_toast: 'Failed to save data',
+    copy_suffix: ' (copy)',
+    list_dup_toast: 'Copy created — purchase marks reset'
   }
 };
 function t(key) {
@@ -3674,7 +3680,7 @@ function duplicateListById(id) {
   const src = state.lists.find(l => l.id === id);
   const copy = JSON.parse(JSON.stringify(src));
   copy.id = uid();
-  copy.name = src.name + ' (копия)';
+  copy.name = src.name + t('copy_suffix');
   copy.date = today();
   copy.data.stores.forEach(s => {
     s.id = uid();
@@ -3684,7 +3690,7 @@ function duplicateListById(id) {
   state.lists.splice(idx + 1, 0, copy);
   state.currentId = copy.id;
   save(); render(); closeSheet('listsSheet');
-  toast('Копия создана — отметки покупок сброшены');
+  toast(t('list_dup_toast'));
 }
 
 let listNameEditId = null;
