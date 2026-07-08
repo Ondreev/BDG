@@ -958,17 +958,17 @@ input[type=file]{display:none}
 
   <div class="view" id="view-debts">
     <section class="budget-card">
-      <div class="budget-label" style="margin-bottom:10px">Долги и кредиты</div>
+      <div class="budget-label" style="margin-bottom:10px" data-i18n="debts_title">Долги и кредиты</div>
       <div class="stats">
-        <div class="stat"><div class="k">Мне должны</div><div class="v pos" id="debtOwedVal">0 ₽</div></div>
-        <div class="stat"><div class="k">Я должен</div><div class="v neg" id="debtOwnVal">0 ₽</div></div>
-        <div class="stat"><div class="k">Кредиты</div><div class="v" id="debtCreditVal">0 ₽</div></div>
+        <div class="stat"><div class="k" data-i18n="debt_owed">Мне должны</div><div class="v pos" id="debtOwedVal">0 ₽</div></div>
+        <div class="stat"><div class="k" data-i18n="debt_own">Я должен</div><div class="v neg" id="debtOwnVal">0 ₽</div></div>
+        <div class="stat"><div class="k" data-i18n="debt_credit">Кредиты</div><div class="v" id="debtCreditVal">0 ₽</div></div>
       </div>
     </section>
     <div class="seg seg-wide">
-      <button id="dsegOwed" class="on" onclick="setDebtTab('owed')">Мне должны</button>
-      <button id="dsegOwn" onclick="setDebtTab('own')">Я должен</button>
-      <button id="dsegCredit" onclick="setDebtTab('credit')">Кредиты</button>
+      <button id="dsegOwed" class="on" onclick="setDebtTab('owed')" data-i18n="debt_owed">Мне должны</button>
+      <button id="dsegOwn" onclick="setDebtTab('own')" data-i18n="debt_own">Я должен</button>
+      <button id="dsegCredit" onclick="setDebtTab('credit')" data-i18n="debt_credit">Кредиты</button>
     </div>
     <section class="store-card"><div id="debtRows"></div></section>
   </div>
@@ -1528,18 +1528,18 @@ input[type=file]{display:none}
 <div class="sheet-wrap" id="debtSheet"><div class="backdrop" onclick="closeSheet('debtSheet')"></div>
   <div class="sheet">
     <div class="grab"></div>
-    <h2 id="debtSheetTitle">Новая запись</h2>
+    <h2 id="debtSheetTitle" data-i18n="debt_new_title">Новая запись</h2>
     <div class="field">
-      <label>Раздел</label>
+      <label data-i18n="debt_section_label">Раздел</label>
       <select id="debtType">
-        <option value="owed">Мне должны</option>
-        <option value="own">Я должен</option>
-        <option value="credit">Кредит</option>
+        <option value="owed" data-i18n="debt_owed">Мне должны</option>
+        <option value="own" data-i18n="debt_own">Я должен</option>
+        <option value="credit" data-i18n="debt_credit_single">Кредит</option>
       </select>
     </div>
     <div class="field">
-      <label>Кто / что</label>
-      <input id="debtName" type="text" placeholder="Например: Иван / Ипотека" autocomplete="off">
+      <label data-i18n="debt_who_label">Кто / что</label>
+      <input id="debtName" type="text" placeholder="Например: Иван / Ипотека" data-i18n-ph="debt_who_ph" autocomplete="off">
     </div>
     <div class="field-row">
       <div class="field">
@@ -1547,16 +1547,16 @@ input[type=file]{display:none}
         <input id="debtAmount" type="number" inputmode="decimal" step="any" placeholder="0">
       </div>
       <div class="field">
-        <label>Дата платежа</label>
+        <label data-i18n="debt_date_label">Дата платежа</label>
         <input id="debtDate" type="date">
       </div>
     </div>
     <div class="field">
-      <label>Заметка (необязательно)</label>
-      <input id="debtNote" type="text" placeholder="Комментарий" autocomplete="off">
+      <label data-i18n="debt_note_label">Заметка (необязательно)</label>
+      <input id="debtNote" type="text" placeholder="Комментарий" data-i18n-ph="debt_note_ph" autocomplete="off">
     </div>
-    <button class="btn btn-primary" id="debtSaveBtn" onclick="saveDebtSheet()">Добавить</button>
-    <button class="btn btn-danger-ghost" id="debtDeleteBtn" onclick="deleteDebtFromSheet()" style="display:none">Удалить запись</button>
+    <button class="btn btn-primary" id="debtSaveBtn" onclick="saveDebtSheet()" data-i18n="btn_add">Добавить</button>
+    <button class="btn btn-danger-ghost" id="debtDeleteBtn" onclick="deleteDebtFromSheet()" style="display:none" data-i18n="debt_delete_btn">Удалить запись</button>
   </div>
 </div>
 
@@ -2296,7 +2296,27 @@ const I18N = {
     plan_deleted_snack: 'План «{name}» удалён',
     plan_name_new_title: 'Новый план',
     plan_name_ph: 'Например: План на неделю',
-    plan_name_rename_title: 'Переименовать план'
+    plan_name_rename_title: 'Переименовать план',
+
+    debts_title: 'Долги и кредиты',
+    debt_owed: 'Мне должны',
+    debt_own: 'Я должен',
+    debt_credit: 'Кредиты',
+    debt_credit_single: 'Кредит',
+    debt_new_title: 'Новая запись',
+    debt_edit_title: 'Запись',
+    debt_section_label: 'Раздел',
+    debt_who_label: 'Кто / что',
+    debt_who_ph: 'Например: Иван / Ипотека',
+    debt_date_label: 'Дата платежа',
+    debt_note_label: 'Заметка (необязательно)',
+    debt_note_ph: 'Комментарий',
+    debt_delete_btn: 'Удалить запись',
+    debt_paid_off: 'Погашено',
+    debt_payments_count: 'платежей: {n}',
+    debt_empty: 'Пока нет записей — нажмите «Новая запись»',
+    debt_payment_marked_snack: 'Платёж отмечен — следующий {date}',
+    debt_deleted_snack: '«{name}» удалена'
   },
   en: {
     lang_sheet_title: 'Language',
@@ -2689,7 +2709,27 @@ const I18N = {
     plan_deleted_snack: 'Plan "{name}" deleted',
     plan_name_new_title: 'New plan',
     plan_name_ph: 'E.g.: Weekly plan',
-    plan_name_rename_title: 'Rename plan'
+    plan_name_rename_title: 'Rename plan',
+
+    debts_title: 'Debts & credits',
+    debt_owed: 'Owed to me',
+    debt_own: 'I owe',
+    debt_credit: 'Credits',
+    debt_credit_single: 'Credit',
+    debt_new_title: 'New entry',
+    debt_edit_title: 'Entry',
+    debt_section_label: 'Section',
+    debt_who_label: 'Who / what',
+    debt_who_ph: 'E.g.: John / Mortgage',
+    debt_date_label: 'Payment date',
+    debt_note_label: 'Note (optional)',
+    debt_note_ph: 'Comment',
+    debt_delete_btn: 'Delete entry',
+    debt_paid_off: 'Paid off',
+    debt_payments_count: 'payments: {n}',
+    debt_empty: 'No entries yet — tap "New entry"',
+    debt_payment_marked_snack: 'Payment marked — next on {date}',
+    debt_deleted_snack: '"{name}" deleted'
   }
 };
 function t(key) {
@@ -4893,7 +4933,6 @@ document.getElementById('planNameInput').addEventListener('keydown', e => { if (
 
 /* ================= debts module ================= */
 let debtTab = 'owed', debtEditId = null;
-const DEBT_LABEL = { owed: 'Мне должны', own: 'Я должен', credit: 'Кредит' };
 
 function debtDaysLeft(dateStr) {
   if (!dateStr) return null;
@@ -4928,22 +4967,22 @@ function renderDebts() {
   const rows = ds.filter(d => d.type === debtTab)
     .sort((a, b) => (a.paid - b.paid) || (a.date || '9999').localeCompare(b.date || '9999'));
   document.getElementById('debtRows').innerHTML = rows.length ? rows.map(d => {
-    const dateTxt = d.date ? new Date(d.date + 'T00:00:00').toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' }) : '';
+    const dateTxt = d.date ? new Date(d.date + 'T00:00:00').toLocaleDateString(appLang === 'en' ? 'en-GB' : 'ru-RU', { day: 'numeric', month: 'short' }) : '';
     const sumTxt = money(d.amount);
     return `
     <div class="debt-row ${d.paid ? 'paid' : ''}">
-      <button class="check" onclick="toggleDebt('${d.id}')" aria-label="Погашено">
+      <button class="check" onclick="toggleDebt('${d.id}')" aria-label="${t('debt_paid_off')}">
         <span class="box" style="${d.paid ? 'background:var(--green);border-color:var(--green)' : ''}">
           ${d.paid ? '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 12.5l5 5 10-11"/></svg>' : ''}
         </span>
       </button>
       <div class="d-body" onclick="openDebtSheet('${d.id}')">
         <div class="d-name">${esc(d.name)}</div>
-        <div class="d-meta">${dateTxt ? `<span>${dateTxt}</span>` : ''}${debtBadge(d)}${d.note ? `<span>· ${esc(d.note)}</span>` : ''}${d.type === 'credit' && d.paidCount ? `<span>· платежей: ${d.paidCount}</span>` : ''}</div>
+        <div class="d-meta">${dateTxt ? `<span>${dateTxt}</span>` : ''}${debtBadge(d)}${d.note ? `<span>· ${esc(d.note)}</span>` : ''}${d.type === 'credit' && d.paidCount ? `<span>· ${tf('debt_payments_count', { n: d.paidCount })}</span>` : ''}</div>
       </div>
       <span class="d-sum ${d.type === 'owed' ? 'plus' : 'minus'}">${sumTxt}</span>
     </div>`;
-  }).join('') : '<div class="empty-items">Пока нет записей — нажмите «Новая запись»</div>';
+  }).join('') : `<div class="empty-items">${t('debt_empty')}</div>`;
 }
 function toggleDebt(id) {
   const d = state.debts.find(x => x.id === id);
@@ -4955,7 +4994,7 @@ function toggleDebt(id) {
     d.date = dt.toISOString().slice(0, 10);
     d.paidCount = (d.paidCount || 0) + 1;
     save(); renderDebts(); vibrate(15);
-    snackbar(`Платёж отмечен — следующий ${dt.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' })}`, () => {
+    snackbar(tf('debt_payment_marked_snack', { date: dt.toLocaleDateString(appLang === 'en' ? 'en-GB' : 'ru-RU', { day: 'numeric', month: 'short' }) }), () => {
       d.date = prev; d.paidCount--; save(); renderDebts();
     });
     return;
@@ -4966,8 +5005,8 @@ function toggleDebt(id) {
 function openDebtSheet(id) {
   debtEditId = id || null;
   const d = id ? state.debts.find(x => x.id === id) : null;
-  document.getElementById('debtSheetTitle').textContent = d ? 'Запись' : 'Новая запись';
-  document.getElementById('debtSaveBtn').textContent = d ? 'Сохранить' : 'Добавить';
+  document.getElementById('debtSheetTitle').textContent = d ? t('debt_edit_title') : t('debt_new_title');
+  document.getElementById('debtSaveBtn').textContent = d ? t('btn_save') : t('btn_add');
   document.getElementById('debtDeleteBtn').style.display = d ? 'flex' : 'none';
   document.getElementById('debtType').value = d ? d.type : debtTab;
   document.getElementById('debtName').value = d ? d.name : '';
@@ -5001,7 +5040,7 @@ function deleteDebtFromSheet() {
   if (idx === -1) { closeSheet('debtSheet'); return; }
   const removed = state.debts.splice(idx, 1)[0];
   save(); renderDebts(); closeSheet('debtSheet');
-  snackbar(`«${removed.name}» удалена`, () => {
+  snackbar(tf('debt_deleted_snack', { name: removed.name }), () => {
     state.debts.splice(Math.min(idx, state.debts.length), 0, removed);
     save(); renderDebts();
   });
