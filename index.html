@@ -877,14 +877,14 @@ input[type=file]{display:none}
   <section class="budget-card">
     <div class="budget-top">
       <div>
-        <div class="budget-label">Бюджет</div>
+        <div class="budget-label" data-i18n="shop_budget_label">Бюджет</div>
         <div class="budget-input-wrap">
           <input id="budgetInput" type="number" inputmode="decimal" min="0" placeholder="0">
           <span class="rub" id="budgetCurSym">₽</span>
         </div>
       </div>
       <div class="remaining-block">
-        <div class="cap">Остаток</div>
+        <div class="cap" data-i18n="shop_remaining">Остаток</div>
         <div class="val" id="remainingVal">0 ₽</div>
       </div>
     </div>
@@ -893,29 +893,29 @@ input[type=file]{display:none}
       <span class="progress-pct" id="progressPct">0%</span>
     </div>
     <div class="stats">
-      <div class="stat"><div class="k">Потрачено</div><div class="v" id="spentVal">0 ₽</div></div>
-      <div class="stat"><div class="k">План</div><div class="v" id="plannedVal">0 ₽</div></div>
-      <div class="stat"><div class="k">Куплено</div><div class="v" id="boughtVal">0 из 0</div></div>
+      <div class="stat"><div class="k" data-i18n="shop_spent">Потрачено</div><div class="v" id="spentVal">0 ₽</div></div>
+      <div class="stat"><div class="k" data-i18n="shop_planned">План</div><div class="v" id="plannedVal">0 ₽</div></div>
+      <div class="stat"><div class="k" data-i18n="shop_bought">Куплено</div><div class="v" id="boughtVal">0 из 0</div></div>
     </div>
     <div class="over-note" id="overNote"></div>
-    <div class="done-note" id="doneNote">Всё куплено — отличная работа</div>
+    <div class="done-note" id="doneNote" data-i18n="shop_done_note">Всё куплено — отличная работа</div>
   </section>
 
   <section class="pay-card" id="payCard">
     <div class="pay-head">
-      <div class="pay-title"><span class="pdot"></span>Важное</div>
+      <div class="pay-title"><span class="pdot"></span><span data-i18n="shop_important">Важное</span></div>
       <div class="pay-total" id="payTotal">0 ₽</div>
     </div>
-    <div class="pay-sub">В течение 7 дней</div>
+    <div class="pay-sub" data-i18n="shop_within_days">В течение 7 дней</div>
     <div id="payRows"></div>
   </section>
 
   <section class="chart-card" id="chartCard" style="display:none">
     <div class="chart-head" onclick="toggleChartCollapse()">
-      <div class="chart-title">Структура расходов</div>
+      <div class="chart-title" data-i18n="shop_chart_title">Структура расходов</div>
       <div class="seg" onclick="event.stopPropagation()">
-        <button id="segPlan" class="on" onclick="setChartMode('plan')">План</button>
-        <button id="segSpent" onclick="setChartMode('spent')">Куплено</button>
+        <button id="segPlan" class="on" onclick="setChartMode('plan')" data-i18n="shop_planned">План</button>
+        <button id="segSpent" onclick="setChartMode('spent')" data-i18n="shop_bought">Куплено</button>
       </div>
       <svg class="chev" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
     </div>
@@ -924,7 +924,7 @@ input[type=file]{display:none}
         <svg id="donutSvg" viewBox="0 0 200 200"></svg>
         <div class="donut-center">
           <div class="dc-val" id="dcVal">0 ₽</div>
-          <div class="dc-cap" id="dcCap">План</div>
+          <div class="dc-cap" id="dcCap" data-i18n="shop_planned">План</div>
         </div>
       </div>
       <div class="legend" id="chartLegend"></div>
@@ -945,11 +945,11 @@ input[type=file]{display:none}
         <rect x="52" y="70" width="38" height="7" rx="3.5" fill="#DDE0FD"/>
       </svg>
     </div>
-    <h2>Список пока пуст</h2>
-    <p>Задайте бюджет и добавьте первый магазин.<br>Покупки удобно группировать по местам.</p>
+    <h2 data-i18n="shop_empty_title">Список пока пуст</h2>
+    <p data-i18n-html="shop_empty_sub">Задайте бюджет и добавьте первый магазин.<br>Покупки удобно группировать по местам.</p>
     <button class="btn btn-primary empty-cta" onclick="event.stopPropagation();openStoreSheet()">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.8" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
-      Добавить магазин
+      <span data-i18n="shop_empty_btn">Добавить магазин</span>
     </button>
   </div>
   </div><!-- /main -->
@@ -1044,23 +1044,23 @@ input[type=file]{display:none}
 <nav class="bottom-nav" id="bottomNav">
   <button class="nav-btn on" id="nav-shop" onclick="switchView('shop')">
     <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="20" r="1.4"/><circle cx="17" cy="20" r="1.4"/><path d="M3 4h2l2.3 11h10.4l2-8H6.2"/></svg>
-    <span>Закупки</span>
+    <span data-i18n="nav_shop">Закупки</span>
   </button>
   <button class="nav-btn" id="nav-plan" onclick="switchView('plan')">
     <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11.5l2 2 4-4.5"/><rect x="3.5" y="3.5" width="17" height="17" rx="3.5"/></svg>
-    <span>План</span>
+    <span data-i18n="nav_plan">План</span>
   </button>
   <button class="nav-btn" id="nav-debts" onclick="switchView('debts')">
     <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="13.5" rx="2.8"/><path d="M3 10.5h18M16.2 15.2h1.6"/></svg>
-    <span>Долги</span>
+    <span data-i18n="nav_debts">Долги</span>
   </button>
   <button class="nav-btn" id="nav-sched" onclick="switchView('sched')">
     <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="16" rx="2.6"/><path d="M8 3v4M16 3v4M3.5 11h17"/></svg>
-    <span>График</span>
+    <span data-i18n="nav_sched">График</span>
   </button>
   <button class="nav-btn" id="nav-inv" onclick="switchView('inv')">
     <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5.5" y="4.5" width="13" height="17" rx="2.4"/><path d="M9.3 4.5a2.7 2.7 0 0 1 5.4 0M9 13l2.1 2.1L15 11"/></svg>
-    <span>Инвентура</span>
+    <span data-i18n="nav_inv">Инвентура</span>
   </button>
   <button class="nav-btn" id="nav-lang" onclick="openLangSheet()" aria-label="Язык и валюта">
     <span id="langFlag" style="font-size:19px;line-height:1.15">🇷🇺</span>
@@ -1072,16 +1072,16 @@ input[type=file]{display:none}
   <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.8" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
 </button>
 
-<div class="snackbar" id="snackbar"><span class="msg" id="snackMsg"></span><button id="snackBtn">Отменить</button></div>
+<div class="snackbar" id="snackbar"><span class="msg" id="snackMsg"></span><button id="snackBtn" data-i18n="btn_undo">Отменить</button></div>
 
 <!-- ======= sheets ======= -->
 <div class="sheet-wrap" id="fabSheet"><div class="backdrop" onclick="closeSheet('fabSheet')"></div>
   <div class="sheet">
     <div class="grab"></div>
     <div class="action-list">
-      <button class="action-item" onclick="closeSheet('fabSheet');quickAddItem()"><span class="ic" data-icon="cart"></span><span>Добавить товар</span></button>
-      <button class="action-item" onclick="closeSheet('fabSheet');openCatalogSheet()"><span class="ic" data-icon="tag"></span><span>Выбрать из каталога</span></button>
-      <button class="action-item" onclick="closeSheet('fabSheet');openStoreSheet()"><span class="ic" data-icon="store"></span><span>Добавить магазин</span></button>
+      <button class="action-item" onclick="closeSheet('fabSheet');quickAddItem()"><span class="ic" data-icon="cart"></span><span data-i18n="fab_add_item">Добавить товар</span></button>
+      <button class="action-item" onclick="closeSheet('fabSheet');openCatalogSheet()"><span class="ic" data-icon="tag"></span><span data-i18n="fab_pick_catalog">Выбрать из каталога</span></button>
+      <button class="action-item" onclick="closeSheet('fabSheet');openStoreSheet()"><span class="ic" data-icon="store"></span><span data-i18n="fab_add_store">Добавить магазин</span></button>
     </div>
   </div>
 </div>
@@ -1089,23 +1089,23 @@ input[type=file]{display:none}
 <div class="sheet-wrap" id="storeSheet"><div class="backdrop" onclick="closeSheet('storeSheet')"></div>
   <div class="sheet">
     <div class="grab"></div>
-    <h2 id="storeSheetTitle">Новый магазин</h2>
+    <h2 id="storeSheetTitle" data-i18n="store_sheet_new_title">Новый магазин</h2>
     <div class="field">
-      <label>Название</label>
-      <input id="storeNameInput" type="text" placeholder="Например: Пятёрочка" autocomplete="off" enterkeyhint="done">
+      <label data-i18n="field_name">Название</label>
+      <input id="storeNameInput" type="text" placeholder="Например: Пятёрочка" data-i18n-ph="store_name_ph" autocomplete="off" enterkeyhint="done">
     </div>
-    <button class="btn btn-primary" id="storeSaveBtn" onclick="saveStoreSheet()">Добавить</button>
+    <button class="btn btn-primary" id="storeSaveBtn" onclick="saveStoreSheet()" data-i18n="btn_add">Добавить</button>
   </div>
 </div>
 
 <div class="sheet-wrap" id="itemSheet"><div class="backdrop" onclick="closeSheet('itemSheet')"></div>
   <div class="sheet">
     <div class="grab"></div>
-    <h2 id="itemSheetTitle">Новый товар</h2>
+    <h2 id="itemSheetTitle" data-i18n="item_sheet_new_title">Новый товар</h2>
     <div class="field">
-      <label>Название</label>
+      <label data-i18n="field_name">Название</label>
       <div style="display:flex;gap:8px;align-items:center">
-        <input id="itemNameInput" type="text" placeholder="Например: Молоко" autocomplete="off" oninput="renderSuggest();renderCatHint('item')" enterkeyhint="next" style="flex:1">
+        <input id="itemNameInput" type="text" placeholder="Например: Молоко" data-i18n-ph="item_name_ph" autocomplete="off" oninput="renderSuggest();renderCatHint('item')" enterkeyhint="next" style="flex:1">
         <button type="button" class="icon-btn" onclick="openScanSheet('item')" aria-label="Сканировать QR-код">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#475569" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8V5.5A1.5 1.5 0 0 1 5.5 4H8M16 4h2.5A1.5 1.5 0 0 1 20 5.5V8M20 16v2.5a1.5 1.5 0 0 1-1.5 1.5H16M8 20H5.5A1.5 1.5 0 0 1 4 18.5V16"/><rect x="9" y="9" width="6" height="6" rx="1"/></svg>
         </button>
@@ -1114,7 +1114,7 @@ input[type=file]{display:none}
     <div class="suggest" id="suggestBox"></div>
     <div class="field-row">
       <div class="field">
-        <label>Количество</label>
+        <label data-i18n="field_qty">Количество</label>
         <div class="stepper">
           <button type="button" onclick="stepQty(-1)">−</button>
           <input id="itemQtyInput" type="number" inputmode="decimal" min="0" step="any" value="1">
@@ -1128,30 +1128,30 @@ input[type=file]{display:none}
         <input id="itemPriceInput" type="number" inputmode="decimal" step="any" placeholder="0 или −500">
       </div>
       <div class="field">
-        <label>Категория</label>
+        <label data-i18n="field_category">Категория</label>
         <select id="itemCatSelect" onchange="renderCatHint('item')"></select>
       </div>
     </div>
     <div class="cat-hint" id="itemCatHint" style="display:none"></div>
     <div class="field">
-      <label>Место (ряд, полка)</label>
+      <label data-i18n="field_location">Место (ряд, полка)</label>
       <div class="chips" id="itemLocChips"></div>
-      <input id="itemLocInput" type="text" placeholder="Например: 2Г, линия 2А" autocomplete="off" oninput="renderItemLocChips()">
+      <input id="itemLocInput" type="text" placeholder="Например: 2Г, линия 2А" data-i18n-ph="field_location_ph" autocomplete="off" oninput="renderItemLocChips()">
     </div>
     <div class="field">
       <div class="sku-head">
-        <label>ID / номер товара в кассе</label>
-        <label class="sku-check"><input type="checkbox" id="itemSkuOn" onchange="toggleItemSku(this.checked)"><span class="sku-box"></span>Использовать</label>
+        <label data-i18n="field_id_label">ID / номер товара в кассе</label>
+        <label class="sku-check"><input type="checkbox" id="itemSkuOn" onchange="toggleItemSku(this.checked)"><span class="sku-box"></span><span data-i18n="field_id_use">Использовать</span></label>
       </div>
-      <input id="itemSkuInput" type="text" inputmode="numeric" placeholder="Например: 10234" autocomplete="off" oninput="onItemSkuInput()">
-      <div class="sku-warn" id="itemSkuWarn">Такой ID уже есть</div>
+      <input id="itemSkuInput" type="text" inputmode="numeric" placeholder="Например: 10234" data-i18n-ph="field_id_ph" autocomplete="off" oninput="onItemSkuInput()">
+      <div class="sku-warn" id="itemSkuWarn" data-i18n="field_id_dup_warn">Такой ID уже есть</div>
     </div>
     <div class="field">
-      <label>Магазин</label>
+      <label data-i18n="field_store">Магазин</label>
       <select id="itemStoreSelect"></select>
     </div>
-    <button class="btn btn-primary" id="itemSaveBtn" onclick="saveItemSheet()">Добавить</button>
-    <button class="btn btn-danger-ghost" id="itemDeleteBtn" onclick="deleteItemFromSheet()" style="display:none">Удалить товар</button>
+    <button class="btn btn-primary" id="itemSaveBtn" onclick="saveItemSheet()" data-i18n="btn_add">Добавить</button>
+    <button class="btn btn-danger-ghost" id="itemDeleteBtn" onclick="deleteItemFromSheet()" style="display:none" data-i18n="item_delete_btn">Удалить товар</button>
   </div>
 </div>
 
@@ -1166,11 +1166,11 @@ input[type=file]{display:none}
 <div class="sheet-wrap" id="listsSheet"><div class="backdrop" onclick="closeSheet('listsSheet')"></div>
   <div class="sheet">
     <div class="grab"></div>
-    <h2>Мои списки</h2>
+    <h2 data-i18n="lists_sheet_title">Мои списки</h2>
     <div id="listsBox"></div>
     <button class="btn btn-primary" onclick="closeSheet('listsSheet');openNewListSheet()">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.8" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
-      Создать список
+      <span data-i18n="lists_create_btn">Создать список</span>
     </button>
   </div>
 </div>
@@ -1178,22 +1178,22 @@ input[type=file]{display:none}
 <div class="sheet-wrap" id="listNameSheet"><div class="backdrop" onclick="closeSheet('listNameSheet')"></div>
   <div class="sheet">
     <div class="grab"></div>
-    <h2 id="listNameTitle">Новый список</h2>
+    <h2 id="listNameTitle" data-i18n="list_name_new_title">Новый список</h2>
     <div class="field">
-      <label>Название</label>
-      <input id="listNameInput" type="text" placeholder="Например: Продукты на неделю" autocomplete="off" enterkeyhint="done">
+      <label data-i18n="field_name">Название</label>
+      <input id="listNameInput" type="text" placeholder="Например: Продукты на неделю" data-i18n-ph="list_name_ph" autocomplete="off" enterkeyhint="done">
     </div>
-    <button class="btn btn-primary" id="listNameSaveBtn" onclick="saveListNameSheet()">Создать</button>
+    <button class="btn btn-primary" id="listNameSaveBtn" onclick="saveListNameSheet()" data-i18n="list_name_create_btn">Создать</button>
   </div>
 </div>
 
 <div class="sheet-wrap" id="confirmSheet"><div class="backdrop" onclick="closeSheet('confirmSheet')"></div>
   <div class="sheet">
     <div class="grab"></div>
-    <h2 id="confirmTitle">Подтвердите</h2>
+    <h2 id="confirmTitle" data-i18n="confirm_title">Подтвердите</h2>
     <p id="confirmText" style="color:var(--muted);font-size:14.5px;margin:0 0 18px;line-height:1.5"></p>
-    <button class="btn btn-danger-ghost" id="confirmBtn">Удалить</button>
-    <button class="btn btn-ghost" onclick="closeSheet('confirmSheet')">Отмена</button>
+    <button class="btn btn-danger-ghost" id="confirmBtn" data-i18n="btn_delete">Удалить</button>
+    <button class="btn btn-ghost" onclick="closeSheet('confirmSheet')" data-i18n="btn_cancel">Отмена</button>
   </div>
 </div>
 
@@ -1354,7 +1354,7 @@ input[type=file]{display:none}
     <h2 id="catAddTitle">В список</h2>
     <div class="field-row">
       <div class="field">
-        <label>Количество</label>
+        <label data-i18n="field_qty">Количество</label>
         <div class="stepper">
           <button type="button" onclick="stepCatQty(-1)">−</button>
           <input id="catAddQty" type="number" inputmode="decimal" min="0" step="any" value="1">
@@ -1368,15 +1368,15 @@ input[type=file]{display:none}
         <input id="catAddPrice" type="number" inputmode="decimal" step="any" placeholder="0">
       </div>
       <div class="field">
-        <label>Магазин</label>
+        <label data-i18n="field_store">Магазин</label>
         <select id="catAddStore"></select>
       </div>
     </div>
     <div class="field">
-      <label>Место (ряд, полка)</label>
-      <input id="catAddLoc" type="text" placeholder="Например: 2Г, линия 2А" autocomplete="off">
+      <label data-i18n="field_location">Место (ряд, полка)</label>
+      <input id="catAddLoc" type="text" placeholder="Например: 2Г, линия 2А" data-i18n-ph="field_location_ph" autocomplete="off">
     </div>
-    <button class="btn btn-primary" onclick="saveCatAdd()">Добавить в список</button>
+    <button class="btn btn-primary" onclick="saveCatAdd()" data-i18n="cat_add_to_list_btn">Добавить в список</button>
   </div>
 </div>
 
@@ -1918,7 +1918,134 @@ const I18N = {
     lbl_catprod_price: 'Цена закупки, {cur}',
     lbl_catadd_price: 'Цена, {cur} (минус — долг)',
     lbl_debt_amount: 'Сумма, {cur}',
-    lbl_emp_rate: 'Ставка, {cur}/час'
+    lbl_emp_rate: 'Ставка, {cur}/час',
+
+    nav_shop: 'Закупки', nav_plan: 'План', nav_debts: 'Долги', nav_sched: 'График', nav_inv: 'Инвентура',
+
+    ai_asks: [
+      'Ты всё или ещё потужишься? Может, сохраню, чтобы ничего не пропало?',
+      'Чувак, сохраняю или как?',
+      'Данные без облака — как шаурма без соуса. Сохраняем?',
+      'Пока ты думал, я уже всё подготовил. Жмёшь «Сохранить»?',
+      'Красиво работаешь! Дай-ка я это в облако унесу, а?',
+      'Будет обидно потерять такую красоту. Закинуть на сервер?',
+      'Шеф, изменения вижу. Фиксируем в облаке?'
+    ],
+    ai_ok: [
+      'Всё тип-топ, данные под контролем 😎',
+      'Улетело в облако. Я слежу за порядком 🚀',
+      'Готово! Спи спокойно, шеф 🛡️',
+      'Записал. Даже если браузер сгорит — мы нет 🔥',
+      'Принято и проштамповано. Люблю порядок 📋'
+    ],
+    ai_no_creds: 'Стоп-стоп, я же тебя не знаю! Номер введи свой (без +7 и 8) и PIN из 4 цифр — и я всё сохраню. Один раз, дальше запомню 😉',
+    ai_saving: 'Секунду, несу данные в облако… 🏃',
+    ai_upload_fail: 'Хм, не вышло: ',
+    ai_save_btn: 'Сохранить',
+    ai_later_btn: 'Позже',
+    ai_enter_pin_btn: 'Ввести номер и PIN',
+    ai_retry_btn: 'Ещё раз',
+    ai_remote_update_text: 'Есть новые данные с другого устройства. Загрузить их сюда?',
+    ai_remote_update_yes: 'Загрузить',
+    ai_remote_update_no: 'Оставить как есть',
+    ai_tour_farewell: 'Если что — я рядом. Работай спокойно, я подстрахую 🤝',
+    ai_tour_offer: 'Я вижу, ты растерялся. Но не бойся, всё очень просто! Хочешь, помогу?',
+    ai_tour_offer_yes: 'Давай, помоги',
+    ai_tour_offer_no: 'Сам разберусь',
+    ai_fav_suggest: 'Вы часто заказываете «{name}» — добавить?',
+    ai_fav_add: 'Добавить',
+    ai_fav_notnow: 'Не сейчас',
+    ai_fav_leave: 'Отстань',
+
+    shop_budget_label: 'Бюджет',
+    shop_remaining: 'Остаток',
+    shop_spent: 'Потрачено',
+    shop_planned: 'План',
+    shop_bought: 'Куплено',
+    shop_bought_of: '{a} из {b}',
+    shop_done_note: 'Всё куплено — отличная работа',
+    shop_over_budget: 'План превышает бюджет на {sum}',
+    shop_important: 'Важное',
+    shop_within_days: 'В течение 7 дней',
+    shop_chart_title: 'Структура расходов',
+    shop_uncategorized: 'Без категории',
+    shop_no_location: 'Без места',
+    shop_other: 'Прочее',
+    shop_nothing_bought: 'Пока ничего не куплено',
+    shop_empty_title: 'Список пока пуст',
+    shop_empty_sub: 'Задайте бюджет и добавьте первый магазин.<br>Покупки удобно группировать по местам.',
+    shop_empty_btn: 'Добавить магазин',
+
+    pay_overdue: 'просрочено',
+    pay_today: 'сегодня',
+    pay_tomorrow: 'завтра',
+    pay_in_days: 'через {n} дн.',
+    pay_and_more: 'и ещё {n} на {sum}',
+
+    day_today: 'сегодня',
+    day_in_days: 'через {n} дн.',
+
+    store_empty_items: 'Пока пусто — добавьте товар',
+    store_add_item_btn: 'Товар',
+    aria_store_actions: 'Действия',
+    aria_drag: 'Перетащить',
+    aria_bought: 'Куплено',
+
+    store_menu_add_item: 'Добавить товар',
+    store_menu_rename: 'Переименовать',
+    store_menu_check_all: 'Отметить всё купленным',
+    store_menu_uncheck_all: 'Снять все отметки',
+    store_menu_delete: 'Удалить магазин',
+    store_delete_title: 'Удалить магазин?',
+    store_delete_text: '«{name}» и все его товары ({n} шт.) будут удалены.',
+    store_deleted_snack: 'Магазин «{name}» удалён',
+
+    fab_add_item: 'Добавить товар',
+    fab_pick_catalog: 'Выбрать из каталога',
+    fab_add_store: 'Добавить магазин',
+
+    store_sheet_new_title: 'Новый магазин',
+    store_sheet_edit_title: 'Переименовать магазин',
+    field_name: 'Название',
+    store_name_ph: 'Например: Пятёрочка',
+    btn_add: 'Добавить',
+    btn_save: 'Сохранить',
+
+    item_sheet_new_title: 'Новый товар',
+    item_sheet_edit_title: 'Редактировать товар',
+    item_name_ph: 'Например: Молоко',
+    field_qty: 'Количество',
+    field_category: 'Категория',
+    field_no_category: 'Без категории',
+    field_location: 'Место (ряд, полка)',
+    field_location_ph: 'Например: 2Г, линия 2А',
+    field_id_label: 'ID / номер товара в кассе',
+    field_id_use: 'Использовать',
+    field_id_ph: 'Например: 10234',
+    field_id_dup_warn: 'Такой ID уже есть',
+    field_store: 'Магазин',
+    item_delete_btn: 'Удалить товар',
+    item_deleted_snack: '«{name}» удалён',
+
+    lists_sheet_title: 'Мои списки',
+    lists_create_btn: 'Создать список',
+    list_name_new_title: 'Новый список',
+    list_name_rename_title: 'Переименовать список',
+    list_name_ph: 'Например: Продукты на неделю',
+    list_name_create_btn: 'Создать',
+    list_delete_title: 'Удалить список?',
+    list_delete_text: '«{name}» будет удалён безвозвратно.',
+    list_deleted_snack: 'Список «{name}» удалён',
+    list_items_count: '{n} тов.',
+    aria_duplicate: 'Дублировать',
+
+    confirm_title: 'Подтвердите',
+    btn_delete: 'Удалить',
+    btn_cancel: 'Отмена',
+    btn_undo: 'Отменить',
+    cat_add_to_list_btn: 'Добавить в список',
+    item_qty_now: '«{name}» — теперь {qty} шт.',
+    item_in_list: '«{name}» — в списке'
   },
   en: {
     lang_sheet_title: 'Language',
@@ -1933,7 +2060,134 @@ const I18N = {
     lbl_catprod_price: 'Purchase price, {cur}',
     lbl_catadd_price: 'Price, {cur} (negative — debt)',
     lbl_debt_amount: 'Amount, {cur}',
-    lbl_emp_rate: 'Rate, {cur}/hour'
+    lbl_emp_rate: 'Rate, {cur}/hour',
+
+    nav_shop: 'Shopping', nav_plan: 'Plan', nav_debts: 'Debts', nav_sched: 'Schedule', nav_inv: 'Inventory',
+
+    ai_asks: [
+      'All done, or still tinkering? Want me to save it so nothing gets lost?',
+      'Hey, should I save this or what?',
+      'Data without a cloud backup is like a burger with no sauce. Save it?',
+      'While you were thinking, I already got everything ready. Hit “Save”?',
+      'Nice work! Let me tuck this away in the cloud, yeah?',
+      'It’d be a shame to lose all this. Toss it up to the server?',
+      'Boss, I see changes. Locking them into the cloud?'
+    ],
+    ai_ok: [
+      'All good, data’s under control 😎',
+      'Off to the cloud it goes. I’ve got it covered 🚀',
+      'Done! Sleep easy, boss 🛡️',
+      'Logged it. Even if the browser burns down, we won’t 🔥',
+      'Received and stamped. I love order 📋'
+    ],
+    ai_no_creds: 'Whoa, hold on — I don’t know you yet! Enter your phone number (without the country code) and a 4-digit PIN, and I’ll save everything. Just once — I’ll remember after that 😉',
+    ai_saving: 'One sec, taking this to the cloud… 🏃',
+    ai_upload_fail: 'Hmm, didn’t work: ',
+    ai_save_btn: 'Save',
+    ai_later_btn: 'Later',
+    ai_enter_pin_btn: 'Enter phone & PIN',
+    ai_retry_btn: 'Try again',
+    ai_remote_update_text: 'There’s new data from another device. Load it here?',
+    ai_remote_update_yes: 'Load',
+    ai_remote_update_no: 'Keep as is',
+    ai_tour_farewell: 'I’m around if you need anything. Work easy, I’ve got your back 🤝',
+    ai_tour_offer: 'Looks like you could use a hand. Don’t worry, it’s all pretty simple! Want help?',
+    ai_tour_offer_yes: 'Sure, help me out',
+    ai_tour_offer_no: 'I’ll figure it out',
+    ai_fav_suggest: 'You often order «{name}» — add it?',
+    ai_fav_add: 'Add',
+    ai_fav_notnow: 'Not now',
+    ai_fav_leave: 'Leave me alone',
+
+    shop_budget_label: 'Budget',
+    shop_remaining: 'Remaining',
+    shop_spent: 'Spent',
+    shop_planned: 'Planned',
+    shop_bought: 'Bought',
+    shop_bought_of: '{a} of {b}',
+    shop_done_note: 'Everything’s bought — great job',
+    shop_over_budget: 'Plan exceeds budget by {sum}',
+    shop_important: 'Important',
+    shop_within_days: 'Within 7 days',
+    shop_chart_title: 'Spending breakdown',
+    shop_uncategorized: 'No category',
+    shop_no_location: 'No location',
+    shop_other: 'Other',
+    shop_nothing_bought: 'Nothing bought yet',
+    shop_empty_title: 'The list is empty',
+    shop_empty_sub: 'Set a budget and add your first store.<br>Purchases are easy to group by location.',
+    shop_empty_btn: 'Add a store',
+
+    pay_overdue: 'overdue',
+    pay_today: 'today',
+    pay_tomorrow: 'tomorrow',
+    pay_in_days: 'in {n} d.',
+    pay_and_more: 'and {n} more for {sum}',
+
+    day_today: 'today',
+    day_in_days: 'in {n} d.',
+
+    store_empty_items: 'Empty so far — add a product',
+    store_add_item_btn: 'Item',
+    aria_store_actions: 'Actions',
+    aria_drag: 'Drag',
+    aria_bought: 'Bought',
+
+    store_menu_add_item: 'Add item',
+    store_menu_rename: 'Rename',
+    store_menu_check_all: 'Mark all as bought',
+    store_menu_uncheck_all: 'Clear all marks',
+    store_menu_delete: 'Delete store',
+    store_delete_title: 'Delete store?',
+    store_delete_text: '«{name}» and all its items ({n}) will be deleted.',
+    store_deleted_snack: 'Store «{name}» deleted',
+
+    fab_add_item: 'Add item',
+    fab_pick_catalog: 'Pick from catalog',
+    fab_add_store: 'Add store',
+
+    store_sheet_new_title: 'New store',
+    store_sheet_edit_title: 'Rename store',
+    field_name: 'Name',
+    store_name_ph: 'E.g.: Whole Foods',
+    btn_add: 'Add',
+    btn_save: 'Save',
+
+    item_sheet_new_title: 'New item',
+    item_sheet_edit_title: 'Edit item',
+    item_name_ph: 'E.g.: Milk',
+    field_qty: 'Quantity',
+    field_category: 'Category',
+    field_no_category: 'No category',
+    field_location: 'Location (aisle, shelf)',
+    field_location_ph: 'E.g.: Aisle 2, shelf A',
+    field_id_label: 'ID / checkout item number',
+    field_id_use: 'Use',
+    field_id_ph: 'E.g.: 10234',
+    field_id_dup_warn: 'This ID is already used',
+    field_store: 'Store',
+    item_delete_btn: 'Delete item',
+    item_deleted_snack: '«{name}» deleted',
+
+    lists_sheet_title: 'My lists',
+    lists_create_btn: 'Create list',
+    list_name_new_title: 'New list',
+    list_name_rename_title: 'Rename list',
+    list_name_ph: 'E.g.: Groceries for the week',
+    list_name_create_btn: 'Create',
+    list_delete_title: 'Delete list?',
+    list_delete_text: '«{name}» will be permanently deleted.',
+    list_deleted_snack: 'List «{name}» deleted',
+    list_items_count: '{n} items',
+    aria_duplicate: 'Duplicate',
+
+    confirm_title: 'Confirm',
+    btn_delete: 'Delete',
+    btn_cancel: 'Cancel',
+    btn_undo: 'Undo',
+    cat_add_to_list_btn: 'Add to list',
+    item_qty_now: '«{name}» — now {qty} pcs.',
+    item_in_list: '«{name}» — added to the list'
   }
 };
 function t(key) {
@@ -1941,9 +2195,17 @@ function t(key) {
   return dict[key] !== undefined ? dict[key] : (I18N.ru[key] !== undefined ? I18N.ru[key] : key);
 }
 const tc = key => t(key).replace('{cur}', currSym());
+// подстановка именованных плейсхолдеров вида {name} в переведённую фразу
+function tf(key, vars) {
+  let s = t(key);
+  if (vars) Object.keys(vars).forEach(k => { s = s.split('{' + k + '}').join(vars[k]); });
+  return s;
+}
+const pickT = key => pick(t(key));
 // применяет переводы к статичной разметке: data-i18n — textContent, data-i18n-ph — placeholder, data-i18n-aria — aria-label
 function applyI18n() {
   document.querySelectorAll('[data-i18n]').forEach(el => { el.textContent = t(el.dataset.i18n); });
+  document.querySelectorAll('[data-i18n-html]').forEach(el => { el.innerHTML = t(el.dataset.i18nHtml); }); // текст со встроенной разметкой (напр. <br>)
   document.querySelectorAll('[data-i18n-ph]').forEach(el => { el.placeholder = t(el.dataset.i18nPh); });
   document.querySelectorAll('[data-i18n-aria]').forEach(el => { el.setAttribute('aria-label', t(el.dataset.i18nAria)); });
   document.querySelectorAll('[data-i18n-cur]').forEach(el => { el.textContent = tc(el.dataset.i18nCur); }); // текст с {cur} — символ текущей валюты
@@ -2173,7 +2435,7 @@ function renderSummary() {
 
   document.getElementById('spentVal').textContent = money(spent);
   document.getElementById('plannedVal').textContent = money(planned);
-  document.getElementById('boughtVal').textContent = bought + ' из ' + total;
+  document.getElementById('boughtVal').textContent = tf('shop_bought_of', { a: bought, b: total });
 
   const fill = document.getElementById('progressFill');
   const pct = budget > 0 ? Math.max(0, Math.min(100, spent / budget * 100)) : 0;
@@ -2184,7 +2446,7 @@ function renderSummary() {
   const over = document.getElementById('overNote');
   if (budget > 0 && planned > budget) {
     over.style.display = 'block';
-    over.textContent = 'План превышает бюджет на ' + money(planned - budget);
+    over.textContent = tf('shop_over_budget', { sum: money(planned - budget) });
   } else over.style.display = 'none';
 
   document.getElementById('doneNote').style.display =
@@ -2193,10 +2455,10 @@ function renderSummary() {
 
 /* ---------- upcoming payments (next 7 days) ---------- */
 function payWhenText(dl) {
-  if (dl < 0) return 'просрочено';
-  if (dl === 0) return 'сегодня';
-  if (dl === 1) return 'завтра';
-  return 'через ' + dl + ' дн.';
+  if (dl < 0) return t('pay_overdue');
+  if (dl === 0) return t('pay_today');
+  if (dl === 1) return t('pay_tomorrow');
+  return tf('pay_in_days', { n: dl });
 }
 function renderPayments() {
   const card = document.getElementById('payCard');
@@ -2233,7 +2495,7 @@ function renderPayments() {
       <span class="pwhen ${r.dl <= 0 ? 'today' : ''}">${payWhenText(r.dl)}</span>
       <span class="psum">${r.kind === 'plan' ? '' : money(r.sum)}</span>
     </button>`).join('') +
-    (rest.length ? `<div class="pay-more">и ещё ${rest.length} на ${money(rest.filter(r => r.kind !== 'plan').reduce((t, r) => t + r.sum, 0))}</div>` : '');
+    (rest.length ? `<div class="pay-more">${tf('pay_and_more', { n: rest.length, sum: money(rest.filter(r => r.kind !== 'plan').reduce((t, r) => t + r.sum, 0)) })}</div>` : '');
 }
 function openPlanTaskFromHome(planId, taskId) {
   state.currentPlanId = planId;
@@ -2286,10 +2548,10 @@ function renderChart() {
   });
   const uncatVal = sums.get('') || 0;
   if (uncatVal > 0) {
-    if (colorI < CHART_COLORS.length) { rows.push({ id: '__uncat', name: 'Без категории', val: uncatVal, color: CHART_COLORS[colorI] }); colorI++; }
+    if (colorI < CHART_COLORS.length) { rows.push({ id: '__uncat', name: t('shop_uncategorized'), val: uncatVal, color: CHART_COLORS[colorI] }); colorI++; }
     else other += uncatVal;
   }
-  if (other > 0) rows.push({ id: '__other', name: 'Прочее', val: other, color: OTHER_COLOR });
+  if (other > 0) rows.push({ id: '__other', name: t('shop_other'), val: other, color: OTHER_COLOR });
   const total = rows.reduce((t, r) => t + r.val, 0);
   if (chartSel && !rows.some(r => r.id === chartSel)) chartSel = null;
 
@@ -2316,10 +2578,10 @@ function renderChart() {
   const valTxt = money(sel ? sel.val : total);
   dcVal.textContent = valTxt;
   dcVal.style.fontSize = valTxt.length > 9 ? '13.5px' : '17px';
-  document.getElementById('dcCap').textContent = sel ? sel.name : (chartMode === 'plan' ? 'План' : 'Куплено');
+  document.getElementById('dcCap').textContent = sel ? sel.name : (chartMode === 'plan' ? t('shop_planned') : t('shop_bought'));
 
   document.getElementById('chartLegend').innerHTML = total <= 0
-    ? '<div class="legend-empty">Пока ничего не куплено</div>'
+    ? `<div class="legend-empty">${t('shop_nothing_bought')}</div>`
     : rows.map(r => `
       <button class="legend-row ${chartSel === r.id ? 'sel' : ''} ${chartSel && chartSel !== r.id ? 'dim' : ''}" onclick="selectChartSeg('${r.id}')">
         <span class="dot" style="background:${r.color}"></span>
@@ -2354,16 +2616,16 @@ function renderStores() {
           <span class="count ${s.items.length && bought === s.items.length ? 'full' : ''}">${bought}/${s.items.length}</span>
         </div>
         <span class="store-sub">${money(subtotal)}</span>
-        <button class="store-more" onclick="event.stopPropagation();openStoreMenu('${s.id}')" aria-label="Действия">
+        <button class="store-more" onclick="event.stopPropagation();openStoreMenu('${s.id}')" aria-label="${t('aria_store_actions')}">
           <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="5" cy="12" r="1" fill="currentColor"/><circle cx="12" cy="12" r="1" fill="currentColor"/><circle cx="19" cy="12" r="1" fill="currentColor"/></svg>
         </button>
         <svg class="chev" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
       </div>
       <div class="items" data-store="${s.id}">
-        ${rows || '<div class="empty-items">Пока пусто — добавьте товар</div>'}
+        ${rows || `<div class="empty-items">${t('store_empty_items')}</div>`}
         <button class="add-item-row" onclick="openItemSheet('${s.id}')">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
-          Товар
+          ${t('store_add_item_btn')}
         </button>
       </div>
     </section>`;
@@ -2399,7 +2661,7 @@ function storeItemsByCat(s) {
     const groupItems = groups.get(k);
     const groupSum = groupItems.reduce((t, it) => t + (+it.qty || 0) * (+it.price || 0), 0);
     const head = showHeads
-      ? `<div class="cat-head"><span>${k ? esc(catById(k).name) : 'Без категории'}</span><span class="cat-head-sum">${money(groupSum)}</span></div>` : '';
+      ? `<div class="cat-head"><span>${k ? esc(catById(k).name) : t('shop_uncategorized')}</span><span class="cat-head-sum">${money(groupSum)}</span></div>` : '';
     return head + groupItems.map(it => itemRowHTML(s.id, it)).join('');
   }).join('');
 }
@@ -2420,7 +2682,7 @@ function storeItemsByLoc(s) {
     const groupItems = groups.get(k);
     const groupSum = groupItems.reduce((t, it) => t + (+it.qty || 0) * (+it.price || 0), 0);
     const head = showHeads
-      ? `<div class="cat-head"><span>${k ? esc(k) : 'Без места'}</span><span class="cat-head-sum">${money(groupSum)}</span></div>` : '';
+      ? `<div class="cat-head"><span>${k ? esc(k) : t('shop_no_location')}</span><span class="cat-head-sum">${money(groupSum)}</span></div>` : '';
     return head + groupItems.map(it => itemRowHTML(s.id, it)).join('');
   }).join('');
 }
@@ -2431,12 +2693,12 @@ function itemRowHTML(sid, it) {
   if (it.day && !it.bought) {
     const dl = daysLeft(+it.day);
     badge = dl <= 0
-      ? '<span class="day-badge today">сегодня</span>'
-      : `<span class="day-badge">через ${dl} дн.</span>`;
+      ? `<span class="day-badge today">${t('day_today')}</span>`
+      : `<span class="day-badge">${tf('day_in_days', { n: dl })}</span>`;
   }
   return `
   <div class="item-row ${it.bought ? 'done' : ''}" data-id="${it.id}">
-    <button class="check" onclick="toggleItem('${sid}','${it.id}')" aria-label="Куплено">
+    <button class="check" onclick="toggleItem('${sid}','${it.id}')" aria-label="${t('aria_bought')}">
       <span class="box"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 12.5l5 5 10-11"/></svg></span>
     </button>
     <div class="item-body" onclick="openItemSheet('${sid}','${it.id}')">
@@ -2444,7 +2706,7 @@ function itemRowHTML(sid, it) {
       <div class="item-meta"><span>${fmt(it.qty)} × ${fmt(it.price)} ${currSym()}</span>${it.loc ? `<span class="loc-badge ${groupMode === 'loc' ? 'active' : ''}" onclick="event.stopPropagation();toggleGroupMode()">${esc(it.loc)}</span>` : ''}${badge}</div>
     </div>
     <span class="item-total ${sum < 0 ? 'neg' : ''}">${money(sum)}</span>
-    <button class="drag-handle" aria-label="Перетащить">
+    <button class="drag-handle" aria-label="${t('aria_drag')}">
       <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor"><circle cx="9" cy="6" r="1.7"/><circle cx="15" cy="6" r="1.7"/><circle cx="9" cy="12" r="1.7"/><circle cx="15" cy="12" r="1.7"/><circle cx="9" cy="18" r="1.7"/><circle cx="15" cy="18" r="1.7"/></svg>
     </button>
   </div>`;
@@ -2495,8 +2757,8 @@ function openFabSheet() {
 let storeSheetEditId = null;
 function openStoreSheet(editId) {
   storeSheetEditId = editId || null;
-  document.getElementById('storeSheetTitle').textContent = editId ? 'Переименовать магазин' : 'Новый магазин';
-  document.getElementById('storeSaveBtn').textContent = editId ? 'Сохранить' : 'Добавить';
+  document.getElementById('storeSheetTitle').textContent = editId ? t('store_sheet_edit_title') : t('store_sheet_new_title');
+  document.getElementById('storeSaveBtn').textContent = editId ? t('btn_save') : t('btn_add');
   document.getElementById('storeNameInput').value = editId ? findStore(editId).name : '';
   openSheet('storeSheet');
   setTimeout(() => document.getElementById('storeNameInput').focus(), 320);
@@ -2517,11 +2779,11 @@ function openStoreMenu(sid) {
   const s = findStore(sid); if (!s) return;
   document.getElementById('storeMenuTitle').textContent = s.name;
   document.getElementById('storeMenuActions').innerHTML = `
-    <button class="action-item" onclick="closeSheet('storeMenuSheet');openItemSheet('${sid}')"><span class="ic">${ic('plus')}</span><span>Добавить товар</span></button>
-    <button class="action-item" onclick="closeSheet('storeMenuSheet');openStoreSheet('${sid}')"><span class="ic">${ic('pencil')}</span><span>Переименовать</span></button>
-    <button class="action-item" onclick="checkAll('${sid}',true)"><span class="ic">${ic('check2')}</span><span>Отметить всё купленным</span></button>
-    <button class="action-item" onclick="checkAll('${sid}',false)"><span class="ic">${ic('undo')}</span><span>Снять все отметки</span></button>
-    <button class="action-item danger" onclick="deleteStore('${sid}')"><span class="ic">${ic('trash')}</span><span>Удалить магазин</span></button>`;
+    <button class="action-item" onclick="closeSheet('storeMenuSheet');openItemSheet('${sid}')"><span class="ic">${ic('plus')}</span><span>${t('store_menu_add_item')}</span></button>
+    <button class="action-item" onclick="closeSheet('storeMenuSheet');openStoreSheet('${sid}')"><span class="ic">${ic('pencil')}</span><span>${t('store_menu_rename')}</span></button>
+    <button class="action-item" onclick="checkAll('${sid}',true)"><span class="ic">${ic('check2')}</span><span>${t('store_menu_check_all')}</span></button>
+    <button class="action-item" onclick="checkAll('${sid}',false)"><span class="ic">${ic('undo')}</span><span>${t('store_menu_uncheck_all')}</span></button>
+    <button class="action-item danger" onclick="deleteStore('${sid}')"><span class="ic">${ic('trash')}</span><span>${t('store_menu_delete')}</span></button>`;
   openSheet('storeMenuSheet');
 }
 function checkAll(sid, val) {
@@ -2531,11 +2793,11 @@ function checkAll(sid, val) {
 function deleteStore(sid) {
   closeSheet('storeMenuSheet');
   const s = findStore(sid);
-  confirmAction('Удалить магазин?', `«${s.name}» и все его товары (${s.items.length} шт.) будут удалены.`, () => {
+  confirmAction(t('store_delete_title'), tf('store_delete_text', { name: s.name, n: s.items.length }), () => {
     const idx = data().stores.findIndex(x => x.id === sid);
     const removed = data().stores.splice(idx, 1)[0];
     save(); render();
-    snackbar(`Магазин «${removed.name}» удалён`, () => {
+    snackbar(tf('store_deleted_snack', { name: removed.name }), () => {
       data().stores.splice(Math.min(idx, data().stores.length), 0, removed);
       save(); render();
     });
@@ -2559,8 +2821,8 @@ function openItemSheet(sid, itemId) {
   const editing = !!itemId;
   const it = editing ? findStore(sid).items.find(i => i.id === itemId) : null;
 
-  document.getElementById('itemSheetTitle').textContent = editing ? 'Редактировать товар' : 'Новый товар';
-  document.getElementById('itemSaveBtn').textContent = editing ? 'Сохранить' : 'Добавить';
+  document.getElementById('itemSheetTitle').textContent = editing ? t('item_sheet_edit_title') : t('item_sheet_new_title');
+  document.getElementById('itemSaveBtn').textContent = editing ? t('btn_save') : t('btn_add');
   document.getElementById('itemDeleteBtn').style.display = editing ? 'flex' : 'none';
   document.getElementById('itemNameInput').value = it ? it.name : '';
   document.getElementById('itemQtyInput').value = it ? it.qty : 1;
@@ -2570,7 +2832,7 @@ function openItemSheet(sid, itemId) {
   document.getElementById('itemSkuInput').value = matchedProd && matchedProd.sku ? matchedProd.sku : '';
 
   document.getElementById('itemCatSelect').innerHTML =
-    `<option value="">Без категории</option>` +
+    `<option value="">${t('field_no_category')}</option>` +
     state.catalogDB.categories.map(c =>
       `<option value="${c.id}" ${it && it.catId === c.id ? 'selected' : ''}>${esc(c.name)}</option>`).join('');
 
@@ -2674,7 +2936,7 @@ function saveItemSheet() {
   upsertCatalogProduct(name, price, catId, loc, sku);
 
   save(); render(); closeSheet('itemSheet'); vibrate(10);
-  if (merged) toast(`«${name}» — теперь ${fmt(merged.qty)} шт.`);
+  if (merged) toast(tf('item_qty_now', { name, qty: fmt(merged.qty) }));
   maybeSuggestFavorite(catId);
 }
 
@@ -2684,7 +2946,7 @@ function deleteItemFromSheet() {
   if (idx === -1) { closeSheet('itemSheet'); return; }
   const removed = s.items.splice(idx, 1)[0];
   save(); render(); closeSheet('itemSheet');
-  snackbar(`«${removed.name}» удалён`, () => {
+  snackbar(tf('item_deleted_snack', { name: removed.name }), () => {
     s.items.splice(Math.min(idx, s.items.length), 0, removed);
     save(); render();
   });
@@ -2707,11 +2969,11 @@ function openListsSheet() {
     <div class="list-row ${cur ? 'current' : ''}" onclick="selectListById('${l.id}')">
       <div class="info">
         <div class="nm">${esc(l.name)}</div>
-        <div class="mt">${items} тов. · ${money(sum)} · ${l.date || ''}</div>
+        <div class="mt">${tf('list_items_count', { n: items })} · ${money(sum)} · ${l.date || ''}</div>
       </div>
-      <button class="mini" onclick="event.stopPropagation();openRenameList('${l.id}')" aria-label="Переименовать">${ic('pencil', 16)}</button>
-      <button class="mini" onclick="event.stopPropagation();duplicateListById('${l.id}')" aria-label="Дублировать">${ic('copy', 16)}</button>
-      ${state.lists.length > 1 ? `<button class="mini danger" onclick="event.stopPropagation();deleteListById('${l.id}')" aria-label="Удалить">${ic('trash', 16)}</button>` : ''}
+      <button class="mini" onclick="event.stopPropagation();openRenameList('${l.id}')" aria-label="${t('store_menu_rename')}">${ic('pencil', 16)}</button>
+      <button class="mini" onclick="event.stopPropagation();duplicateListById('${l.id}')" aria-label="${t('aria_duplicate')}">${ic('copy', 16)}</button>
+      ${state.lists.length > 1 ? `<button class="mini danger" onclick="event.stopPropagation();deleteListById('${l.id}')" aria-label="${t('btn_delete')}">${ic('trash', 16)}</button>` : ''}
     </div>`;
   }).join('');
   openSheet('listsSheet');
@@ -2723,12 +2985,12 @@ function selectListById(id) {
 function deleteListById(id) {
   const l = state.lists.find(x => x.id === id);
   closeSheet('listsSheet');
-  confirmAction('Удалить список?', `«${l.name}» будет удалён безвозвратно.`, () => {
+  confirmAction(t('list_delete_title'), tf('list_delete_text', { name: l.name }), () => {
     const idx = state.lists.findIndex(x => x.id === id);
     const removed = state.lists.splice(idx, 1)[0];
     if (state.currentId === id) state.currentId = state.lists[0].id;
     save(); render();
-    snackbar(`Список «${removed.name}» удалён`, () => {
+    snackbar(tf('list_deleted_snack', { name: removed.name }), () => {
       state.lists.splice(Math.min(idx, state.lists.length), 0, removed);
       save(); render();
     });
@@ -2755,8 +3017,8 @@ function duplicateListById(id) {
 let listNameEditId = null;
 function openNewListSheet() {
   listNameEditId = null;
-  document.getElementById('listNameTitle').textContent = 'Новый список';
-  document.getElementById('listNameSaveBtn').textContent = 'Создать';
+  document.getElementById('listNameTitle').textContent = t('list_name_new_title');
+  document.getElementById('listNameSaveBtn').textContent = t('list_name_create_btn');
   document.getElementById('listNameInput').value = '';
   openSheet('listNameSheet');
   setTimeout(() => document.getElementById('listNameInput').focus(), 320);
@@ -2764,8 +3026,8 @@ function openNewListSheet() {
 function openRenameList(id) {
   listNameEditId = id;
   closeSheet('listsSheet');
-  document.getElementById('listNameTitle').textContent = 'Переименовать список';
-  document.getElementById('listNameSaveBtn').textContent = 'Сохранить';
+  document.getElementById('listNameTitle').textContent = t('list_name_rename_title');
+  document.getElementById('listNameSaveBtn').textContent = t('btn_save');
   document.getElementById('listNameInput').value = state.lists.find(l => l.id === id).name;
   openSheet('listNameSheet');
   setTimeout(() => document.getElementById('listNameInput').focus(), 320);
@@ -2789,7 +3051,7 @@ function confirmAction(title, text, cb, btnLabel, primary) {
   document.getElementById('confirmText').textContent = text;
   const btn = document.getElementById('confirmBtn');
   const clone = btn.cloneNode(true);
-  clone.textContent = btnLabel || 'Удалить';
+  clone.textContent = btnLabel || t('btn_delete');
   clone.className = 'btn ' + (primary ? 'btn-primary' : 'btn-danger-ghost');
   btn.parentNode.replaceChild(clone, btn);
   clone.onclick = () => { closeSheet('confirmSheet'); cb(); };
@@ -3003,7 +3265,7 @@ function syncUpload(silent) {
   if (!silent) { btn.textContent = 'Выгружаю…'; btn.disabled = true; }
   performUpload(creds)
     .then(() => {
-      if (!silent) { closeSheet('syncSheet'); stampShow(); setTimeout(() => aiSay(pick(AI_OK), [], 4200), 1500); }
+      if (!silent) { closeSheet('syncSheet'); stampShow(); setTimeout(() => aiSay(pickT('ai_ok'), [], 4200), 1500); }
     })
     .catch(err => { if (!silent) toast(errToMsg(err)); })
     .finally(() => { if (!silent) { btn.textContent = 'Выгрузить в облако'; btn.disabled = false; } });
@@ -3061,9 +3323,9 @@ function offerRemoteUpdate() {
     setTimeout(offerRemoteUpdate, 5000);
     return;
   }
-  aiSay('Есть новые данные с другого устройства. Загрузить их сюда?', [
-    { label: 'Загрузить', pri: true, fn: applyPendingRemote },
-    { label: 'Оставить как есть', fn: () => { pendingRemote = null; } }
+  aiSay(t('ai_remote_update_text'), [
+    { label: t('ai_remote_update_yes'), pri: true, fn: applyPendingRemote },
+    { label: t('ai_remote_update_no'), fn: () => { pendingRemote = null; } }
   ]);
 }
 function applyPendingRemote() {
@@ -3324,23 +3586,6 @@ function drawCurrChart(points) {
 }
 
 /* ================= ИИ-ассистент ================= */
-const AI_ASKS = [
-  'Ты всё или ещё потужишься? Может, сохраню, чтобы ничего не пропало?',
-  'Чувак, сохраняю или как?',
-  'Данные без облака — как шаурма без соуса. Сохраняем?',
-  'Пока ты думал, я уже всё подготовил. Жмёшь «Сохранить»?',
-  'Красиво работаешь! Дай-ка я это в облако унесу, а?',
-  'Будет обидно потерять такую красоту. Закинуть на сервер?',
-  'Шеф, изменения вижу. Фиксируем в облаке?'
-];
-const AI_OK = [
-  'Всё тип-топ, данные под контролем 😎',
-  'Улетело в облако. Я слежу за порядком 🚀',
-  'Готово! Спи спокойно, шеф 🛡️',
-  'Записал. Даже если браузер сгорит — мы нет 🔥',
-  'Принято и проштамповано. Люблю порядок 📋'
-];
-const AI_NO_CREDS = 'Стоп-стоп, я же тебя не знаю! Номер введи свой (без +7 и 8) и PIN из 4 цифр — и я всё сохраню. Один раз, дальше запомню 😉';
 const pick = arr => arr[Math.floor(Math.random() * arr.length)];
 let aiSnoozeUntil = 0;
 
@@ -3378,30 +3623,30 @@ function aiAskSave() {
     autoSyncTimer = setTimeout(aiAskSave, 8000);
     return;
   }
-  aiSay(pick(AI_ASKS), [
-    { label: 'Сохранить', pri: true, fn: aiDoSave },
-    { label: 'Позже', fn: () => { aiSnoozeUntil = Date.now() + 10 * 60000; } }
+  aiSay(pickT('ai_asks'), [
+    { label: t('ai_save_btn'), pri: true, fn: aiDoSave },
+    { label: t('ai_later_btn'), fn: () => { aiSnoozeUntil = Date.now() + 10 * 60000; } }
   ]);
 }
 function aiDoSave() {
   const s = syncState();
   if (!s.login || !s.pin || !(s.url || DEFAULT_SYNC_URL)) {
-    aiSay(AI_NO_CREDS, [
-      { label: 'Ввести номер и PIN', pri: true, fn: () => { openSyncSheet(); } },
-      { label: 'Позже', fn: () => { aiSnoozeUntil = Date.now() + 10 * 60000; } }
+    aiSay(t('ai_no_creds'), [
+      { label: t('ai_enter_pin_btn'), pri: true, fn: () => { openSyncSheet(); } },
+      { label: t('ai_later_btn'), fn: () => { aiSnoozeUntil = Date.now() + 10 * 60000; } }
     ]);
     return;
   }
-  aiSay('Секунду, несу данные в облако… 🏃', []);
+  aiSay(t('ai_saving'), []);
   performUpload({ login: s.login, pin: s.pin, url: s.url || DEFAULT_SYNC_URL })
     .then(() => {
       aiHide();
       stampShow();
-      setTimeout(() => aiSay(pick(AI_OK), [], 4200), 1500);
+      setTimeout(() => aiSay(pickT('ai_ok'), [], 4200), 1500);
     })
-    .catch(err => aiSay('Хм, не вышло: ' + errToMsg(err), [
-      { label: 'Ещё раз', pri: true, fn: aiDoSave },
-      { label: 'Позже', fn: () => { aiSnoozeUntil = Date.now() + 10 * 60000; } }
+    .catch(err => aiSay(t('ai_upload_fail') + errToMsg(err), [
+      { label: t('ai_retry_btn'), pri: true, fn: aiDoSave },
+      { label: t('ai_later_btn'), fn: () => { aiSnoozeUntil = Date.now() + 10 * 60000; } }
     ]));
 }
 
@@ -3475,15 +3720,15 @@ function tourNext() {
 function endTour() {
   document.getElementById('tourOverlay').classList.remove('show');
   window.__tourActive = false;
-  aiSay('Если что — я рядом. Работай спокойно, я подстрахую 🤝', [], 4000);
+  aiSay(t('ai_tour_farewell'), [], 4000);
 }
 function maybeOfferTour() {
   if (localStorage.getItem('bdgTourSeen')) return;
   localStorage.setItem('bdgTourSeen', '1');
   setTimeout(() => {
-    aiSay('Я вижу, ты растерялся. Но не бойся, всё очень просто! Хочешь, помогу?', [
-      { label: 'Давай, помоги', pri: true, fn: startTour },
-      { label: 'Сам разберусь', fn: () => {} }
+    aiSay(t('ai_tour_offer'), [
+      { label: t('ai_tour_offer_yes'), pri: true, fn: startTour },
+      { label: t('ai_tour_offer_no'), fn: () => {} }
     ]);
   }, 2200);
 }
@@ -3946,7 +4191,7 @@ function saveCatAdd() {
   }
   if (addLoc && addLoc !== (p.loc || '')) { p.loc = addLoc; }
   save(); render(); closeSheet('catAddSheet'); vibrate(10);
-  toast(merged ? `«${p.name}» — теперь ${fmt(merged.qty)} шт.` : `«${p.name}» — в списке`);
+  toast(merged ? tf('item_qty_now', { name: p.name, qty: fmt(merged.qty) }) : tf('item_in_list', { name: p.name }));
   maybeSuggestFavorite(p.categoryId);
 }
 
@@ -3972,10 +4217,10 @@ function trySuggestFavorite(catId) {
   const pool = state.catalogDB.products.filter(p => p.favorite && !inList.has((p.name || '').toLowerCase()) && !favDeclinedIds.has(p.id));
   if (!pool.length) return;
   const pick = (catId && pool.find(p => p.categoryId === catId)) || pool[Math.floor(Math.random() * pool.length)];
-  aiSay(`Вы часто заказываете «${pick.name}» — добавить?`, [
-    { label: 'Добавить', pri: true, fn: () => openCatAddSheet(pick.id) },
-    { label: 'Не сейчас', fn: () => { favDeclinedIds.add(pick.id); clearTimeout(favSuggestTimer); favSuggestTimer = setTimeout(() => trySuggestFavorite(catId), 45000); } },
-    { label: 'Отстань', fn: () => { favSnoozeUntil = Date.now() + 10 * 60000; } }
+  aiSay(tf('ai_fav_suggest', { name: pick.name }), [
+    { label: t('ai_fav_add'), pri: true, fn: () => openCatAddSheet(pick.id) },
+    { label: t('ai_fav_notnow'), fn: () => { favDeclinedIds.add(pick.id); clearTimeout(favSuggestTimer); favSuggestTimer = setTimeout(() => trySuggestFavorite(catId), 45000); } },
+    { label: t('ai_fav_leave'), fn: () => { favSnoozeUntil = Date.now() + 10 * 60000; } }
   ]);
 }
 
