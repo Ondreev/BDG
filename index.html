@@ -1068,7 +1068,7 @@ input[type=file]{display:none}
   </button>
 </nav>
 
-<button class="fab" id="fabBtn" onclick="onFab()" aria-label="Добавить">
+<button class="fab" id="fabBtn" onclick="onFab()" aria-label="Добавить" data-i18n-aria="btn_add">
   <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.8" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
 </button>
 
@@ -1280,13 +1280,13 @@ input[type=file]{display:none}
 <div class="sheet-wrap" id="catalogSheet"><div class="backdrop" onclick="closeSheet('catalogSheet')"></div>
   <div class="sheet">
     <div class="grab"></div>
-    <h2>Каталог товаров</h2>
+    <h2 data-i18n="cat_sheet_title">Каталог товаров</h2>
     <div style="display:flex;gap:8px;align-items:center;margin-bottom:12px">
       <div class="search-wrap" style="flex:1;margin-bottom:0">
         <span class="sic"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="6.5"/><path d="M20.2 20.2l-4.6-4.6"/></svg></span>
-        <input id="catSearch" type="text" placeholder="Название, цена или категория" autocomplete="off" oninput="renderCatalog()" onkeydown="if(event.key==='Enter')catSearchEnter()">
+        <input id="catSearch" type="text" placeholder="Название, цена или категория" data-i18n-ph="cat_search_ph" autocomplete="off" oninput="renderCatalog()" onkeydown="if(event.key==='Enter')catSearchEnter()">
       </div>
-      <button class="icon-btn" onclick="openScanSheet()" aria-label="Сканировать QR-код">
+      <button class="icon-btn" onclick="openScanSheet()" aria-label="Сканировать QR-код" data-i18n-aria="aria_scan">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#475569" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8V5.5A1.5 1.5 0 0 1 5.5 4H8M16 4h2.5A1.5 1.5 0 0 1 20 5.5V8M20 16v2.5a1.5 1.5 0 0 1-1.5 1.5H16M8 20H5.5A1.5 1.5 0 0 1 4 18.5V16"/><rect x="9" y="9" width="6" height="6" rx="1"/></svg>
       </button>
     </div>
@@ -1295,7 +1295,7 @@ input[type=file]{display:none}
     <div class="cat-list" id="catList"></div>
     <button class="btn btn-primary" onclick="openCatProductSheet()">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.8" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
-      Товар в каталог
+      <span data-i18n="cat_add_product_btn">Товар в каталог</span>
     </button>
   </div>
 </div>
@@ -1304,12 +1304,12 @@ input[type=file]{display:none}
   <div class="sheet">
     <div class="grab"></div>
     <div class="sku-head">
-      <h2 id="catProductTitle" style="margin:0">Товар каталога</h2>
-      <button class="icon-btn" id="catProdFavBtn" onclick="toggleFavorite(catEditProductId)" aria-label="Избранное" style="width:38px;height:38px;border-radius:12px"></button>
+      <h2 id="catProductTitle" style="margin:0" data-i18n="cat_product_sheet_title">Товар каталога</h2>
+      <button class="icon-btn" id="catProdFavBtn" onclick="toggleFavorite(catEditProductId)" aria-label="Избранное" data-i18n-aria="aria_favorite" style="width:38px;height:38px;border-radius:12px"></button>
     </div>
     <div class="field">
-      <label>Название</label>
-      <input id="catProdName" type="text" placeholder="Например: Молоко 3,2%" autocomplete="off" oninput="renderCatHint('catalog')">
+      <label data-i18n="field_name">Название</label>
+      <input id="catProdName" type="text" placeholder="Например: Молоко 3,2%" data-i18n-ph="catprod_name_ph" autocomplete="off" oninput="renderCatHint('catalog')">
     </div>
     <div class="field-row">
       <div class="field">
@@ -1317,34 +1317,34 @@ input[type=file]{display:none}
         <input id="catProdPrice" type="number" inputmode="decimal" min="0" step="any" placeholder="0">
       </div>
       <div class="field">
-        <label>Категория</label>
+        <label data-i18n="field_category">Категория</label>
         <select id="catProdCategory" onchange="onCatProdCategoryChange();renderCatHint('catalog')"></select>
       </div>
     </div>
     <div class="cat-hint" id="catProdCatHint" style="display:none"></div>
     <div class="field" id="catProdNewCatField" style="display:none">
-      <label>Название новой категории</label>
-      <input id="catProdNewCat" type="text" placeholder="Например: Молочка" autocomplete="off">
+      <label data-i18n="catprod_newcat_label">Название новой категории</label>
+      <input id="catProdNewCat" type="text" placeholder="Например: Молочка" data-i18n-ph="catprod_newcat_ph" autocomplete="off">
     </div>
     <div class="field">
-      <label>Место (ряд, полка)</label>
+      <label data-i18n="field_location">Место (ряд, полка)</label>
       <div class="chips" id="catProdLocChips"></div>
-      <input id="catProdLoc" type="text" placeholder="Например: 2Г, линия 2А" autocomplete="off" oninput="renderCatProdLocChips()">
+      <input id="catProdLoc" type="text" placeholder="Например: 2Г, линия 2А" data-i18n-ph="field_location_ph" autocomplete="off" oninput="renderCatProdLocChips()">
     </div>
     <div class="field">
       <div class="sku-head">
-        <label>ID / номер товара в кассе</label>
-        <label class="sku-check"><input type="checkbox" id="catProdSkuOn" onchange="toggleCatProdSku(this.checked)"><span class="sku-box"></span>Использовать</label>
+        <label data-i18n="field_id_label">ID / номер товара в кассе</label>
+        <label class="sku-check"><input type="checkbox" id="catProdSkuOn" onchange="toggleCatProdSku(this.checked)"><span class="sku-box"></span><span data-i18n="field_id_use">Использовать</span></label>
       </div>
-      <input id="catProdSku" type="text" inputmode="numeric" placeholder="Например: 10234" autocomplete="off" oninput="onCatProdSkuInput()">
-      <div class="sku-warn" id="catProdSkuWarn">Такой ID уже есть</div>
+      <input id="catProdSku" type="text" inputmode="numeric" placeholder="Например: 10234" data-i18n-ph="field_id_ph" autocomplete="off" oninput="onCatProdSkuInput()">
+      <div class="sku-warn" id="catProdSkuWarn" data-i18n="field_id_dup_warn">Такой ID уже есть</div>
     </div>
-    <button class="btn btn-primary" id="catProdSaveBtn" onclick="saveCatProduct()">Добавить</button>
+    <button class="btn btn-primary" id="catProdSaveBtn" onclick="saveCatProduct()" data-i18n="btn_add">Добавить</button>
     <button class="btn btn-ghost" id="catProdPrintBtn" onclick="printLabel(catEditProductId)" style="display:none">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V3.5h12V9M6 17H4.5A1.5 1.5 0 0 1 3 15.5v-5A1.5 1.5 0 0 1 4.5 9h15A1.5 1.5 0 0 1 21 10.5v5a1.5 1.5 0 0 1-1.5 1.5H18M6 14h12v6.5H6z"/></svg>
-      Печать этикетки 40×30
+      <span data-i18n="catprod_print_label_btn">Печать этикетки 40×30</span>
     </button>
-    <button class="btn btn-danger-ghost" id="catProdDeleteBtn" onclick="deleteCatProduct()" style="display:none">Удалить из каталога</button>
+    <button class="btn btn-danger-ghost" id="catProdDeleteBtn" onclick="deleteCatProduct()" style="display:none" data-i18n="catprod_delete_btn">Удалить из каталога</button>
   </div>
 </div>
 
@@ -1383,14 +1383,14 @@ input[type=file]{display:none}
 <div class="sheet-wrap" id="scanSheet"><div class="backdrop" onclick="closeScanSheet()"></div>
   <div class="sheet" style="padding-left:0;padding-right:0">
     <div class="grab"></div>
-    <h2 style="padding:0 20px">Сканировать QR-код</h2>
+    <h2 style="padding:0 20px" data-i18n="scan_title">Сканировать QR-код</h2>
     <div class="scan-viewport">
       <video id="scanVideo" autoplay playsinline muted></video>
       <div class="scan-frame"></div>
     </div>
-    <p id="scanStatus" style="color:var(--muted);font-size:13.5px;text-align:center;margin:14px 20px 0">Наведите камеру на QR-код на этикетке товара</p>
+    <p id="scanStatus" style="color:var(--muted);font-size:13.5px;text-align:center;margin:14px 20px 0" data-i18n="scan_hint">Наведите камеру на QR-код на этикетке товара</p>
     <div style="padding:0 20px">
-      <button class="btn btn-ghost" style="margin-top:16px" onclick="closeScanSheet()">Закрыть</button>
+      <button class="btn btn-ghost" style="margin-top:16px" onclick="closeScanSheet()" data-i18n="btn_close">Закрыть</button>
     </div>
   </div>
 </div>
@@ -1398,27 +1398,27 @@ input[type=file]{display:none}
 <div class="sheet-wrap" id="termScanSheet"><div class="backdrop" onclick="closeScanSheet()"></div>
   <div class="sheet">
     <div class="grab"></div>
-    <h2>Сканировать ID</h2>
-    <p style="color:var(--muted);font-size:13.5px;margin:0 0 12px">Наведите курсор на поле и отсканируйте штрихкод/QR терминалом — или введите ID вручную и нажмите Enter</p>
+    <h2 data-i18n="term_scan_title">Сканировать ID</h2>
+    <p style="color:var(--muted);font-size:13.5px;margin:0 0 12px" data-i18n="term_scan_hint">Наведите курсор на поле и отсканируйте штрихкод/QR терминалом — или введите ID вручную и нажмите Enter</p>
     <div class="field">
-      <label>ID товара</label>
-      <input id="termScanInput" type="text" inputmode="numeric" autocomplete="off" placeholder="Например: 12345" oninput="onTermScanInput()" onkeydown="if(event.key==='Enter'){event.preventDefault();submitTermScan();}">
+      <label data-i18n="term_scan_id_label">ID товара</label>
+      <input id="termScanInput" type="text" inputmode="numeric" autocomplete="off" placeholder="Например: 12345" data-i18n-ph="field_id_ph" oninput="onTermScanInput()" onkeydown="if(event.key==='Enter'){event.preventDefault();submitTermScan();}">
     </div>
     <p id="termScanStatus" style="color:var(--red);font-size:13px;min-height:16px;margin:-6px 0 12px"></p>
-    <button class="btn btn-primary" onclick="submitTermScan()">Найти</button>
+    <button class="btn btn-primary" onclick="submitTermScan()" data-i18n="btn_find">Найти</button>
   </div>
 </div>
 
 <div class="sheet-wrap" id="catCategorySheet"><div class="backdrop" onclick="closeSheet('catCategorySheet')"></div>
   <div class="sheet">
     <div class="grab"></div>
-    <h2 id="catCategoryTitle">Новая категория</h2>
+    <h2 id="catCategoryTitle" data-i18n="cat_category_new_title">Новая категория</h2>
     <div class="field">
-      <label>Название</label>
-      <input id="catCategoryName" type="text" placeholder="Например: Молочка" autocomplete="off" enterkeyhint="done">
+      <label data-i18n="field_name">Название</label>
+      <input id="catCategoryName" type="text" placeholder="Например: Молочка" data-i18n-ph="catprod_newcat_ph" autocomplete="off" enterkeyhint="done">
     </div>
-    <button class="btn btn-primary" id="catCategorySaveBtn" onclick="saveCatCategory()">Создать</button>
-    <button class="btn btn-danger-ghost" id="catCategoryDeleteBtn" onclick="deleteCatCategory()" style="display:none">Удалить категорию</button>
+    <button class="btn btn-primary" id="catCategorySaveBtn" onclick="saveCatCategory()" data-i18n="list_name_create_btn">Создать</button>
+    <button class="btn btn-danger-ghost" id="catCategoryDeleteBtn" onclick="deleteCatCategory()" style="display:none" data-i18n="cat_category_delete_btn">Удалить категорию</button>
   </div>
 </div>
 
@@ -2078,7 +2078,47 @@ const I18N = {
     sync_err_too_big: 'Данные слишком большие для облака',
     sync_err_generic: 'Ошибка облака: {code}',
     sync_err_no_connection: 'Нет связи с облаком — проверьте интернет и адрес скрипта',
-    sync_download_confirm_btn: 'Заменить и загрузить'
+    sync_download_confirm_btn: 'Заменить и загрузить',
+
+    cat_sheet_title: 'Каталог товаров',
+    cat_search_ph: 'Название, цена или категория',
+    aria_scan: 'Сканировать QR-код',
+    cat_add_product_btn: 'Товар в каталог',
+    cat_product_sheet_title: 'Товар каталога',
+    cat_product_edit_title: 'Редактировать товар',
+    aria_favorite: 'Избранное',
+    catprod_name_ph: 'Например: Молоко 3,2%',
+    catprod_newcat_label: 'Название новой категории',
+    catprod_newcat_ph: 'Например: Молочка',
+    catprod_print_label_btn: 'Печать этикетки 40×30',
+    catprod_delete_btn: 'Удалить из каталога',
+    cat_new_category_option: '+ Новая категория…',
+    cat_hint_looks_like: 'Похоже, это <b>«{name}»</b>',
+    btn_choose: 'Выбрать',
+    cat_product_deleted_snack: '«{name}» удалён из каталога',
+    chip_all: 'Все',
+    chip_all_locations: 'Все места',
+    cat_not_found: 'Ничего не найдено',
+    cat_empty: 'Каталог пуст — добавьте товары вручную или загрузите из Google Таблицы',
+    cat_add_need_store: 'Сначала добавьте магазин в список',
+
+    scan_title: 'Сканировать QR-код',
+    scan_hint: 'Наведите камеру на QR-код на этикетке товара',
+    scan_no_camera: 'Нет доступа к камере — разрешите доступ в настройках браузера',
+    scan_not_found: 'Товар с ID «{id}» не найден в каталоге',
+    scan_found_check_qty: '«{name}» найден — проверьте количество и сохраните',
+    print_label_need_id: 'Сначала укажите ID/номер товара',
+    btn_close: 'Закрыть',
+    btn_find: 'Найти',
+
+    term_scan_title: 'Сканировать ID',
+    term_scan_hint: 'Наведите курсор на поле и отсканируйте штрихкод/QR терминалом — или введите ID вручную и нажмите Enter',
+    term_scan_id_label: 'ID товара',
+
+    cat_category_new_title: 'Новая категория',
+    cat_category_edit_title: 'Категория',
+    cat_category_delete_btn: 'Удалить категорию',
+    cat_category_deleted_toast: 'Категория «{name}» удалена — товары остались в каталоге'
   },
   en: {
     lang_sheet_title: 'Language',
@@ -2253,7 +2293,47 @@ const I18N = {
     sync_err_too_big: 'Data is too large for the cloud',
     sync_err_generic: 'Cloud error: {code}',
     sync_err_no_connection: 'No connection to the cloud — check your internet and the script URL',
-    sync_download_confirm_btn: 'Replace and download'
+    sync_download_confirm_btn: 'Replace and download',
+
+    cat_sheet_title: 'Product catalog',
+    cat_search_ph: 'Name, price or category',
+    aria_scan: 'Scan QR code',
+    cat_add_product_btn: 'Add product to catalog',
+    cat_product_sheet_title: 'Catalog product',
+    cat_product_edit_title: 'Edit product',
+    aria_favorite: 'Favorite',
+    catprod_name_ph: 'E.g.: Milk 3.2%',
+    catprod_newcat_label: 'New category name',
+    catprod_newcat_ph: 'E.g.: Dairy',
+    catprod_print_label_btn: 'Print 40×30 label',
+    catprod_delete_btn: 'Remove from catalog',
+    cat_new_category_option: '+ New category…',
+    cat_hint_looks_like: 'Looks like <b>«{name}»</b>',
+    btn_choose: 'Choose',
+    cat_product_deleted_snack: '«{name}» removed from catalog',
+    chip_all: 'All',
+    chip_all_locations: 'All locations',
+    cat_not_found: 'Nothing found',
+    cat_empty: 'Catalog is empty — add products manually or import from Google Sheets',
+    cat_add_need_store: 'Add a store to the list first',
+
+    scan_title: 'Scan QR code',
+    scan_hint: 'Point the camera at the QR code on the product label',
+    scan_no_camera: 'No camera access — allow it in your browser settings',
+    scan_not_found: 'No product with ID «{id}» in the catalog',
+    scan_found_check_qty: '«{name}» found — check the quantity and save',
+    print_label_need_id: 'Set the product ID first',
+    btn_close: 'Close',
+    btn_find: 'Find',
+
+    term_scan_title: 'Scan ID',
+    term_scan_hint: 'Point the cursor at the field and scan the barcode/QR with a terminal — or type the ID manually and press Enter',
+    term_scan_id_label: 'Product ID',
+
+    cat_category_new_title: 'New category',
+    cat_category_edit_title: 'Category',
+    cat_category_delete_btn: 'Delete category',
+    cat_category_deleted_toast: 'Category «{name}» deleted — products remain in the catalog'
   }
 };
 function t(key) {
@@ -3862,7 +3942,7 @@ function openScanSheet(context) {
   // на десктопе камеры обычно нет под рукой, зато есть терминал-сканер на кассе —
   // он просто "печатает" код как клавиатура, поэтому даём под это отдельное поле
   if (window.matchMedia('(min-width:920px)').matches) { openTermScanSheet(); return; }
-  document.getElementById('scanStatus').textContent = 'Наведите камеру на QR-код на этикетке товара';
+  document.getElementById('scanStatus').textContent = t('scan_hint');
   openSheet('scanSheet');
   navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
     .then(stream => {
@@ -3873,7 +3953,7 @@ function openScanSheet(context) {
       scanRAF = requestAnimationFrame(scanTick);
     })
     .catch(() => {
-      document.getElementById('scanStatus').textContent = 'Нет доступа к камере — разрешите доступ в настройках браузера';
+      document.getElementById('scanStatus').textContent = t('scan_no_camera');
     });
 }
 function openTermScanSheet() {
@@ -3929,7 +4009,7 @@ function handleScanResult(text) {
   const p = state.catalogDB.products.find(x => (x.sku || '').trim() === text);
   const viaTerm = document.getElementById('termScanSheet').classList.contains('open');
   if (!p) {
-    const msg = `Товар с ID «${text}» не найден в каталоге`;
+    const msg = tf('scan_not_found', { id: text });
     beepScan(false);
     if (viaTerm) {
       document.getElementById('termScanStatus').textContent = msg;
@@ -3963,7 +4043,7 @@ function applyProductToItemForm(p) {
   renderItemLocChips();
   renderCatHint('item');
   onItemSkuInput();
-  toast(`«${p.name}» найден — проверьте количество и сохраните`);
+  toast(tf('scan_found_check_qty', { name: p.name }));
 }
 function closeScanSheet() {
   closeSheet('scanSheet');
@@ -3994,19 +4074,19 @@ function renderCatalog() {
 
   // category chips
   document.getElementById('catChips').innerHTML =
-    `<button class="chip ${!catFilter ? 'on' : ''}" onclick="setCatFilter(null)">Все</button>` +
+    `<button class="chip ${!catFilter ? 'on' : ''}" onclick="setCatFilter(null)">${t('chip_all')}</button>` +
     db.categories.map(c => `
       <button class="chip ${catFilter === c.id ? 'on' : ''}" onclick="setCatFilter('${c.id}')">
         ${esc(c.name)}
         ${catFilter === c.id ? `<span class="chip-edit" onclick="event.stopPropagation();openCatCategorySheet('${c.id}')">${ic('pencil', 13)}</span>` : ''}
       </button>`).join('') +
-    `<button class="chip" onclick="openCatCategorySheet()">${ic('plus', 14)} Категория</button>`;
+    `<button class="chip" onclick="openCatCategorySheet()">${ic('plus', 14)} ${t('field_category')}</button>`;
 
   // location chips (built from products' "Место" values, filter-only — no separate location catalog)
   const locChips = document.getElementById('catLocChips');
   locChips.style.display = locs.length ? 'flex' : 'none';
   locChips.innerHTML = locs.length
-    ? `<button class="chip ${!catLocFilter ? 'on' : ''}" onclick="setCatLocFilter(null)">Все места</button>` +
+    ? `<button class="chip ${!catLocFilter ? 'on' : ''}" onclick="setCatLocFilter(null)">${t('chip_all_locations')}</button>` +
       locs.map(l => `<button class="chip ${catLocFilter === l ? 'on' : ''}" data-loc="${esc(l)}" onclick="setCatLocFilter(this.dataset.loc)">${esc(l)}</button>`).join('')
     : '';
 
@@ -4028,13 +4108,13 @@ function renderCatalog() {
     <div class="cat-row">
       <div class="cat-info" onclick="openCatProductSheet('${p.id}')">
         <div class="cat-name">${esc(p.name)}</div>
-        <div class="cat-meta">${cat ? esc(cat.name) : 'Без категории'}${p.loc ? ' · ' + esc(p.loc) : ''}${p.sku ? ' · #' + esc(p.sku) : ''}</div>
+        <div class="cat-meta">${cat ? esc(cat.name) : t('shop_uncategorized')}${p.loc ? ' · ' + esc(p.loc) : ''}${p.sku ? ' · #' + esc(p.sku) : ''}</div>
       </div>
       <span class="cat-price">${money(p.price)}</span>
-      <button class="cat-fav" onclick="event.stopPropagation();toggleFavorite('${p.id}')" aria-label="Избранное">${favStarSvg(p.favorite)}</button>
-      <button class="cat-add" onclick="catAddClick('${p.id}')" aria-label="Добавить">${ic('plus', 18)}</button>
+      <button class="cat-fav" onclick="event.stopPropagation();toggleFavorite('${p.id}')" aria-label="${t('aria_favorite')}">${favStarSvg(p.favorite)}</button>
+      <button class="cat-add" onclick="catAddClick('${p.id}')" aria-label="${t('btn_add')}">${ic('plus', 18)}</button>
     </div>`;
-  }).join('') : `<div class="cat-empty">${db.products.length ? 'Ничего не найдено' : 'Каталог пуст — добавьте товары вручную или загрузите из Google Таблицы'}</div>`;
+  }).join('') : `<div class="cat-empty">${db.products.length ? t('cat_not_found') : t('cat_empty')}</div>`;
 }
 function setCatFilter(id) { catFilter = id === catFilter ? null : id; renderCatalog(); }
 function setCatLocFilter(loc) { catLocFilter = loc === catLocFilter ? null : loc; renderCatalog(); }
@@ -4056,8 +4136,8 @@ function catSearchEnter() {
 function openCatProductSheet(id) {
   catEditProductId = id || null;
   const p = id ? prodById(id) : null;
-  document.getElementById('catProductTitle').textContent = p ? 'Редактировать товар' : 'Товар каталога';
-  document.getElementById('catProdSaveBtn').textContent = p ? 'Сохранить' : 'Добавить';
+  document.getElementById('catProductTitle').textContent = p ? t('cat_product_edit_title') : t('cat_product_sheet_title');
+  document.getElementById('catProdSaveBtn').textContent = p ? t('btn_save') : t('btn_add');
   document.getElementById('catProdDeleteBtn').style.display = p ? 'flex' : 'none';
   document.getElementById('catProdPrintBtn').style.display = p ? 'flex' : 'none';
   const favBtn = document.getElementById('catProdFavBtn');
@@ -4069,10 +4149,10 @@ function openCatProductSheet(id) {
   document.getElementById('catProdSku').value = p && p.sku ? p.sku : '';
   renderCatProdLocChips();
   const sel = document.getElementById('catProdCategory');
-  sel.innerHTML = `<option value="">Без категории</option>` +
+  sel.innerHTML = `<option value="">${t('field_no_category')}</option>` +
     state.catalogDB.categories.map(c =>
       `<option value="${c.id}" ${p && p.categoryId === c.id ? 'selected' : ''}>${esc(c.name)}</option>`).join('') +
-    `<option value="__new">+ Новая категория…</option>`;
+    `<option value="__new">${t('cat_new_category_option')}</option>`;
   if (!p && catFilter) sel.value = catFilter;
   onCatProdCategoryChange();
   renderCatHint('catalog');
@@ -4167,7 +4247,7 @@ function renderCatHint(ctx) {
   hint.dataset.catId = cat.id;
   hint.style.display = 'flex';
   hint.style.animation = 'none'; hint.offsetWidth; hint.style.animation = '';
-  hint.innerHTML = `<span class="chi">${ic('tag', 15)}</span><span class="cht">Похоже, это <b>«${esc(cat.name)}»</b></span><button type="button" class="chb">Выбрать</button>`;
+  hint.innerHTML = `<span class="chi">${ic('tag', 15)}</span><span class="cht">${tf('cat_hint_looks_like', { name: esc(cat.name) })}</span><button type="button" class="chb">${t('btn_choose')}</button>`;
   hint.querySelector('.chb').onclick = () => {
     catSel.value = cat.id;
     if (ctx === 'catalog') onCatProdCategoryChange();
@@ -4210,7 +4290,7 @@ function deleteCatProduct() {
   if (idx === -1) { closeSheet('catProductSheet'); return; }
   const removed = state.catalogDB.products.splice(idx, 1)[0];
   save(); renderCatalog(); renderInv(); closeSheet('catProductSheet');
-  snackbar(`«${removed.name}» удалён из каталога`, () => {
+  snackbar(tf('cat_product_deleted_snack', { name: removed.name }), () => {
     state.catalogDB.products.splice(Math.min(idx, state.catalogDB.products.length), 0, removed);
     save(); renderCatalog(); renderInv();
   });
@@ -4221,7 +4301,7 @@ function openCatAddSheet(pid) {
   const p = prodById(pid); if (!p) return;
   if (!data().stores.length) {
     closeSheet('catalogSheet');
-    toast('Сначала добавьте магазин в список');
+    toast(t('cat_add_need_store'));
     openStoreSheet();
     return;
   }
@@ -4294,8 +4374,8 @@ function trySuggestFavorite(catId) {
 function openCatCategorySheet(id) {
   catEditCategoryId = id || null;
   const c = id ? catById(id) : null;
-  document.getElementById('catCategoryTitle').textContent = c ? 'Категория' : 'Новая категория';
-  document.getElementById('catCategorySaveBtn').textContent = c ? 'Сохранить' : 'Создать';
+  document.getElementById('catCategoryTitle').textContent = c ? t('cat_category_edit_title') : t('cat_category_new_title');
+  document.getElementById('catCategorySaveBtn').textContent = c ? t('btn_save') : t('list_name_create_btn');
   document.getElementById('catCategoryDeleteBtn').style.display = c ? 'flex' : 'none';
   document.getElementById('catCategoryName').value = c ? c.name : '';
   openSheet('catCategorySheet');
@@ -4315,7 +4395,7 @@ function deleteCatCategory() {
   state.catalogDB.products.forEach(p => { if (p.categoryId === removed.id) p.categoryId = null; });
   if (catFilter === removed.id) catFilter = null;
   save(); renderCatalog(); closeSheet('catCategorySheet');
-  toast(`Категория «${removed.name}» удалена — товары остались в каталоге`);
+  toast(tf('cat_category_deleted_toast', { name: removed.name }));
 }
 
 /* ================= plan module (checklists) ================= */
@@ -4889,7 +4969,7 @@ function labelHtml(name, sku, qrImg) {
 function printLabel(id) {
   const p = prodById(id);
   if (!p) return;
-  if (!p.sku) { toast('Сначала укажите ID/номер товара'); return; }
+  if (!p.sku) { toast(t('print_label_need_id')); return; }
   const qr = qrcode(0, 'M');
   qr.addData(p.sku);
   qr.make();
