@@ -386,6 +386,18 @@ input,select{font-family:inherit}
 .field-row .field{flex:1;min-width:0}
 .field.field-empty input,.field.field-empty select{background:#FEF9C3;border-color:#FDE68A}
 .field.field-empty input:focus,.field.field-empty select:focus{background:#fff;border-color:var(--accent)}
+.sku-head{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.sku-head label{margin-bottom:0}
+label.sku-check{display:flex;align-items:center;gap:6px;font-size:11.5px;font-weight:700;color:var(--muted);cursor:pointer;white-space:nowrap}
+.sku-check input{position:absolute;opacity:0;width:0;height:0}
+.sku-box{width:16px;min-width:16px;height:16px;border-radius:5px;border:2px solid var(--line);background:#fff;flex:none;position:relative;transition:background .15s,border-color .15s}
+.sku-check input:checked + .sku-box{background:var(--accent);border-color:var(--accent)}
+.sku-check input:checked + .sku-box::after{
+  content:'';position:absolute;left:4px;top:0px;width:4px;height:8px;
+  border:solid #fff;border-width:0 2px 2px 0;transform:rotate(45deg);
+}
+.sku-warn{display:none;color:var(--red);font-size:12px;font-weight:700;margin-top:6px}
+.sku-warn.show{display:block}
 .cat-hint{
   display:none;align-items:center;gap:8px;margin-top:9px;padding:8px 8px 8px 12px;border-radius:14px;
   background:linear-gradient(90deg,var(--accent-soft),rgba(20,184,166,.14));
@@ -424,6 +436,8 @@ input,select{font-family:inherit}
   transition:transform .12s;text-decoration:none;
 }
 .btn:active{transform:scale(.98)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn:disabled:active{transform:none}
 .btn-primary{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;box-shadow:0 6px 18px rgba(99,102,241,.35)}
 .btn-ghost{background:var(--bg);color:var(--text)}
 a.btn-primary{color:#fff}
@@ -1097,8 +1111,12 @@ input[type=file]{display:none}
       <input id="itemLocInput" type="text" placeholder="Например: 2Г, линия 2А" autocomplete="off" oninput="renderItemLocChips()">
     </div>
     <div class="field">
-      <label>ID / номер товара в кассе</label>
-      <input id="itemSkuInput" type="text" inputmode="numeric" placeholder="Например: 10234" autocomplete="off">
+      <div class="sku-head">
+        <label>ID / номер товара в кассе</label>
+        <label class="sku-check"><input type="checkbox" id="itemSkuOn" onchange="toggleItemSku(this.checked)"><span class="sku-box"></span>Использовать</label>
+      </div>
+      <input id="itemSkuInput" type="text" inputmode="numeric" placeholder="Например: 10234" autocomplete="off" oninput="onItemSkuInput()">
+      <div class="sku-warn" id="itemSkuWarn">Такой ID уже есть</div>
     </div>
     <div class="field">
       <label>Магазин</label>
@@ -1283,8 +1301,12 @@ input[type=file]{display:none}
       <input id="catProdLoc" type="text" placeholder="Например: 2Г, линия 2А" autocomplete="off" oninput="renderCatProdLocChips()">
     </div>
     <div class="field">
-      <label>ID / номер товара в кассе</label>
-      <input id="catProdSku" type="text" inputmode="numeric" placeholder="Например: 10234" autocomplete="off">
+      <div class="sku-head">
+        <label>ID / номер товара в кассе</label>
+        <label class="sku-check"><input type="checkbox" id="catProdSkuOn" onchange="toggleCatProdSku(this.checked)"><span class="sku-box"></span>Использовать</label>
+      </div>
+      <input id="catProdSku" type="text" inputmode="numeric" placeholder="Например: 10234" autocomplete="off" oninput="onCatProdSkuInput()">
+      <div class="sku-warn" id="catProdSkuWarn">Такой ID уже есть</div>
     </div>
     <button class="btn btn-primary" id="catProdSaveBtn" onclick="saveCatProduct()">Добавить</button>
     <button class="btn btn-ghost" id="catProdPrintBtn" onclick="printLabel(catEditProductId)" style="display:none">
@@ -2361,7 +2383,8 @@ function openItemSheet(sid, itemId) {
   renderSuggest();
   renderItemLocChips();
   renderCatHint('item');
-  markEmptyFields('itemSheet');
+  onItemSkuInput();
+  document.getElementById('itemSaveBtn').disabled = false;
   openSheet('itemSheet');
   if (!editing) setTimeout(() => document.getElementById('itemNameInput').focus(), 320);
 }
@@ -2398,14 +2421,14 @@ function applySuggest(i) {
   document.getElementById('itemPriceInput').value = c.price || '';
   document.getElementById('itemQtyInput').value = c.qty || 1;
   if (c.loc) document.getElementById('itemLocInput').value = c.loc;
-  if (c.sku) document.getElementById('itemSkuInput').value = c.sku;
+  document.getElementById('itemSkuInput').value = c.sku || '';
   if (c.catId) document.getElementById('itemCatSelect').value = c.catId;
   const box = document.getElementById('suggestBox');
   box.innerHTML = '';
   box.classList.remove('show');
   renderItemLocChips();
   renderCatHint('item');
-  markEmptyFields('itemSheet');
+  onItemSkuInput();
 }
 
 function saveItemSheet() {
@@ -2416,6 +2439,7 @@ function saveItemSheet() {
   const sku = document.getElementById('itemSkuInput').value.trim();
   const catId = document.getElementById('itemCatSelect').value || null;
   const targetSid = document.getElementById('itemStoreSelect').value || itemSheetStore;
+  if (skuExists(sku, currentItemSkuExcludeId())) { onItemSkuInput(); return; }
   if (!name || isNaN(qty) || qty <= 0) {
     document.getElementById(!name ? 'itemNameInput' : 'itemQtyInput').focus();
     return;
@@ -3362,12 +3386,12 @@ function applyProductToItemForm(p) {
   document.getElementById('itemPriceInput').value = p.price || '';
   document.getElementById('itemQtyInput').value = 1;
   if (p.loc) document.getElementById('itemLocInput').value = p.loc;
-  if (p.sku) document.getElementById('itemSkuInput').value = p.sku;
+  document.getElementById('itemSkuInput').value = p.sku || '';
   if (p.categoryId) document.getElementById('itemCatSelect').value = p.categoryId;
   document.getElementById('suggestBox').innerHTML = '';
   renderItemLocChips();
   renderCatHint('item');
-  markEmptyFields('itemSheet');
+  onItemSkuInput();
   toast(`«${p.name}» найден — проверьте количество и сохраните`);
 }
 function closeScanSheet() {
@@ -3453,7 +3477,8 @@ function openCatProductSheet(id) {
   if (!p && catFilter) sel.value = catFilter;
   onCatProdCategoryChange();
   renderCatHint('catalog');
-  markEmptyFields('catProductSheet');
+  onCatProdSkuInput();
+  document.getElementById('catProdSaveBtn').disabled = false;
   openSheet('catProductSheet');
   if (!p) setTimeout(() => document.getElementById('catProdName').focus(), 320);
 }
@@ -3485,6 +3510,49 @@ function renderItemLocChips() {
 function pickItemLoc(loc) {
   document.getElementById('itemLocInput').value = loc;
   renderItemLocChips();
+  markEmptyFields('itemSheet');
+}
+
+/* ---------- QR/POS ID: checkbox generates a unique 5-digit code, manual entry is checked for dupes ---------- */
+function skuExists(value, excludeId) {
+  const v = value.trim();
+  return !!v && state.catalogDB.products.some(p => p.id !== excludeId && (p.sku || '').trim() === v);
+}
+function genUniqueSku(excludeId) {
+  let code, tries = 0;
+  do { code = String(Math.floor(10000 + Math.random() * 90000)); tries++; }
+  while (skuExists(code, excludeId) && tries < 50);
+  return code;
+}
+function toggleCatProdSku(checked) {
+  const input = document.getElementById('catProdSku');
+  input.value = checked ? (input.value.trim() || genUniqueSku(catEditProductId)) : '';
+  onCatProdSkuInput();
+}
+function onCatProdSkuInput() {
+  const val = document.getElementById('catProdSku').value;
+  document.getElementById('catProdSkuOn').checked = !!val.trim();
+  const dup = skuExists(val, catEditProductId);
+  document.getElementById('catProdSkuWarn').classList.toggle('show', dup);
+  document.getElementById('catProdSaveBtn').disabled = dup;
+  markEmptyFields('catProductSheet');
+}
+function currentItemSkuExcludeId() {
+  const name = document.getElementById('itemNameInput').value.trim().toLowerCase();
+  const m = name ? state.catalogDB.products.find(x => x.name.toLowerCase() === name) : null;
+  return m ? m.id : null;
+}
+function toggleItemSku(checked) {
+  const input = document.getElementById('itemSkuInput');
+  input.value = checked ? (input.value.trim() || genUniqueSku(currentItemSkuExcludeId())) : '';
+  onItemSkuInput();
+}
+function onItemSkuInput() {
+  const val = document.getElementById('itemSkuInput').value;
+  document.getElementById('itemSkuOn').checked = !!val.trim();
+  const dup = skuExists(val, currentItemSkuExcludeId());
+  document.getElementById('itemSkuWarn').classList.toggle('show', dup);
+  document.getElementById('itemSaveBtn').disabled = dup;
   markEmptyFields('itemSheet');
 }
 // gentle, non-blocking category suggestion based on the product name typed so far
@@ -3530,6 +3598,7 @@ function saveCatProduct() {
   }
   const loc = document.getElementById('catProdLoc').value.trim();
   const sku = document.getElementById('catProdSku').value.trim();
+  if (skuExists(sku, catEditProductId)) { onCatProdSkuInput(); return; }
   if (catEditProductId) {
     Object.assign(prodById(catEditProductId), { name, price, categoryId, loc, sku });
   } else {
