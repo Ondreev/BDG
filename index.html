@@ -976,13 +976,13 @@ input[type=file]{display:none}
   <div class="view" id="view-sched">
     <div class="sched-bar">
       <div class="seg">
-        <button id="ssegWeek" class="on" onclick="setSchedMode('week')">Неделя</button>
-        <button id="ssegMonth" onclick="setSchedMode('month')">Месяц</button>
+        <button id="ssegWeek" class="on" onclick="setSchedMode('week')" data-i18n="sched_week">Неделя</button>
+        <button id="ssegMonth" onclick="setSchedMode('month')" data-i18n="sched_month">Месяц</button>
       </div>
       <div class="sched-nav">
-        <button onclick="schedShift(-1)" aria-label="Назад">‹</button>
+        <button onclick="schedShift(-1)" aria-label="Назад" data-i18n-aria="aria_back">‹</button>
         <span class="lbl" id="schedLabel"></span>
-        <button onclick="schedShift(1)" aria-label="Вперёд">›</button>
+        <button onclick="schedShift(1)" aria-label="Вперёд" data-i18n-aria="aria_forward">›</button>
       </div>
       <button class="print-btn" onclick="printSchedule()">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V3.5h12V9M6 17H4.5A1.5 1.5 0 0 1 3 15.5v-5A1.5 1.5 0 0 1 4.5 9h15A1.5 1.5 0 0 1 21 10.5v5a1.5 1.5 0 0 1-1.5 1.5H18M6 14h12v6.5H6z"/></svg>
@@ -1604,15 +1604,15 @@ input[type=file]{display:none}
 <div class="sheet-wrap" id="empSheet"><div class="backdrop" onclick="closeSheet('empSheet')"></div>
   <div class="sheet">
     <div class="grab"></div>
-    <h2 id="empSheetTitle">Сотрудник</h2>
+    <h2 id="empSheetTitle" data-i18n="emp_new_title">Сотрудник</h2>
     <div class="field">
-      <label>Имя</label>
-      <input id="empName" type="text" placeholder="Например: Иван" autocomplete="off">
+      <label data-i18n="field_person_name">Имя</label>
+      <input id="empName" type="text" placeholder="Например: Иван" data-i18n-ph="emp_name_ph" autocomplete="off">
     </div>
     <div class="field-row">
       <div class="field">
-        <label>Роль</label>
-        <input id="empRole" type="text" placeholder="Повар, кассир…" autocomplete="off">
+        <label data-i18n="field_role">Роль</label>
+        <input id="empRole" type="text" placeholder="Повар, кассир…" data-i18n-ph="field_role_ph" autocomplete="off">
       </div>
       <div class="field">
         <label data-i18n-cur="lbl_emp_rate">Ставка, ₽/час</label>
@@ -1623,23 +1623,23 @@ input[type=file]{display:none}
       <div class="emp-summary" id="empSummary"></div>
       <button class="btn btn-ghost" onclick="printEmpCard()">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:6px;vertical-align:-3px"><path d="M6 9V3.5h12V9M6 17H4.5A1.5 1.5 0 0 1 3 15.5v-5A1.5 1.5 0 0 1 4.5 9h15A1.5 1.5 0 0 1 21 10.5v5a1.5 1.5 0 0 1-1.5 1.5H18M6 14h12v6.5H6z"/></svg>
-        Печать карточки A4
+        <span data-i18n="btn_print_emp_card">Печать карточки A4</span>
       </button>
-      <div class="field" style="margin-bottom:8px;margin-top:14px"><label>Штраф (сумма и причина)</label></div>
+      <div class="field" style="margin-bottom:8px;margin-top:14px"><label data-i18n="emp_penalty_field_label">Штраф (сумма и причина)</label></div>
       <div class="mini-form">
-        <input id="penSum" type="number" inputmode="decimal" placeholder="Сумма" style="max-width:110px">
-        <input id="penNote" type="text" placeholder="Причина">
-        <button onclick="addPenalty()">Штраф</button>
+        <input id="penSum" type="number" inputmode="decimal" placeholder="Сумма" data-i18n-ph="field_amount_ph" style="max-width:110px">
+        <input id="penNote" type="text" placeholder="Причина" data-i18n-ph="field_reason_ph">
+        <button onclick="addPenalty()" data-i18n="hist_penalty">Штраф</button>
       </div>
-      <div class="field" style="margin-bottom:8px"><label>Выплата зарплаты</label></div>
+      <div class="field" style="margin-bottom:8px"><label data-i18n="emp_payout_field_label">Выплата зарплаты</label></div>
       <div class="mini-form">
-        <input id="paySum" type="number" inputmode="decimal" placeholder="Сумма">
-        <button onclick="addPayout()">Выплатить</button>
+        <input id="paySum" type="number" inputmode="decimal" placeholder="Сумма" data-i18n-ph="field_amount_ph">
+        <button onclick="addPayout()" data-i18n="emp_payout_btn">Выплатить</button>
       </div>
       <div id="empHistory" style="margin-bottom:14px"></div>
     </div>
-    <button class="btn btn-primary" id="empSaveBtn" onclick="saveEmpSheet()">Добавить</button>
-    <button class="btn btn-danger-ghost" id="empDeleteBtn" onclick="deleteEmpFromSheet()" style="display:none">Удалить сотрудника</button>
+    <button class="btn btn-primary" id="empSaveBtn" onclick="saveEmpSheet()" data-i18n="btn_add">Добавить</button>
+    <button class="btn btn-danger-ghost" id="empDeleteBtn" onclick="deleteEmpFromSheet()" style="display:none" data-i18n="emp_delete_btn">Удалить сотрудника</button>
   </div>
 </div>
 
@@ -1648,22 +1648,22 @@ input[type=file]{display:none}
     <div class="grab"></div>
     <h2 id="slotSheetTitle">Смена</h2>
     <div class="seg seg-wide" style="margin:0 0 6px">
-      <button id="slotSegAll" class="on" onclick="setSlotScope('all')">Постоянный график</button>
-      <button id="slotSegWeek" onclick="setSlotScope('week')">Только эта неделя</button>
+      <button id="slotSegAll" class="on" onclick="setSlotScope('all')" data-i18n="slot_scope_recurring">Постоянный график</button>
+      <button id="slotSegWeek" onclick="setSlotScope('week')" data-i18n="slot_scope_once">Только эта неделя</button>
     </div>
     <p style="color:var(--muted);font-size:12.5px;font-weight:600;margin:0 0 14px" id="slotScopeHint">Смена будет повторяться в этот день каждую неделю</p>
     <div class="field-row">
       <div class="field">
-        <label>Начало</label>
+        <label data-i18n="field_start">Начало</label>
         <input id="slotFrom" type="time" value="09:00">
       </div>
       <div class="field">
-        <label>Конец</label>
+        <label data-i18n="field_end">Конец</label>
         <input id="slotTo" type="time" value="18:00">
       </div>
     </div>
-    <button class="btn btn-primary" onclick="saveSlot()">Сохранить</button>
-    <button class="btn btn-ghost" onclick="clearSlot()">Выходной</button>
+    <button class="btn btn-primary" onclick="saveSlot()" data-i18n="btn_save">Сохранить</button>
+    <button class="btn btn-ghost" onclick="clearSlot()" data-i18n="slot_day_off_btn">Выходной</button>
   </div>
 </div>
 
@@ -2316,7 +2316,58 @@ const I18N = {
     debt_payments_count: 'платежей: {n}',
     debt_empty: 'Пока нет записей — нажмите «Новая запись»',
     debt_payment_marked_snack: 'Платёж отмечен — следующий {date}',
-    debt_deleted_snack: '«{name}» удалена'
+    debt_deleted_snack: '«{name}» удалена',
+
+    sched_week: 'Неделя',
+    sched_month: 'Месяц',
+    aria_back: 'Назад',
+    aria_forward: 'Вперёд',
+    sched_empty: 'Добавьте первого сотрудника — и стройте график смен',
+    emp_col_header: 'Сотрудник',
+    slot_once_title: 'разовая смена',
+    hours_value: '{n} ч',
+    sched_paid_off: 'выплачено',
+    sched_debt_prefix: 'долг {sum}',
+    sched_total_header: 'Итог',
+    sched_salary_paid: 'ЗП погашена',
+    emp_new_title: 'Новый сотрудник',
+    field_person_name: 'Имя',
+    emp_name_ph: 'Например: Иван',
+    field_role: 'Роль',
+    field_role_ph: 'Повар, кассир…',
+    btn_print_emp_card: 'Печать карточки A4',
+    emp_penalty_field_label: 'Штраф (сумма и причина)',
+    field_amount_ph: 'Сумма',
+    field_reason_ph: 'Причина',
+    hist_penalty: 'Штраф',
+    hist_payout: 'Выплата',
+    emp_payout_field_label: 'Выплата зарплаты',
+    emp_payout_btn: 'Выплатить',
+    emp_delete_btn: 'Удалить сотрудника',
+    emp_hours_worked: 'Отработано часов',
+    emp_accrued: 'Начислено',
+    emp_accrued_week: 'Начислено за неделю',
+    emp_penalties_label: 'Штрафы',
+    emp_paid_label: 'Выплачено',
+    emp_carryover: 'Перенос с прошлых недель',
+    emp_salary_debt: 'Долг по ЗП',
+    emp_debt_settled: 'погашен',
+    emp_no_ops_week: 'Нет операций за эту неделю',
+    emp_ops_week_title: 'Операции за неделю',
+    emp_delete_confirm_title: 'Удалить сотрудника?',
+    emp_delete_confirm_text: '«{name}», его график, штрафы и выплаты будут удалены.',
+    slot_scope_recurring: 'Постоянный график',
+    slot_scope_once: 'Только эта неделя',
+    slot_scope_hint_recurring: 'Смена будет повторяться в этот день каждую неделю',
+    slot_scope_hint_once: 'Изменение только на {date} — постоянный график не тронем',
+    field_start: 'Начало',
+    field_end: 'Конец',
+    slot_day_off_btn: 'Выходной',
+    sched_print_title: 'Расписание смен',
+    sched_hours_col: 'Часы',
+    unit_per_hour: '/час',
+    weekdays_short: ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'],
+    weekdays_full: ['Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота', 'Воскресенье']
   },
   en: {
     lang_sheet_title: 'Language',
@@ -2729,7 +2780,58 @@ const I18N = {
     debt_payments_count: 'payments: {n}',
     debt_empty: 'No entries yet — tap "New entry"',
     debt_payment_marked_snack: 'Payment marked — next on {date}',
-    debt_deleted_snack: '"{name}" deleted'
+    debt_deleted_snack: '"{name}" deleted',
+
+    sched_week: 'Week',
+    sched_month: 'Month',
+    aria_back: 'Back',
+    aria_forward: 'Forward',
+    sched_empty: 'Add your first employee — then build the shift schedule',
+    emp_col_header: 'Employee',
+    slot_once_title: 'one-off shift',
+    hours_value: '{n} h',
+    sched_paid_off: 'paid',
+    sched_debt_prefix: 'debt {sum}',
+    sched_total_header: 'Total',
+    sched_salary_paid: 'Salary paid',
+    emp_new_title: 'New employee',
+    field_person_name: 'Name',
+    emp_name_ph: 'E.g.: John',
+    field_role: 'Role',
+    field_role_ph: 'Cook, cashier…',
+    btn_print_emp_card: 'Print A4 card',
+    emp_penalty_field_label: 'Penalty (amount and reason)',
+    field_amount_ph: 'Amount',
+    field_reason_ph: 'Reason',
+    hist_penalty: 'Penalty',
+    hist_payout: 'Payout',
+    emp_payout_field_label: 'Salary payout',
+    emp_payout_btn: 'Pay out',
+    emp_delete_btn: 'Delete employee',
+    emp_hours_worked: 'Hours worked',
+    emp_accrued: 'Accrued',
+    emp_accrued_week: 'Accrued this week',
+    emp_penalties_label: 'Penalties',
+    emp_paid_label: 'Paid out',
+    emp_carryover: 'Carried over from previous weeks',
+    emp_salary_debt: 'Salary debt',
+    emp_debt_settled: 'settled',
+    emp_no_ops_week: 'No transactions this week',
+    emp_ops_week_title: 'Transactions this week',
+    emp_delete_confirm_title: 'Delete employee?',
+    emp_delete_confirm_text: '"{name}", their schedule, penalties and payouts will be deleted.',
+    slot_scope_recurring: 'Recurring schedule',
+    slot_scope_once: 'This week only',
+    slot_scope_hint_recurring: 'The shift will repeat on this day every week',
+    slot_scope_hint_once: 'Change applies only to {date} — the recurring schedule stays untouched',
+    field_start: 'Start',
+    field_end: 'End',
+    slot_day_off_btn: 'Day off',
+    sched_print_title: 'Shift schedule',
+    sched_hours_col: 'Hours',
+    unit_per_hour: '/h',
+    weekdays_short: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+    weekdays_full: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
   }
 };
 function t(key) {
@@ -5048,7 +5150,8 @@ function deleteDebtFromSheet() {
 
 /* ================= schedule module ================= */
 let schedMode = 'week', schedRef = new Date(), empEditId = null, slotCtx = null;
-const WD = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
+function wdShort() { return t('weekdays_short'); }
+function wdFull() { return t('weekdays_full'); }
 const empColor = i => CHART_COLORS[i % CHART_COLORS.length];
 
 function weekStart(d) {
@@ -5131,7 +5234,7 @@ function renderSched() {
   if (!emps.length) {
     document.getElementById('schedLabel').textContent = '';
     card.style.display = 'block';
-    grid.innerHTML = '<div class="empty-items" style="padding:28px">Добавьте первого сотрудника — и стройте график смен</div>';
+    grid.innerHTML = `<div class="empty-items" style="padding:28px">${t('sched_empty')}</div>`;
     return;
   }
   if (schedMode === 'week') renderSchedWeek(); else renderSchedMonth();
@@ -5140,18 +5243,19 @@ function renderSchedWeek() {
   const ws = weekStart(schedRef);
   const monIso = isoDate(ws);
   const days = [...Array(7)].map((_, i) => { const d = new Date(ws); d.setDate(d.getDate() + i); return d; });
+  const dloc = appLang === 'en' ? 'en-GB' : 'ru-RU';
   document.getElementById('schedLabel').textContent =
-    days[0].toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' }) + ' – ' +
-    days[6].toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' });
+    days[0].toLocaleDateString(dloc, { day: 'numeric', month: 'short' }) + ' – ' +
+    days[6].toLocaleDateString(dloc, { day: 'numeric', month: 'short' });
   const todayStr = new Date().toDateString();
-  let html = '<table class="sched-table"><tr><th class="emp-col">Сотрудник</th>' +
-    days.map((d, i) => `<th class="${d.toDateString() === todayStr ? 'today-col' : ''}">${WD[i]}<span class="dnum">${d.getDate()}</span></th>`).join('') +
-    '<th>Неделя</th></tr>';
+  let html = `<table class="sched-table"><tr><th class="emp-col">${t('emp_col_header')}</th>` +
+    days.map((d, i) => `<th class="${d.toDateString() === todayStr ? 'today-col' : ''}">${wdShort()[i]}<span class="dnum">${d.getDate()}</span></th>`).join('') +
+    `<th>${t('sched_week')}</th></tr>`;
   state.staff.employees.forEach((e, ei) => {
     const cells = days.map((d, i) => {
       const s = effSlot(e.id, d);
       const ovr = hasOverride(e.id, d);
-      return `<td><button class="slot-chip ${s ? '' : 'off'} ${ovr ? 'ovr' : ''}" title="${ovr ? 'разовая смена' : ''}" style="${s ? `background:${empColor(ei)}22;color:${empColor(ei)}` : ''}" onclick="openSlotSheet('${e.id}',${i},'${isoDate(d)}')">${s ? `${s.f}<small>${s.t}</small>` : '+'}</button></td>`;
+      return `<td><button class="slot-chip ${s ? '' : 'off'} ${ovr ? 'ovr' : ''}" title="${ovr ? t('slot_once_title') : ''}" style="${s ? `background:${empColor(ei)}22;color:${empColor(ei)}` : ''}" onclick="openSlotSheet('${e.id}',${i},'${isoDate(d)}')">${s ? `${s.f}<small>${s.t}</small>` : '+'}</button></td>`;
     }).join('');
     const st = weekStats(e.id, monIso);
     const total = carryDebt(e.id, monIso) + st.net;
@@ -5160,7 +5264,7 @@ function renderSchedWeek() {
         <div class="emp-name">${esc(e.name)}</div>
         ${e.role ? `<span class="emp-role" style="background:${empColor(ei)}22;color:${empColor(ei)}">${esc(e.role)}</span>` : ''}
       </td>${cells}
-      <td class="hours-cell">${st.hours} ч${e.rate ? `<br><span class="msum">${money(st.salary)}</span><br><span class="sal-badge ${total <= 0.01 ? 'ok' : 'due'}">${total <= 0.01 ? 'выплачено' : 'долг ' + money(total)}</span>` : ''}</td>
+      <td class="hours-cell">${tf('hours_value', { n: st.hours })}${e.rate ? `<br><span class="msum">${money(st.salary)}</span><br><span class="sal-badge ${total <= 0.01 ? 'ok' : 'due'}">${total <= 0.01 ? t('sched_paid_off') : tf('sched_debt_prefix', { sum: money(total) })}</span>` : ''}</td>
     </tr>`;
   });
   document.getElementById('schedGrid').innerHTML = html + '</table>';
@@ -5169,14 +5273,14 @@ function renderSchedMonth() {
   const y = schedRef.getFullYear(), m = schedRef.getMonth();
   const days = new Date(y, m + 1, 0).getDate();
   document.getElementById('schedLabel').textContent =
-    schedRef.toLocaleDateString('ru-RU', { month: 'long', year: 'numeric' }).replace(' г.', '');
+    schedRef.toLocaleDateString(appLang === 'en' ? 'en-GB' : 'ru-RU', { month: 'long', year: 'numeric' }).replace(' г.', '');
   const today = new Date();
-  let html = '<table class="sched-table" style="min-width:' + (days * 26 + 300) + 'px"><tr><th class="emp-col">Сотрудник</th>';
+  let html = '<table class="sched-table" style="min-width:' + (days * 26 + 300) + 'px"><tr><th class="emp-col">' + t('emp_col_header') + '</th>';
   for (let d = 1; d <= days; d++) {
     const isToday = today.getFullYear() === y && today.getMonth() === m && today.getDate() === d;
     html += `<th class="${isToday ? 'today-col' : ''}" style="padding:10px 2px"><span class="dnum">${d}</span></th>`;
   }
-  html += '<th>Итог</th></tr>';
+  html += `<th>${t('sched_total_header')}</th></tr>`;
   // долг считается по неделям и переносится: берём срез на конец месяца
   const afterMonth = new Date(y, m + 1, 1);
   afterMonth.setDate(afterMonth.getDate() + 7);
@@ -5196,8 +5300,8 @@ function renderSchedMonth() {
         ${e.role ? `<span class="emp-role" style="background:${empColor(ei)}22;color:${empColor(ei)}">${esc(e.role)}</span>` : ''}
       </td>${cells}
       <td class="hours-cell" style="text-align:left;padding-right:14px">
-        ${hrs} ч · ${money(salary)}<br>
-        <span class="sal-badge ${debt <= 0.01 ? 'ok' : 'due'}">${debt <= 0.01 ? 'ЗП погашена' : 'долг ' + money(debt)}</span>
+        ${tf('hours_value', { n: hrs })} · ${money(salary)}<br>
+        <span class="sal-badge ${debt <= 0.01 ? 'ok' : 'due'}">${debt <= 0.01 ? t('sched_salary_paid') : tf('sched_debt_prefix', { sum: money(debt) })}</span>
       </td>
     </tr>`;
   });
@@ -5208,8 +5312,8 @@ function renderSchedMonth() {
 function openEmpSheet(id) {
   empEditId = id || null;
   const e = id ? state.staff.employees.find(x => x.id === id) : null;
-  document.getElementById('empSheetTitle').textContent = e ? e.name : 'Новый сотрудник';
-  document.getElementById('empSaveBtn').textContent = e ? 'Сохранить' : 'Добавить';
+  document.getElementById('empSheetTitle').textContent = e ? e.name : t('emp_new_title');
+  document.getElementById('empSaveBtn').textContent = e ? t('btn_save') : t('btn_add');
   document.getElementById('empDeleteBtn').style.display = e ? 'flex' : 'none';
   document.getElementById('empPayBlock').style.display = e ? 'block' : 'none';
   document.getElementById('empName').value = e ? e.name : '';
@@ -5226,22 +5330,23 @@ function renderEmpPay(id) {
   const st = weekStats(id, monIso);
   const carry = carryDebt(id, monIso);
   const total = carry + st.net;
-  const range = ws.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' }) + ' – ' + we.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' });
+  const dloc = appLang === 'en' ? 'en-GB' : 'ru-RU';
+  const range = ws.toLocaleDateString(dloc, { day: 'numeric', month: 'short' }) + ' – ' + we.toLocaleDateString(dloc, { day: 'numeric', month: 'short' });
   document.getElementById('empSummary').innerHTML = `
-    <div class="row"><span>Неделя</span><b>${range}</b></div>
-    <div class="row"><span>Отработано часов</span><b>${st.hours} ч</b></div>
-    <div class="row"><span>Начислено</span><b>${money(st.salary)}</b></div>
-    <div class="row"><span>Штрафы</span><b style="color:var(--red)">${st.pen ? '−' + money(st.pen) : money(0)}</b></div>
-    <div class="row"><span>Выплачено</span><b>${money(st.paid)}</b></div>
-    ${Math.abs(carry) > 0.01 ? `<div class="row"><span>Перенос с прошлых недель</span><b style="color:${carry > 0 ? 'var(--red)' : 'var(--green)'}">${money(carry)}</b></div>` : ''}
-    <div class="row total"><span>Долг по ЗП</span><b style="color:${total <= 0.01 ? 'var(--green)' : 'var(--red)'}">${total <= 0.01 ? 'погашен' : money(total)}</b></div>`;
+    <div class="row"><span>${t('sched_week')}</span><b>${range}</b></div>
+    <div class="row"><span>${t('emp_hours_worked')}</span><b>${tf('hours_value', { n: st.hours })}</b></div>
+    <div class="row"><span>${t('emp_accrued')}</span><b>${money(st.salary)}</b></div>
+    <div class="row"><span>${t('emp_penalties_label')}</span><b style="color:var(--red)">${st.pen ? '−' + money(st.pen) : money(0)}</b></div>
+    <div class="row"><span>${t('emp_paid_label')}</span><b>${money(st.paid)}</b></div>
+    ${Math.abs(carry) > 0.01 ? `<div class="row"><span>${t('emp_carryover')}</span><b style="color:${carry > 0 ? 'var(--red)' : 'var(--green)'}">${money(carry)}</b></div>` : ''}
+    <div class="row total"><span>${t('emp_salary_debt')}</span><b style="color:${total <= 0.01 ? 'var(--green)' : 'var(--red)'}">${total <= 0.01 ? t('emp_debt_settled') : money(total)}</b></div>`;
   const hist = [
     ...state.staff.penalties.filter(p => p.empId === id && p.wk === monIso).map(p => ({ ...p, kind: 'pen' })),
     ...state.staff.payouts.filter(p => p.empId === id && p.wk === monIso).map(p => ({ ...p, kind: 'pay' }))
   ];
   document.getElementById('empHistory').innerHTML = hist.map(h => `
     <div class="hist-row">
-      <span>${h.kind === 'pen' ? 'Штраф' : 'Выплата'}${h.note ? ' · ' + esc(h.note) : ''}</span>
+      <span>${h.kind === 'pen' ? t('hist_penalty') : t('hist_payout')}${h.note ? ' · ' + esc(h.note) : ''}</span>
       <span class="hs" style="color:${h.kind === 'pen' ? 'var(--red)' : 'var(--green)'}">${h.kind === 'pen' ? '−' : ''}${money(h.sum)}</span>
       <button onclick="delPayRec('${h.kind}','${h.id}')">${ic('trash', 14)}</button>
     </div>`).join('');
@@ -5278,7 +5383,7 @@ function saveEmpSheet() {
 function deleteEmpFromSheet() {
   const e = state.staff.employees.find(x => x.id === empEditId);
   closeSheet('empSheet');
-  confirmAction('Удалить сотрудника?', `«${e.name}», его график, штрафы и выплаты будут удалены.`, () => {
+  confirmAction(t('emp_delete_confirm_title'), tf('emp_delete_confirm_text', { name: e.name }), () => {
     state.staff.employees = state.staff.employees.filter(x => x.id !== empEditId);
     delete state.staff.shifts[empEditId];
     Object.keys(state.staff.overrides).forEach(k => { if (k.startsWith(empEditId + '|')) delete state.staff.overrides[k]; });
@@ -5295,8 +5400,8 @@ function setSlotScope(sc) {
   document.getElementById('slotSegAll').classList.toggle('on', sc === 'all');
   document.getElementById('slotSegWeek').classList.toggle('on', sc === 'week');
   document.getElementById('slotScopeHint').textContent = sc === 'all'
-    ? 'Смена будет повторяться в этот день каждую неделю'
-    : 'Изменение только на ' + new Date(slotCtx.date + 'T00:00:00').toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' }) + ' — постоянный график не тронем';
+    ? t('slot_scope_hint_recurring')
+    : tf('slot_scope_hint_once', { date: new Date(slotCtx.date + 'T00:00:00').toLocaleDateString(appLang === 'en' ? 'en-GB' : 'ru-RU', { day: 'numeric', month: 'long' }) });
 }
 function openSlotSheet(empId, wd, dateIso) {
   slotCtx = { empId, wd, date: dateIso };
@@ -5304,8 +5409,8 @@ function openSlotSheet(empId, wd, dateIso) {
   const d = new Date(dateIso + 'T00:00:00');
   const s = effSlot(empId, d);
   document.getElementById('slotSheetTitle').textContent =
-    e.name + ' — ' + ['Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота', 'Воскресенье'][wd] + ', ' +
-    d.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' });
+    e.name + ' — ' + wdFull()[wd] + ', ' +
+    d.toLocaleDateString(appLang === 'en' ? 'en-GB' : 'ru-RU', { day: 'numeric', month: 'short' });
   document.getElementById('slotFrom').value = s ? s.f : '09:00';
   document.getElementById('slotTo').value = s ? s.t : '18:00';
   setSlotScope(hasOverride(empId, d) ? 'week' : 'all');
@@ -5488,8 +5593,9 @@ function printSchedule() {
   if (schedMode !== 'week') setSchedMode('week');
   const ws = weekStart(schedRef);
   const days = [...Array(7)].map((_, i) => { const d = new Date(ws); d.setDate(d.getDate() + i); return d; });
-  const range = days[0].toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' }) + ' — ' +
-    days[6].toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' });
+  const dloc = appLang === 'en' ? 'en-GB' : 'ru-RU';
+  const range = days[0].toLocaleDateString(dloc, { day: 'numeric', month: 'long' }) + ' — ' +
+    days[6].toLocaleDateString(dloc, { day: 'numeric', month: 'long', year: 'numeric' });
   let rows = '';
   state.staff.employees.forEach(e => {
     let week = 0;
@@ -5503,15 +5609,15 @@ function printSchedule() {
         <div style="font-weight:800;font-size:14px">${esc(e.name)}</div>
         ${e.role ? `<div style="font-size:11px;color:#64748B;font-weight:700;text-transform:uppercase;letter-spacing:.04em">${esc(e.role)}</div>` : ''}
       </td>${cells}
-      <td style="${PTD};text-align:center;font-weight:800">${Math.round(week * 10) / 10} ч</td>
+      <td style="${PTD};text-align:center;font-weight:800">${tf('hours_value', { n: Math.round(week * 10) / 10 })}</td>
     </tr>`;
   });
-  printDoc('landscape', 'Расписание смен', range, `
+  printDoc('landscape', t('sched_print_title'), range, `
     <table style="border-collapse:collapse;width:100%">
       <tr>
-        <th style="${PTH};text-align:left;padding-left:12px">Сотрудник</th>
-        ${days.map((d, i) => `<th style="${PTH}">${WD[i]} ${d.getDate()}.${String(d.getMonth() + 1).padStart(2, '0')}</th>`).join('')}
-        <th style="${PTH}">Часы</th>
+        <th style="${PTH};text-align:left;padding-left:12px">${t('emp_col_header')}</th>
+        ${days.map((d, i) => `<th style="${PTH}">${wdShort()[i]} ${d.getDate()}.${String(d.getMonth() + 1).padStart(2, '0')}</th>`).join('')}
+        <th style="${PTH}">${t('sched_hours_col')}</th>
       </tr>${rows}
     </table>`);
 }
@@ -5522,7 +5628,8 @@ function printEmpCard() {
   if (!e) return;
   const ws = weekStart(schedRef);
   const we = new Date(ws); we.setDate(we.getDate() + 6);
-  const range = ws.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' }) + ' – ' + we.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short', year: 'numeric' });
+  const dloc = appLang === 'en' ? 'en-GB' : 'ru-RU';
+  const range = ws.toLocaleDateString(dloc, { day: 'numeric', month: 'short' }) + ' – ' + we.toLocaleDateString(dloc, { day: 'numeric', month: 'short', year: 'numeric' });
   const monIso = isoDate(ws);
   const st = weekStats(e.id, monIso);
   const carry = carryDebt(e.id, monIso);
@@ -5531,32 +5638,32 @@ function printEmpCard() {
   const days = [...Array(7)].map((_, i) => { const d = new Date(ws); d.setDate(d.getDate() + i); return d; });
   const dayCells = days.map((d, i) => {
     const s = effSlot(e.id, d);
-    return `<td style="${PTD};text-align:center;font-weight:${s ? 700 : 400};color:${s ? '#1E293B' : '#CBD5E1'}">${WD[i]}<br>${s ? s.f + '–' + s.t : '—'}</td>`;
+    return `<td style="${PTD};text-align:center;font-weight:${s ? 700 : 400};color:${s ? '#1E293B' : '#CBD5E1'}">${wdShort()[i]}<br>${s ? s.f + '–' + s.t : '—'}</td>`;
   }).join('');
 
   const hist = [
-    ...state.staff.penalties.filter(p => p.empId === e.id && p.wk === monIso).map(p => ({ ...p, kind: 'Штраф', sign: '−' })),
-    ...state.staff.payouts.filter(p => p.empId === e.id && p.wk === monIso).map(p => ({ ...p, kind: 'Выплата', sign: '' }))
+    ...state.staff.penalties.filter(p => p.empId === e.id && p.wk === monIso).map(p => ({ ...p, kind: t('hist_penalty'), sign: '−' })),
+    ...state.staff.payouts.filter(p => p.empId === e.id && p.wk === monIso).map(p => ({ ...p, kind: t('hist_payout'), sign: '' }))
   ];
   const histRows = hist.length ? hist.map(h => `
     <tr><td style="${PTD}">${h.kind}${h.note ? ' · ' + esc(h.note) : ''}</td>
     <td style="${PTD};text-align:right;font-weight:700">${h.sign}${money(h.sum)}</td></tr>`).join('')
-    : `<tr><td style="${PTD}" colspan="2">Нет операций за эту неделю</td></tr>`;
+    : `<tr><td style="${PTD}" colspan="2">${t('emp_no_ops_week')}</td></tr>`;
 
   printDoc('portrait', esc(e.name), range, `
-    ${e.role ? `<div style="font-size:12px;color:#64748B;font-weight:700;text-transform:uppercase;letter-spacing:.05em;margin:-8px 0 14px">${esc(e.role)}${e.rate ? ' · ' + fmt(e.rate) + ' ' + currSym() + '/час' : ''}</div>` : ''}
+    ${e.role ? `<div style="font-size:12px;color:#64748B;font-weight:700;text-transform:uppercase;letter-spacing:.05em;margin:-8px 0 14px">${esc(e.role)}${e.rate ? ' · ' + fmt(e.rate) + ' ' + currSym() + t('unit_per_hour') : ''}</div>` : ''}
     <table style="border-collapse:collapse;width:100%;margin-bottom:16px">
       <tr>${dayCells}</tr>
     </table>
     <table style="border-collapse:collapse;width:100%;margin-bottom:16px">
-      <tr><td style="${PTD}">Отработано часов</td><td style="${PTD};text-align:right;font-weight:700">${st.hours} ч</td></tr>
-      <tr><td style="${PTD}">Начислено за неделю</td><td style="${PTD};text-align:right;font-weight:700">${money(st.salary)}</td></tr>
-      <tr><td style="${PTD}">Штрафы</td><td style="${PTD};text-align:right;font-weight:700;color:#DC2626">${st.pen ? '−' + money(st.pen) : money(0)}</td></tr>
-      <tr><td style="${PTD}">Выплачено</td><td style="${PTD};text-align:right;font-weight:700">${money(st.paid)}</td></tr>
-      ${Math.abs(carry) > 0.01 ? `<tr><td style="${PTD}">Перенос с прошлых недель</td><td style="${PTD};text-align:right;font-weight:700;color:${carry > 0 ? '#DC2626' : '#059669'}">${money(carry)}</td></tr>` : ''}
-      <tr><td style="${PTD};font-weight:800">Долг по ЗП</td><td style="${PTD};text-align:right;font-weight:900;color:${total <= 0.01 ? '#059669' : '#DC2626'}">${total <= 0.01 ? 'погашен' : money(total)}</td></tr>
+      <tr><td style="${PTD}">${t('emp_hours_worked')}</td><td style="${PTD};text-align:right;font-weight:700">${tf('hours_value', { n: st.hours })}</td></tr>
+      <tr><td style="${PTD}">${t('emp_accrued_week')}</td><td style="${PTD};text-align:right;font-weight:700">${money(st.salary)}</td></tr>
+      <tr><td style="${PTD}">${t('emp_penalties_label')}</td><td style="${PTD};text-align:right;font-weight:700;color:#DC2626">${st.pen ? '−' + money(st.pen) : money(0)}</td></tr>
+      <tr><td style="${PTD}">${t('emp_paid_label')}</td><td style="${PTD};text-align:right;font-weight:700">${money(st.paid)}</td></tr>
+      ${Math.abs(carry) > 0.01 ? `<tr><td style="${PTD}">${t('emp_carryover')}</td><td style="${PTD};text-align:right;font-weight:700;color:${carry > 0 ? '#DC2626' : '#059669'}">${money(carry)}</td></tr>` : ''}
+      <tr><td style="${PTD};font-weight:800">${t('emp_salary_debt')}</td><td style="${PTD};text-align:right;font-weight:900;color:${total <= 0.01 ? '#059669' : '#DC2626'}">${total <= 0.01 ? t('emp_debt_settled') : money(total)}</td></tr>
     </table>
-    <div style="font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:#64748B;margin-bottom:6px">Операции за неделю</div>
+    <div style="font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:#64748B;margin-bottom:6px">${t('emp_ops_week_title')}</div>
     <table style="border-collapse:collapse;width:100%">${histRows}</table>`);
 }
 
