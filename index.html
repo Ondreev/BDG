@@ -1390,7 +1390,7 @@ input[type=file]{display:none}
     <p style="color:var(--muted);font-size:13.5px;margin:0 0 12px">Наведите курсор на поле и отсканируйте штрихкод/QR терминалом — или введите ID вручную и нажмите Enter</p>
     <div class="field">
       <label>ID товара</label>
-      <input id="termScanInput" type="text" inputmode="numeric" autocomplete="off" placeholder="Например: 12345" onkeydown="if(event.key==='Enter'){event.preventDefault();submitTermScan();}">
+      <input id="termScanInput" type="text" inputmode="numeric" autocomplete="off" placeholder="Например: 12345" oninput="onTermScanInput()" onkeydown="if(event.key==='Enter'){event.preventDefault();submitTermScan();}">
     </div>
     <p id="termScanStatus" style="color:var(--red);font-size:13px;min-height:16px;margin:-6px 0 12px"></p>
     <button class="btn btn-primary" onclick="submitTermScan()">Найти</button>
@@ -3405,6 +3405,13 @@ function openTermScanSheet() {
   document.getElementById('termScanInput').value = '';
   openSheet('termScanSheet');
   setTimeout(() => document.getElementById('termScanInput').focus(), 320);
+}
+// сканер-терминал печатает код мгновенно — как только введённое совпало с ID товара,
+// открываем его сразу, не заставляя ещё жать "Найти"
+function onTermScanInput() {
+  document.getElementById('termScanStatus').textContent = '';
+  const v = document.getElementById('termScanInput').value.trim().replace(/\s/g, '');
+  if (v && state.catalogDB.products.some(p => p.sku && p.sku === v)) submitTermScan();
 }
 function submitTermScan() {
   const v = document.getElementById('termScanInput').value.trim();
