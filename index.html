@@ -856,8 +856,8 @@ input[type=file]{display:none}
     </div>
     <div id="topNavSlot"></div>
     <div style="display:flex;gap:8px">
-      <button class="print-top-btn view-shop" id="printTopBtn" onclick="openPrintListSheet()" aria-label="Печать списка">
-        <span class="ic" data-icon="printer"></span><span>Печать</span>
+      <button class="print-top-btn view-shop" id="printTopBtn" onclick="openPrintListSheet()" aria-label="Печать списка" data-i18n-aria="print_top_aria">
+        <span class="ic" data-icon="printer"></span><span data-i18n="btn_print">Печать</span>
       </button>
       <button class="curr-top-btn" id="currTopBtn" onclick="openCurrencySheet()" aria-label="Курсы валют">
         <span class="ctc">$</span><span id="currTopRate">…</span>
@@ -1200,20 +1200,20 @@ input[type=file]{display:none}
 <div class="sheet-wrap" id="menuSheet"><div class="backdrop" onclick="closeSheet('menuSheet')"></div>
   <div class="sheet">
     <div class="grab"></div>
-    <h2>Меню</h2>
+    <h2 data-i18n="menu_title">Меню</h2>
     <div class="action-list">
-      <button class="action-item" onclick="openSyncSheet()"><span class="ic" data-icon="cloud"></span><span>Облако — копия данных<small>Телефон + PIN · Google Таблица</small></span></button>
-      <button class="action-item" onclick="refreshFromCatalog()"><span class="ic" data-icon="refresh"></span><span>Обновить из каталога<small>Свежие цены и места для некупленного</small></span></button>
-      <button class="action-item" onclick="shareList()"><span class="ic" data-icon="share"></span><span>Поделиться списком<small>Отправить текстом</small></span></button>
-      <button class="action-item" onclick="openPrintListSheet()"><span class="ic" data-icon="printer"></span><span>Печать списка<small>Накладная A4 или этикетки 40×30</small></span></button>
-      <button class="action-item" onclick="openPrintReceiverSheet()"><span class="ic" data-icon="cloud"></span><span>Печать с телефона<small>Приём заданий на этом компьютере</small></span></button>
-      <button class="action-item" onclick="openCurrencySheet()"><span class="ic" data-icon="currency"></span><span>Курсы валют<small>ЦБ РФ — доллар, юань, лира и другие</small></span></button>
-      <button class="action-item" onclick="exportData()"><span class="ic" data-icon="export"></span><span>Файл-копия на компьютер<small>Резервный JSON, работает без облака</small></span></button>
-      <button class="action-item" onclick="document.getElementById('importFile').click()"><span class="ic" data-icon="import"></span><span>Восстановить из файла<small>Если нет доступа к облаку</small></span></button>
-      <button class="action-item" onclick="closeSheet('menuSheet');openSheet('installSheet')"><span class="ic" data-icon="phone"></span><span>Установить на телефон</span></button>
-      <button class="action-item" onclick="shareApp()"><span class="ic" data-icon="megaphone"></span><span>Поделиться приложением BDG<small>Отправить ссылку друзьям</small></span></button>
+      <button class="action-item" onclick="openSyncSheet()"><span class="ic" data-icon="cloud"></span><span data-i18n-html="menu_cloud">Облако — копия данных<small>Телефон + PIN · Google Таблица</small></span></button>
+      <button class="action-item" onclick="refreshFromCatalog()"><span class="ic" data-icon="refresh"></span><span data-i18n-html="menu_refresh">Обновить из каталога<small>Свежие цены и места для некупленного</small></span></button>
+      <button class="action-item" onclick="shareList()"><span class="ic" data-icon="share"></span><span data-i18n-html="menu_share_list">Поделиться списком<small>Отправить текстом</small></span></button>
+      <button class="action-item" onclick="openPrintListSheet()"><span class="ic" data-icon="printer"></span><span data-i18n-html="menu_print_list">Печать списка<small>Накладная A4 или этикетки 40×30</small></span></button>
+      <button class="action-item" onclick="openPrintReceiverSheet()"><span class="ic" data-icon="cloud"></span><span data-i18n-html="menu_print_from_phone">Печать с телефона<small>Приём заданий на этом компьютере</small></span></button>
+      <button class="action-item" onclick="openCurrencySheet()"><span class="ic" data-icon="currency"></span><span data-i18n-html="menu_currency">Курсы валют<small>ЦБ РФ — доллар, юань, лира и другие</small></span></button>
+      <button class="action-item" onclick="exportData()"><span class="ic" data-icon="export"></span><span data-i18n-html="menu_export">Файл-копия на компьютер<small>Резервный JSON, работает без облака</small></span></button>
+      <button class="action-item" onclick="document.getElementById('importFile').click()"><span class="ic" data-icon="import"></span><span data-i18n-html="menu_import">Восстановить из файла<small>Если нет доступа к облаку</small></span></button>
+      <button class="action-item" onclick="closeSheet('menuSheet');openSheet('installSheet')"><span class="ic" data-icon="phone"></span><span data-i18n="menu_install">Установить на телефон</span></button>
+      <button class="action-item" onclick="shareApp()"><span class="ic" data-icon="megaphone"></span><span data-i18n-html="menu_share_app">Поделиться приложением BDG<small>Отправить ссылку друзьям</small></span></button>
       <a class="action-item" href="https://karatmarket.ru/kivimarket" target="_blank" rel="noopener"><span class="ic" data-icon="link"></span><span>КИВИ Маркет</span></a>
-      <button class="action-item" onclick="closeSheet('menuSheet');openSheet('aboutSheet')"><span class="ic" data-icon="info"></span><span>О приложении</span></button>
+      <button class="action-item" onclick="closeSheet('menuSheet');openSheet('aboutSheet')"><span class="ic" data-icon="info"></span><span data-i18n="menu_about">О приложении</span></button>
     </div>
     <div class="menu-footer">Kirill Andreev &middot; KIVI Business Tech&trade; &middot; &copy; 2025</div>
     <input type="file" id="importFile" accept="application/json,.json" onchange="importData(this)">
@@ -1223,56 +1223,56 @@ input[type=file]{display:none}
 <div class="sheet-wrap" id="installSheet"><div class="backdrop" onclick="closeSheet('installSheet')"></div>
   <div class="sheet">
     <div class="grab"></div>
-    <h2>Установить на телефон</h2>
+    <h2 data-i18n="install_title">Установить на телефон</h2>
     <div class="about">
-      <p><b>Android (Chrome):</b> меню&nbsp;⋮ → «Добавить на главный экран».</p>
-      <p><b>iPhone (Safari):</b> кнопка «Поделиться» → «На экран "Домой"».</p>
-      <p>Приложение будет работать как обычное — с иконкой и офлайн-режимом.</p>
+      <p data-i18n-html="install_android"><b>Android (Chrome):</b> меню&nbsp;⋮ → «Добавить на главный экран».</p>
+      <p data-i18n-html="install_ios"><b>iPhone (Safari):</b> кнопка «Поделиться» → «На экран "Домой"».</p>
+      <p data-i18n="install_note">Приложение будет работать как обычное — с иконкой и офлайн-режимом.</p>
     </div>
-    <button class="btn btn-ghost" onclick="closeSheet('installSheet')">Понятно</button>
+    <button class="btn btn-ghost" onclick="closeSheet('installSheet')" data-i18n="btn_got_it">Понятно</button>
   </div>
 </div>
 
 <div class="sheet-wrap" id="aboutSheet"><div class="backdrop" onclick="closeSheet('aboutSheet')"></div>
   <div class="sheet">
     <div class="grab"></div>
-    <h2>О приложении</h2>
+    <h2 data-i18n="about_title">О приложении</h2>
     <div class="about">
-      <p><b>BDG</b> — планировщик закупок и бюджета от КИВИ Маркет. Бюджет, магазины и товары — под контролем в одно касание.</p>
+      <p data-i18n-html="about_intro"><b>BDG</b> — планировщик закупок и бюджета от КИВИ Маркет. Бюджет, магазины и товары — под контролем в одно касание.</p>
       <button class="about-toggle" onclick="toggleAboutMore('aboutMore', this)">
-        Смотреть больше<svg class="chev" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+        <span data-i18n="btn_show_more">Смотреть больше</span><svg class="chev" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
       </button>
       <div class="about-collapse" id="aboutMore">
-        <p>Помимо закупок — полноценный органайзер бизнеса: <b>Долги и кредиты</b> с датами платежей, <b>График</b> сотрудников с расчётом зарплаты и печатью на A4, <b>Инвентура</b> с планированием закупок, <b>План</b> — чек-листы дел.</p>
-        <p>Данные синхронизируются между устройствами через облако, а встроенный ИИ-ассистент сам подскажет, когда пора сохраниться.</p>
+        <p data-i18n-html="about_more_1">Помимо закупок — полноценный органайзер бизнеса: <b>Долги и кредиты</b> с датами платежей, <b>График</b> сотрудников с расчётом зарплаты и печатью на A4, <b>Инвентура</b> с планированием закупок, <b>План</b> — чек-листы дел.</p>
+        <p data-i18n="about_more_2">Данные синхронизируются между устройствами через облако, а встроенный ИИ-ассистент сам подскажет, когда пора сохраниться.</p>
         <div class="about-footer">
           <p class="af-line"><b>Kirill Andreev</b> &middot; KIVI Business Tech&trade;</p>
           <p class="af-line">Powered by top-tier AI &middot; &copy; 2025, Moscow</p>
         </div>
         <a class="btn btn-ghost" style="margin-top:12px" href="https://wa.me/74951400557?text=%D0%A3%20%D0%BC%D0%B5%D0%BD%D1%8F%20%D0%B2%D0%BE%D0%BF%D1%80%D0%BE%D1%81%20%D0%BF%D0%BE%20%D0%9F%D1%80%D0%B8%D0%BB%D0%BE%D0%B6%D0%B5%D0%BD%D0%B8%D1%8E%20BDG" target="_blank" rel="noopener">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="2.5" width="10" height="19" rx="2.8"/><path d="M10.8 18.5h2.4"/></svg>
-          Пожелания и вопросы пишите на WhatsApp
+          <span data-i18n="about_whatsapp">Пожелания и вопросы пишите на WhatsApp</span>
         </a>
       </div>
     </div>
-    <button class="btn btn-ghost" onclick="closeSheet('aboutSheet')">Закрыть</button>
+    <button class="btn btn-ghost" onclick="closeSheet('aboutSheet')" data-i18n="btn_close">Закрыть</button>
   </div>
 </div>
 
 <div class="sheet-wrap" id="printListSheet"><div class="backdrop" onclick="closeSheet('printListSheet')"></div>
   <div class="sheet">
     <div class="grab"></div>
-    <h2>Печать списка</h2>
+    <h2 data-i18n="print_list_title">Печать списка</h2>
     <div class="seg seg-wide">
-      <button id="plmDoc" class="on" onclick="setPrintListMode('doc')">Накладная A4</button>
-      <button id="plmLabels" onclick="setPrintListMode('labels')">Этикетки 40×30</button>
+      <button id="plmDoc" class="on" onclick="setPrintListMode('doc')" data-i18n="print_mode_doc">Накладная A4</button>
+      <button id="plmLabels" onclick="setPrintListMode('labels')" data-i18n="print_mode_labels">Этикетки 40×30</button>
     </div>
     <p id="printListHint" style="color:var(--muted);font-size:12.5px;margin:8px 4px 0"></p>
     <div class="plr-list" id="printListRows"></div>
     <div class="plr-footer" id="printListFooter"></div>
     <button class="btn btn-primary" onclick="executePrintList()">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M7 8.5V4h10v4.5M7 17.5H5.5A1.5 1.5 0 0 1 4 16v-5a1.5 1.5 0 0 1 1.5-1.5h13A1.5 1.5 0 0 1 20 11v5a1.5 1.5 0 0 1-1.5 1.5H17M7 14.5h10v6H7z"/></svg>
-      Печать
+      <span data-i18n="btn_print">Печать</span>
     </button>
   </div>
 </div>
@@ -1454,10 +1454,10 @@ input[type=file]{display:none}
 <div class="sheet-wrap" id="printDispatchSheet"><div class="backdrop" onclick="closeSheet('printDispatchSheet')"></div>
   <div class="sheet">
     <div class="grab"></div>
-    <h2>Печать</h2>
+    <h2 data-i18n="print_dispatch_title">Печать</h2>
     <div class="action-list">
-      <button class="action-item" onclick="printLocalNow()"><span class="ic" data-icon="printer"></span><span>Напечатать с телефона<small>Открыть системное окно печати здесь</small></span></button>
-      <button class="action-item" onclick="printRemoteNow()"><span class="ic" data-icon="cloud"></span><span>Отправить на компьютер<small>Напечатается там, где включён приём</small></span></button>
+      <button class="action-item" onclick="printLocalNow()"><span class="ic" data-icon="printer"></span><span data-i18n-html="print_local_now">Напечатать с телефона<small>Открыть системное окно печати здесь</small></span></button>
+      <button class="action-item" onclick="printRemoteNow()"><span class="ic" data-icon="cloud"></span><span data-i18n-html="print_remote_now">Отправить на компьютер<small>Напечатается там, где включён приём</small></span></button>
     </div>
   </div>
 </div>
@@ -1465,16 +1465,16 @@ input[type=file]{display:none}
 <div class="sheet-wrap" id="printReceiverSheet"><div class="backdrop" onclick="closeSheet('printReceiverSheet')"></div>
   <div class="sheet">
     <div class="grab"></div>
-    <h2>Печать с телефона</h2>
+    <h2 data-i18n="print_receiver_title">Печать с телефона</h2>
     <div class="about">
-      <p>Включите на компьютере рядом с принтером. Пока эта вкладка открыта, задания на печать, отправленные с телефона, будут запускаться здесь автоматически.</p>
+      <p data-i18n="print_receiver_intro">Включите на компьютере рядом с принтером. Пока эта вкладка открыта, задания на печать, отправленные с телефона, будут запускаться здесь автоматически.</p>
     </div>
     <div class="seg seg-wide">
-      <button id="prOff" onclick="setPrintReceiver(false)">Выключено</button>
-      <button id="prOn" onclick="setPrintReceiver(true)">Включено</button>
+      <button id="prOff" onclick="setPrintReceiver(false)" data-i18n="print_receiver_off">Выключено</button>
+      <button id="prOn" onclick="setPrintReceiver(true)" data-i18n="print_receiver_on">Включено</button>
     </div>
     <p id="printReceiverStatus" style="color:var(--muted);font-size:12.5px;margin:10px 4px 0"></p>
-    <button class="btn btn-ghost" style="margin-top:16px" onclick="closeSheet('printReceiverSheet')">Закрыть</button>
+    <button class="btn btn-ghost" style="margin-top:16px" onclick="closeSheet('printReceiverSheet')" data-i18n="btn_close">Закрыть</button>
   </div>
 </div>
 
@@ -1482,8 +1482,8 @@ input[type=file]{display:none}
   <div class="sheet">
     <div class="grab"></div>
     <div class="curr-head">
-      <h2 style="margin:0">Курсы валют</h2>
-      <button class="icon-btn" id="currRefreshBtn" onclick="loadCurrencyRates(true)" aria-label="Обновить">
+      <h2 style="margin:0" data-i18n="curr_sheet_rates_title">Курсы валют</h2>
+      <button class="icon-btn" id="currRefreshBtn" onclick="loadCurrencyRates(true)" aria-label="Обновить" data-i18n-aria="aria_refresh">
         <span class="ic" data-icon="refresh"></span>
       </button>
     </div>
@@ -1498,12 +1498,12 @@ input[type=file]{display:none}
     <h2 id="currDetailTitle" style="margin:0">USD</h2>
     <p class="pay-sub" id="currDetailSub" style="margin:2px 2px 12px"></p>
     <div class="seg seg-wide">
-      <button id="currRangeMonth" class="on" onclick="setCurrRange('month')">Месяц</button>
-      <button id="currRangeYear" onclick="setCurrRange('year')">Год</button>
+      <button id="currRangeMonth" class="on" onclick="setCurrRange('month')" data-i18n="curr_range_month">Месяц</button>
+      <button id="currRangeYear" onclick="setCurrRange('year')" data-i18n="curr_range_year">Год</button>
     </div>
     <div class="curr-chart-wrap"><svg id="currChart" viewBox="0 0 300 120"></svg></div>
     <p id="currChartStatus" style="text-align:center;color:var(--muted);font-size:12.5px;margin-top:10px"></p>
-    <button class="btn btn-ghost" style="margin-top:16px" onclick="closeSheet('currencyDetailSheet')">Закрыть</button>
+    <button class="btn btn-ghost" style="margin-top:16px" onclick="closeSheet('currencyDetailSheet')" data-i18n="btn_close">Закрыть</button>
   </div>
 </div>
 
@@ -1948,6 +1948,7 @@ const I18N = {
     ai_remote_update_text: 'Есть новые данные с другого устройства. Загрузить их сюда?',
     ai_remote_update_yes: 'Загрузить',
     ai_remote_update_no: 'Оставить как есть',
+    remote_update_applied: 'Данные обновлены с другого устройства',
     ai_tour_farewell: 'Если что — я рядом. Работай спокойно, я подстрахую 🤝',
     ai_tour_offer: 'Я вижу, ты растерялся. Но не бойся, всё очень просто! Хочешь, помогу?',
     ai_tour_offer_yes: 'Давай, помоги',
@@ -2118,7 +2119,105 @@ const I18N = {
     cat_category_new_title: 'Новая категория',
     cat_category_edit_title: 'Категория',
     cat_category_delete_btn: 'Удалить категорию',
-    cat_category_deleted_toast: 'Категория «{name}» удалена — товары остались в каталоге'
+    cat_category_deleted_toast: 'Категория «{name}» удалена — товары остались в каталоге',
+
+    menu_title: 'Меню',
+    menu_cloud: 'Облако — копия данных<small>Телефон + PIN · Google Таблица</small>',
+    menu_refresh: 'Обновить из каталога<small>Свежие цены и места для некупленного</small>',
+    menu_share_list: 'Поделиться списком<small>Отправить текстом</small>',
+    menu_print_list: 'Печать списка<small>Накладная A4 или этикетки 40×30</small>',
+    menu_print_from_phone: 'Печать с телефона<small>Приём заданий на этом компьютере</small>',
+    menu_currency: 'Курсы валют<small>ЦБ РФ — доллар, юань, лира и другие</small>',
+    menu_export: 'Файл-копия на компьютер<small>Резервный JSON, работает без облака</small>',
+    menu_import: 'Восстановить из файла<small>Если нет доступа к облаку</small>',
+    menu_install: 'Установить на телефон',
+    menu_share_app: 'Поделиться приложением BDG<small>Отправить ссылку друзьям</small>',
+    menu_about: 'О приложении',
+
+    install_title: 'Установить на телефон',
+    install_android: '<b>Android (Chrome):</b> меню&nbsp;⋮ → «Добавить на главный экран».',
+    install_ios: '<b>iPhone (Safari):</b> кнопка «Поделиться» → «На экран "Домой"».',
+    install_note: 'Приложение будет работать как обычное — с иконкой и офлайн-режимом.',
+    btn_got_it: 'Понятно',
+
+    about_title: 'О приложении',
+    about_intro: '<b>BDG</b> — планировщик закупок и бюджета от КИВИ Маркет. Бюджет, магазины и товары — под контролем в одно касание.',
+    about_more_1: 'Помимо закупок — полноценный органайзер бизнеса: <b>Долги и кредиты</b> с датами платежей, <b>График</b> сотрудников с расчётом зарплаты и печатью на A4, <b>Инвентура</b> с планированием закупок, <b>План</b> — чек-листы дел.',
+    about_more_2: 'Данные синхронизируются между устройствами через облако, а встроенный ИИ-ассистент сам подскажет, когда пора сохраниться.',
+    about_whatsapp: 'Пожелания и вопросы пишите на WhatsApp',
+
+    print_list_title: 'Печать списка',
+    print_mode_doc: 'Накладная A4',
+    print_mode_labels: 'Этикетки 40×30',
+    print_hint_labels: 'Этикетка печатается для каждой единицы товара — по количеству ниже. Доступны только товары с ID из каталога.',
+    print_hint_doc: 'В накладную попадут все товары из списка с указанным количеством.',
+    btn_print: 'Печать',
+    print_top_aria: 'Печать списка',
+    print_no_labels: 'Нет товаров для печати этикеток',
+    print_no_qty: 'Укажите количество для печати',
+    print_invoice_title: 'Накладная',
+    print_col_item: 'Товар',
+    print_col_price: 'Цена',
+    print_col_qty: 'Кол-во',
+    print_col_sum: 'Сумма',
+    print_total: 'Итого: {sum}',
+    print_list_empty: 'Список пуст',
+    print_list_skipped: 'нет ID в каталоге — пропущены',
+    print_labels_to_print: 'Этикеток к печати',
+    print_footer_total: 'Итого',
+    print_generated_by: 'Сформировано в BDG · {date}',
+    print_label_title: 'Этикетка: {name}',
+    print_labels_title: 'Этикетки ({n} шт.)',
+
+    print_document_default_title: 'Документ',
+    print_dispatch_title: 'Печать',
+    print_local_now: 'Напечатать с телефона<small>Открыть системное окно печати здесь</small>',
+    print_remote_now: 'Отправить на компьютер<small>Напечатается там, где включён приём</small>',
+    print_sending: 'Отправляю на компьютер…',
+    print_sent: 'Отправлено — откройте BDG на компьютере с включённым приёмом печати',
+    print_receiver_title: 'Печать с телефона',
+    print_receiver_intro: 'Включите на компьютере рядом с принтером. Пока эта вкладка открыта, задания на печать, отправленные с телефона, будут запускаться здесь автоматически.',
+    print_receiver_off: 'Выключено',
+    print_receiver_on: 'Включено',
+    print_receiver_need_cloud: 'Сначала настройте Облако в меню — без него компьютер не сможет получать задания.',
+    print_receiver_waiting: 'Ждём заданий с телефона — держите эту вкладку открытой.',
+    print_receiver_disabled: 'Приём выключен.',
+    print_receiving_from_phone: 'Печатаю с телефона: {title}',
+
+    curr_sheet_rates_title: 'Курсы валют',
+    aria_refresh: 'Обновить',
+    curr_updated_on: 'ЦБ РФ на {date}',
+    curr_loading: 'Загрузка…',
+    curr_now: 'Сейчас: {rate}',
+    curr_range_month: 'Месяц',
+    curr_range_year: 'Год',
+    curr_vpn_msg: 'Не удалось загрузить курсы. Если включён VPN — попробуйте временно отключить его и обновить, приносим свои извинения за неудобства.',
+    curr_name_USD: 'Доллар США',
+    curr_name_EUR: 'Евро',
+    curr_name_CNY: 'Китайский юань',
+    curr_name_TRY: 'Турецкая лира',
+    curr_name_KZT: 'Казахстанский тенге',
+    curr_name_UZS: 'Узбекский сум',
+    curr_name_KGS: 'Киргизский сом',
+    curr_name_AED: 'Дирхам ОАЭ',
+    curr_name_UAH: 'Украинская гривна',
+    curr_name_GBP: 'Фунт стерлингов',
+
+    share_list_copied: 'Список скопирован в буфер обмена',
+    share_pay_day: '(платёж {day}-го)',
+    share_budget_line: 'Бюджет: {budget} · План: {planned}',
+    share_failed: 'Не удалось поделиться',
+    share_app_link_copied: 'Ссылка на приложение скопирована',
+    share_app_title: 'BDG — планировщик закупок',
+    share_app_text: 'BDG — планировщик закупок и бюджета от КИВИ Маркет. Бесплатно, работает офлайн, ставится на телефон:',
+    refresh_confirm_title: 'Обновить из каталога?',
+    refresh_confirm_text: 'Цена, место и категория будут обновлены у {n} некупленных позиций. Купленные не изменятся. Пустые значения каталога ничего не затирают.',
+    refresh_confirm_btn: 'Обновить',
+    refresh_all_actual: 'Всё уже актуально — изменений нет',
+    refresh_updated_snack: 'Обновлено позиций: {n}',
+    export_done: 'Резервная копия скачана',
+    import_bad_file: 'Файл не похож на копию BDG',
+    import_done: 'Данные восстановлены'
   },
   en: {
     lang_sheet_title: 'Language',
@@ -2163,6 +2262,7 @@ const I18N = {
     ai_remote_update_text: 'There’s new data from another device. Load it here?',
     ai_remote_update_yes: 'Load',
     ai_remote_update_no: 'Keep as is',
+    remote_update_applied: 'Data updated from another device',
     ai_tour_farewell: 'I’m around if you need anything. Work easy, I’ve got your back 🤝',
     ai_tour_offer: 'Looks like you could use a hand. Don’t worry, it’s all pretty simple! Want help?',
     ai_tour_offer_yes: 'Sure, help me out',
@@ -2333,7 +2433,105 @@ const I18N = {
     cat_category_new_title: 'New category',
     cat_category_edit_title: 'Category',
     cat_category_delete_btn: 'Delete category',
-    cat_category_deleted_toast: 'Category «{name}» deleted — products remain in the catalog'
+    cat_category_deleted_toast: 'Category «{name}» deleted — products remain in the catalog',
+
+    menu_title: 'Menu',
+    menu_cloud: 'Cloud — data backup<small>Phone + PIN · Google Sheet</small>',
+    menu_refresh: 'Refresh from catalog<small>Fresh prices and locations for unbought items</small>',
+    menu_share_list: 'Share list<small>Send as text</small>',
+    menu_print_list: 'Print list<small>A4 invoice or 40×30 labels</small>',
+    menu_print_from_phone: 'Print from phone<small>Receive jobs on this computer</small>',
+    menu_currency: 'Exchange rates<small>Central Bank of Russia — dollar, yuan, lira and more</small>',
+    menu_export: 'File backup to computer<small>Backup JSON, works without the cloud</small>',
+    menu_import: 'Restore from file<small>If the cloud isn’t available</small>',
+    menu_install: 'Install on phone',
+    menu_share_app: 'Share the BDG app<small>Send a link to friends</small>',
+    menu_about: 'About the app',
+
+    install_title: 'Install on phone',
+    install_android: '<b>Android (Chrome):</b> ⋮ menu → “Add to Home screen”.',
+    install_ios: '<b>iPhone (Safari):</b> “Share” button → “Add to Home Screen”.',
+    install_note: 'The app will work just like a regular one — with an icon and offline mode.',
+    btn_got_it: 'Got it',
+
+    about_title: 'About the app',
+    about_intro: '<b>BDG</b> — a purchasing and budget planner from KIVI Market. Budget, stores and products — under control in one tap.',
+    about_more_1: 'Beyond shopping — a full business organizer: <b>Debts &amp; loans</b> with payment dates, staff <b>Schedule</b> with payroll and A4 printing, <b>Inventory</b> with purchase planning, <b>Plan</b> — to-do checklists.',
+    about_more_2: 'Data syncs across devices via the cloud, and the built-in AI assistant will remind you when it’s time to save.',
+    about_whatsapp: 'Send feedback and questions on WhatsApp',
+
+    print_list_title: 'Print list',
+    print_mode_doc: 'A4 invoice',
+    print_mode_labels: '40×30 labels',
+    print_hint_labels: 'A label is printed for each unit of the product — by the quantity below. Only products with an ID from the catalog are available.',
+    print_hint_doc: 'The invoice will include all list items with the specified quantity.',
+    btn_print: 'Print',
+    print_top_aria: 'Print list',
+    print_no_labels: 'No products to print labels for',
+    print_no_qty: 'Set the quantity to print',
+    print_invoice_title: 'Invoice',
+    print_col_item: 'Item',
+    print_col_price: 'Price',
+    print_col_qty: 'Qty',
+    print_col_sum: 'Sum',
+    print_total: 'Total: {sum}',
+    print_list_empty: 'The list is empty',
+    print_list_skipped: 'no catalog ID — skipped',
+    print_labels_to_print: 'Labels to print',
+    print_footer_total: 'Total',
+    print_generated_by: 'Generated in BDG · {date}',
+    print_label_title: 'Label: {name}',
+    print_labels_title: 'Labels ({n} pcs.)',
+
+    print_document_default_title: 'Document',
+    print_dispatch_title: 'Print',
+    print_local_now: 'Print from phone<small>Open the system print dialog here</small>',
+    print_remote_now: 'Send to computer<small>Prints wherever receiving is enabled</small>',
+    print_sending: 'Sending to computer…',
+    print_sent: 'Sent — open BDG on the computer with print receiving enabled',
+    print_receiver_title: 'Print from phone',
+    print_receiver_intro: 'Enable this on the computer next to the printer. While this tab stays open, print jobs sent from a phone will run here automatically.',
+    print_receiver_off: 'Off',
+    print_receiver_on: 'On',
+    print_receiver_need_cloud: 'Set up Cloud in the menu first — without it, the computer can’t receive jobs.',
+    print_receiver_waiting: 'Waiting for jobs from the phone — keep this tab open.',
+    print_receiver_disabled: 'Receiving is off.',
+    print_receiving_from_phone: 'Printing from phone: {title}',
+
+    curr_sheet_rates_title: 'Exchange rates',
+    aria_refresh: 'Refresh',
+    curr_updated_on: 'Central Bank of Russia on {date}',
+    curr_loading: 'Loading…',
+    curr_now: 'Now: {rate}',
+    curr_range_month: 'Month',
+    curr_range_year: 'Year',
+    curr_vpn_msg: 'Couldn’t load exchange rates. If a VPN is on, try turning it off temporarily and refresh — sorry for the inconvenience.',
+    curr_name_USD: 'US Dollar',
+    curr_name_EUR: 'Euro',
+    curr_name_CNY: 'Chinese Yuan',
+    curr_name_TRY: 'Turkish Lira',
+    curr_name_KZT: 'Kazakhstani Tenge',
+    curr_name_UZS: 'Uzbekistani Som',
+    curr_name_KGS: 'Kyrgyzstani Som',
+    curr_name_AED: 'UAE Dirham',
+    curr_name_UAH: 'Ukrainian Hryvnia',
+    curr_name_GBP: 'British Pound',
+
+    share_list_copied: 'List copied to clipboard',
+    share_pay_day: '(due on the {day}th)',
+    share_budget_line: 'Budget: {budget} · Planned: {planned}',
+    share_failed: 'Couldn’t share',
+    share_app_link_copied: 'App link copied',
+    share_app_title: 'BDG — purchase planner',
+    share_app_text: 'BDG — a purchasing and budget planner from KIVI Market. Free, works offline, installs on your phone:',
+    refresh_confirm_title: 'Refresh from catalog?',
+    refresh_confirm_text: 'Price, location and category will be updated for {n} unbought items. Bought items won’t change. Empty catalog values overwrite nothing.',
+    refresh_confirm_btn: 'Refresh',
+    refresh_all_actual: 'Already up to date — no changes',
+    refresh_updated_snack: 'Items updated: {n}',
+    export_done: 'Backup downloaded',
+    import_bad_file: 'This file doesn’t look like a BDG backup',
+    import_done: 'Data restored'
   }
 };
 function t(key) {
@@ -2892,7 +3090,7 @@ function closeSheet(id) {
 function toggleAboutMore(id, btn) {
   const open = document.getElementById(id).classList.toggle('open');
   btn.classList.toggle('open', open);
-  btn.firstChild.textContent = open ? t('btn_less') : (id === 'aboutMore' ? t('btn_show_more') : t('btn_more'));
+  btn.querySelector('span').textContent = open ? t('btn_less') : (id === 'aboutMore' ? t('btn_show_more') : t('btn_more'));
 }
 function openFabSheet() {
   if (!data().stores.length) { openStoreSheet(); return; }
@@ -3232,18 +3430,18 @@ function shareList() {
       const sum = (+it.qty || 0) * (+it.price || 0);
       lines.push((it.bought ? '  ✓ ' : '  – ') + it.name +
         ((+it.qty || 1) !== 1 ? ' ' + fmt(it.qty) + ' × ' + fmt(it.price) + ' ' + currSym() : '') +
-        ' — ' + money(sum) + (it.loc ? ' [' + it.loc + ']' : '') + (it.day ? ' (платёж ' + it.day + '-го)' : ''));
+        ' — ' + money(sum) + (it.loc ? ' [' + it.loc + ']' : '') + (it.day ? ' ' + tf('share_pay_day', { day: it.day }) : ''));
     });
     lines.push('');
   });
-  if (+d.budget) lines.push('Бюджет: ' + money(d.budget) + ' · План: ' + money(planned));
+  if (+d.budget) lines.push(tf('share_budget_line', { budget: money(d.budget), planned: money(planned) }));
   const text = lines.join('\n').trim();
   closeSheet('menuSheet');
   if (navigator.share) {
     navigator.share({ text }).catch(() => {});
   } else if (navigator.clipboard) {
-    navigator.clipboard.writeText(text).then(() => toast('Список скопирован в буфер обмена'));
-  } else toast('Не удалось поделиться');
+    navigator.clipboard.writeText(text).then(() => toast(t('share_list_copied')));
+  } else toast(t('share_failed'));
 }
 
 /* ---------- refresh unbought items from catalog ---------- */
@@ -3263,10 +3461,10 @@ function refreshFromCatalog() {
       (newCat && newCat !== (it.catId || null));
     if (diff) changes.push({ it, newPrice, newLoc, newCat });
   }));
-  if (!changes.length) { toast('Всё уже актуально — изменений нет'); return; }
+  if (!changes.length) { toast(t('refresh_all_actual')); return; }
   confirmAction(
-    'Обновить из каталога?',
-    `Цена, место и категория будут обновлены у ${changes.length} некупленных позиций. Купленные не изменятся. Пустые значения каталога ничего не затирают.`,
+    t('refresh_confirm_title'),
+    tf('refresh_confirm_text', { n: changes.length }),
     () => {
       const backup = JSON.stringify(data().stores);
       changes.forEach(c => {
@@ -3275,12 +3473,12 @@ function refreshFromCatalog() {
         if (c.newCat) c.it.catId = c.newCat;
       });
       save(); render();
-      snackbar(`Обновлено позиций: ${changes.length}`, () => {
+      snackbar(tf('refresh_updated_snack', { n: changes.length }), () => {
         data().stores = JSON.parse(backup);
         save(); render();
       });
     },
-    'Обновить', true
+    t('refresh_confirm_btn'), true
   );
 }
 
@@ -3288,11 +3486,11 @@ function refreshFromCatalog() {
 const APP_URL = 'https://ondreev.github.io/BDG/';
 function shareApp() {
   closeSheet('menuSheet');
-  const text = 'BDG — планировщик закупок и бюджета от КИВИ Маркет. Бесплатно, работает офлайн, ставится на телефон: ' + APP_URL;
+  const text = t('share_app_text') + ' ' + APP_URL;
   if (navigator.share) {
-    navigator.share({ title: 'BDG — планировщик закупок', text, url: APP_URL }).catch(() => {});
+    navigator.share({ title: t('share_app_title'), text, url: APP_URL }).catch(() => {});
   } else if (navigator.clipboard) {
-    navigator.clipboard.writeText(text).then(() => toast('Ссылка на приложение скопирована'));
+    navigator.clipboard.writeText(text).then(() => toast(t('share_app_link_copied')));
   } else toast(APP_URL);
 }
 
@@ -3305,7 +3503,7 @@ function exportData() {
   document.body.appendChild(a); a.click(); a.remove();
   setTimeout(() => URL.revokeObjectURL(a.href), 3000);
   closeSheet('menuSheet');
-  toast('Резервная копия скачана');
+  toast(t('export_done'));
 }
 function importData(input) {
   const file = input.files[0];
@@ -3315,12 +3513,12 @@ function importData(input) {
   reader.onload = () => {
     let s = tryParse(reader.result);
     if (s && Array.isArray(s.lists) && !s.version) s = migrateOld(s);
-    if (!s || !Array.isArray(s.lists) || !s.lists.length) { toast('Файл не похож на копию BDG'); return; }
+    if (!s || !Array.isArray(s.lists) || !s.lists.length) { toast(t('import_bad_file')); return; }
     sanitizeCatalogDB(s);
     state = s;
     if (!state.lists.some(l => l.id === state.currentId)) state.currentId = state.lists[0].id;
     save(); render(); closeSheet('menuSheet');
-    toast('Данные восстановлены');
+    toast(t('import_done'));
   };
   reader.readAsText(file);
 }
@@ -3479,7 +3677,7 @@ function applyPendingRemote() {
   const s = syncState();
   applyRemotePayload(pendingRemote.payload, { login: s.login, pin: s.pin, url: s.url }, pendingRemote.at);
   pendingRemote = null;
-  toast('Данные обновлены с другого устройства');
+  toast(t('remote_update_applied'));
 }
 
 function errToMsg(err) {
@@ -3502,7 +3700,7 @@ let pendingPrintTitle = '';
 // каждая функция печати сначала кладёт разметку в #printSheet/#printPageStyle, а печатает через эту точку —
 // на телефоне (если облако настроено) вместо мгновенной печати предлагаем выбор устройства
 function dispatchPrint(title) {
-  pendingPrintTitle = title || 'Документ';
+  pendingPrintTitle = title || t('print_document_default_title');
   const s = syncState();
   const isMobile = !window.matchMedia('(min-width:920px)').matches;
   if (isMobile && s.login && s.pin) openSheet('printDispatchSheet');
@@ -3529,9 +3727,9 @@ function printRemoteNow() {
     html: document.getElementById('printSheet').innerHTML
   };
   closeSheet('printDispatchSheet');
-  toast('Отправляю на компьютер…');
+  toast(t('print_sending'));
   syncCall(creds, 'print_push', payload)
-    .then(() => toast('Отправлено — откройте BDG на компьютере с включённым приёмом печати'))
+    .then(() => toast(t('print_sent')))
     .catch(err => toast(errToMsg(err)));
 }
 
@@ -3563,8 +3761,8 @@ function renderPrintReceiverSheet() {
   document.getElementById('prOff').classList.toggle('on', !on);
   const s = syncState();
   document.getElementById('printReceiverStatus').textContent = (!s.login || !s.pin)
-    ? 'Сначала настройте Облако в меню — без него компьютер не сможет получать задания.'
-    : (on ? 'Ждём заданий с телефона — держите эту вкладку открытой.' : 'Приём выключен.');
+    ? t('print_receiver_need_cloud')
+    : (on ? t('print_receiver_waiting') : t('print_receiver_disabled'));
 }
 function pollPrintJob() {
   const s = syncState();
@@ -3575,7 +3773,7 @@ function pollPrintJob() {
       if (!res.job) return;
       document.getElementById('printPageStyle').textContent = res.job.pageStyle;
       document.getElementById('printSheet').innerHTML = res.job.html;
-      toast(`Печатаю с телефона: ${res.job.title}`);
+      toast(tf('print_receiving_from_phone', { title: res.job.title }));
       printNow();
     })
     .catch(() => {});
@@ -3585,12 +3783,11 @@ function pollPrintJob() {
 const CBR_URL = 'https://www.cbr-xml-daily.ru/daily_json.js';
 const CBR_CACHE_KEY = 'bdgCbrCache';
 const CBR_MAX_AGE = 6 * 3600 * 1000; // не дёргаем сервер чаще раза в 6 часов
-const CBR_VPN_MSG = 'Не удалось загрузить курсы. Если включён VPN — попробуйте временно отключить его и обновить, приносим свои извинения за неудобства.';
-// код → отображаемое имя; порядок задаёт порядок строк в списке
+// код → ключ перевода названия; порядок задаёт порядок строк в списке
 const CBR_CODES = [
-  ['USD', 'Доллар США'], ['EUR', 'Евро'], ['CNY', 'Китайский юань'],
-  ['TRY', 'Турецкая лира'], ['KZT', 'Казахстанский тенге'], ['UZS', 'Узбекский сум'],
-  ['KGS', 'Киргизский сом'], ['AED', 'Дирхам ОАЭ'], ['UAH', 'Украинская гривна'], ['GBP', 'Фунт стерлингов']
+  ['USD', 'curr_name_USD'], ['EUR', 'curr_name_EUR'], ['CNY', 'curr_name_CNY'],
+  ['TRY', 'curr_name_TRY'], ['KZT', 'curr_name_KZT'], ['UZS', 'curr_name_UZS'],
+  ['KGS', 'curr_name_KGS'], ['AED', 'curr_name_AED'], ['UAH', 'curr_name_UAH'], ['GBP', 'curr_name_GBP']
 ];
 function openCurrencySheet() {
   closeSheet('menuSheet');
@@ -3608,7 +3805,7 @@ function loadCurrencyRates(force) {
     renderCurrencyRates();
   }).catch(() => {
     renderCurrencyRates();
-    if (!cache) document.getElementById('currUpdated').textContent = CBR_VPN_MSG;
+    if (!cache) document.getElementById('currUpdated').textContent = t('curr_vpn_msg');
   }).finally(() => { if (btn) btn.classList.remove('spin'); });
 }
 function renderCurrTopBadge() {
@@ -3621,13 +3818,13 @@ function renderCurrencyRates() {
   const rowsEl = document.getElementById('currRows');
   renderCurrTopBadge();
   if (!cache || !cache.valute) {
-    document.getElementById('currUpdated').textContent = 'Загрузка…';
+    document.getElementById('currUpdated').textContent = t('curr_loading');
     rowsEl.innerHTML = '';
     return;
   }
   document.getElementById('currUpdated').textContent =
-    'ЦБ РФ на ' + new Date(cache.date).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' });
-  const rows = CBR_CODES.map(([code, name]) => {
+    tf('curr_updated_on', { date: new Date(cache.date).toLocaleDateString(appLang === 'en' ? 'en-GB' : 'ru-RU', { day: 'numeric', month: 'long' }) });
+  const rows = CBR_CODES.map(([code, nameKey]) => {
     const v = cache.valute[code];
     if (!v) return null;
     const rate = v.Value / v.Nominal;
@@ -3640,7 +3837,7 @@ function renderCurrencyRates() {
       <button type="button" class="curr-row" onclick="openCurrencyDetail('${code}')">
         <div class="curr-code">${esc(code)}</div>
         <div class="curr-info">
-          <div class="curr-name">${esc(name)}</div>
+          <div class="curr-name">${esc(t(nameKey))}</div>
         </div>
         <div class="curr-right">
           <div class="curr-rate">${fmtRate(rate)} ₽</div>
@@ -3648,7 +3845,7 @@ function renderCurrencyRates() {
         </div>
       </button>`;
   }).filter(Boolean);
-  rowsEl.innerHTML = rows.length ? rows.join('') : `<div class="curr-empty">${CBR_VPN_MSG}</div>`;
+  rowsEl.innerHTML = rows.length ? rows.join('') : `<div class="curr-empty">${t('curr_vpn_msg')}</div>`;
 }
 
 /* ---------- динамика курса за месяц/год: несколько архивных снимков ЦБ, лёгкий SVG-график ---------- */
@@ -3675,9 +3872,9 @@ function openCurrencyDetail(code) {
   document.getElementById('currRangeYear').classList.remove('on');
   const cache = tryParse(localStorage.getItem(CBR_CACHE_KEY));
   const v = cache && cache.valute && cache.valute[code];
-  const name = (CBR_CODES.find(c => c[0] === code) || [code, code])[1];
-  document.getElementById('currDetailTitle').textContent = code + ' — ' + name;
-  document.getElementById('currDetailSub').textContent = v ? 'Сейчас: ' + fmtRate(v.Value / v.Nominal) + ' ₽' : '';
+  const nameKey = (CBR_CODES.find(c => c[0] === code) || [code, null])[1];
+  document.getElementById('currDetailTitle').textContent = code + ' — ' + (nameKey ? t(nameKey) : code);
+  document.getElementById('currDetailSub').textContent = v ? tf('curr_now', { rate: fmtRate(v.Value / v.Nominal) + ' ₽' }) : '';
   openSheet('currencyDetailSheet');
   loadCurrencyHistory();
 }
@@ -3691,7 +3888,7 @@ function loadCurrencyHistory() {
   const code = currDetailCode;
   const gen = ++window.__currHistGen; // если пользователь быстро переключит Месяц/Год, старый ответ не перерисует график
   const status = document.getElementById('currChartStatus');
-  status.textContent = 'Загрузка…';
+  status.textContent = t('curr_loading');
   document.getElementById('currChart').innerHTML = '';
   const dates = sampleDates(currDetailRange);
   Promise.allSettled(dates.map(d => fetch(archiveUrl(d)).then(r => r.ok ? r.json() : null).then(json => ({ date: d, json })).catch(() => null)))
@@ -3701,9 +3898,9 @@ function loadCurrencyHistory() {
         .map(r => r.status === 'fulfilled' ? r.value : null)
         .filter(r => r && r.json && r.json.Valute && r.json.Valute[code])
         .map(r => ({ date: r.date, rate: r.json.Valute[code].Value / r.json.Valute[code].Nominal }));
-      if (points.length < 2) { status.textContent = CBR_VPN_MSG; return; }
+      if (points.length < 2) { status.textContent = t('curr_vpn_msg'); return; }
       drawCurrChart(points);
-      const fmtD = d => d.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' });
+      const fmtD = d => d.toLocaleDateString(appLang === 'en' ? 'en-GB' : 'ru-RU', { day: 'numeric', month: 'short' });
       status.textContent = fmtD(points[0].date) + ' — ' + fmtD(points[points.length - 1].date);
     });
 }
@@ -4952,7 +5149,7 @@ function printDoc(orientation, title, subtitle, bodyHtml) {
         <div style="font-size:13px;font-weight:700;color:#64748B">BDG · ${subtitle}</div>
       </div>
       ${bodyHtml}
-      <div style="margin-top:12px;font-size:11px;color:#94A3B8;font-weight:600">Сформировано в BDG · ${new Date().toLocaleDateString('ru-RU')}</div>
+      <div style="margin-top:12px;font-size:11px;color:#94A3B8;font-weight:600">${tf('print_generated_by', { date: new Date().toLocaleDateString(appLang === 'en' ? 'en-GB' : 'ru-RU') })}</div>
     </div>`;
   dispatchPrint(title);
 }
@@ -4975,7 +5172,7 @@ function printLabel(id) {
   qr.make();
   document.getElementById('printPageStyle').textContent = `@media print{@page{size:40mm 30mm;margin:0}}`;
   document.getElementById('printSheet').innerHTML = labelHtml(p.name, p.sku, qr.createDataURL(6, 2));
-  dispatchPrint('Этикетка: ' + p.name);
+  dispatchPrint(tf('print_label_title', { name: p.name }));
 }
 function printLabelsBatch(items) {
   document.getElementById('printPageStyle').textContent = `@media print{@page{size:40mm 30mm;margin:0}}`;
@@ -4990,8 +5187,8 @@ function printLabelsBatch(items) {
   document.getElementById('printSheet').innerHTML = pages
     .map((html, i) => i < pages.length - 1 ? `<div style="page-break-after:always">${html}</div>` : html)
     .join('');
-  const total = items.reduce((t, it) => t + it.qty, 0);
-  dispatchPrint(`Этикетки (${total} шт.)`);
+  const total = items.reduce((sum, it) => sum + it.qty, 0);
+  dispatchPrint(tf('print_labels_title', { n: total }));
 }
 
 /* ---------- print current purchase list: A4 invoice or batch 40x30 labels ---------- */
@@ -5024,8 +5221,8 @@ function setPrintListMode(m) {
 function renderPrintListRows() {
   const rows = printListRowsData();
   document.getElementById('printListHint').textContent = printListMode === 'labels'
-    ? 'Этикетка печатается для каждой единицы товара — по количеству ниже. Доступны только товары с ID из каталога.'
-    : 'В накладную попадут все товары из списка с указанным количеством.';
+    ? t('print_hint_labels')
+    : t('print_hint_doc');
   const usable = printListMode === 'labels' ? rows.filter(r => r.sku) : rows;
   const skipped = printListMode === 'labels' ? rows.filter(r => !r.sku) : [];
   document.getElementById('printListRows').innerHTML =
@@ -5038,8 +5235,8 @@ function renderPrintListRows() {
         <input type="number" min="0" inputmode="numeric" class="plr-qty" autocomplete="off"
           value="${printListQty[r.it.id] ?? 0}"
           oninput="printListQty['${r.it.id}']=Math.max(0,+this.value||0);updatePrintListFooter()">
-      </div>`).join('') : '<div class="empty-items">Список пуст</div>') +
-    (skipped.length ? `<div class="plr-row skip"><div class="plr-body"><div class="plr-name" style="white-space:normal">${skipped.map(r => esc(r.it.name)).join(', ')}</div><div class="plr-meta">нет ID в каталоге — пропущены</div></div></div>` : '');
+      </div>`).join('') : `<div class="empty-items">${t('print_list_empty')}</div>`) +
+    (skipped.length ? `<div class="plr-row skip"><div class="plr-body"><div class="plr-name" style="white-space:normal">${skipped.map(r => esc(r.it.name)).join(', ')}</div><div class="plr-meta">${t('print_list_skipped')}</div></div></div>` : '');
   updatePrintListFooter();
 }
 function updatePrintListFooter() {
@@ -5047,11 +5244,11 @@ function updatePrintListFooter() {
   const usable = printListMode === 'labels' ? rows.filter(r => r.sku) : rows;
   const footer = document.getElementById('printListFooter');
   if (printListMode === 'labels') {
-    const count = usable.reduce((t, r) => t + (printListQty[r.it.id] || 0), 0);
-    footer.innerHTML = `<span>Этикеток к печати</span><span>${count}</span>`;
+    const count = usable.reduce((sum, r) => sum + (printListQty[r.it.id] || 0), 0);
+    footer.innerHTML = `<span>${t('print_labels_to_print')}</span><span>${count}</span>`;
   } else {
-    const total = usable.reduce((t, r) => t + (printListQty[r.it.id] || 0) * (+r.it.price || 0), 0);
-    footer.innerHTML = `<span>Итого</span><span>${money(total)}</span>`;
+    const total = usable.reduce((sum, r) => sum + (printListQty[r.it.id] || 0) * (+r.it.price || 0), 0);
+    footer.innerHTML = `<span>${t('print_footer_total')}</span><span>${money(total)}</span>`;
   }
 }
 function executePrintList() {
@@ -5059,11 +5256,11 @@ function executePrintList() {
   if (printListMode === 'labels') {
     const items = rows.filter(r => r.sku && (printListQty[r.it.id] || 0) > 0)
       .map(r => ({ name: r.it.name, sku: r.sku, qty: printListQty[r.it.id] }));
-    if (!items.length) { toast('Нет товаров для печати этикеток'); return; }
+    if (!items.length) { toast(t('print_no_labels')); return; }
     printLabelsBatch(items);
   } else {
     const picks = rows.filter(r => (printListQty[r.it.id] || 0) > 0);
-    if (!picks.length) { toast('Укажите количество для печати'); return; }
+    if (!picks.length) { toast(t('print_no_qty')); return; }
     let total = 0;
     const body = picks.map(r => {
       const qty = printListQty[r.it.id];
@@ -5076,14 +5273,14 @@ function executePrintList() {
         <td style="${PTD};text-align:right;font-weight:700">${sum ? money(sum) : ''}</td>
       </tr>`;
     }).join('');
-    printDoc('portrait', 'Накладная', list().name, `
+    printDoc('portrait', t('print_invoice_title'), list().name, `
       <table style="border-collapse:collapse;width:100%">
         <tr>
-          <th style="${PTH};text-align:left">Товар</th><th style="${PTH}">Цена</th>
-          <th style="${PTH}">Кол-во</th><th style="${PTH}">Сумма</th>
+          <th style="${PTH};text-align:left">${t('print_col_item')}</th><th style="${PTH}">${t('print_col_price')}</th>
+          <th style="${PTH}">${t('print_col_qty')}</th><th style="${PTH}">${t('print_col_sum')}</th>
         </tr>${body}
       </table>
-      <div style="margin-top:12px;font-size:15px;font-weight:900">Итого: ${money(total)}</div>`);
+      <div style="margin-top:12px;font-size:15px;font-weight:900">${tf('print_total', { sum: money(total) })}</div>`);
   }
   closeSheet('printListSheet');
 }
