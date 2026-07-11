@@ -116,11 +116,18 @@ function doPost(e) {
       // получателя аутентифицировать нечем — отправитель знает только его номер телефона,
       // поэтому это "почтовый ящик": положить может любой, а прочитать/удалить — только
       // сам получатель своей парой логин+PIN. Отправитель аутентифицируется как обычно.
+      // toLogin === 'ALL' — публичное предложение "всем": его видят все аккаунты, а
+      // строка на сервере не удаляется по одиночному accept/decline — только отправитель
+      // мог бы её убрать (такого действия пока нет), каждый получатель просто прячет
+      // её у себя локально (state.dismissedShares), поэтому share_remove для него не зовём.
       if (req.action === 'share_push') {
         if (row === -1) return out({ ok: false, error: 'not_found' });
         if (getPin(sh, row) !== pin) return out({ ok: false, error: 'wrong_pin' });
-        var toLogin = String((req.payload && req.payload.toLogin) || '').replace(/\D/g, '');
-        if (!/^\d{10,15}$/.test(toLogin)) return out({ ok: false, error: 'bad_to_login' });
+        var rawTo = String((req.payload && req.payload.toLogin) || '');
+        var toLogin = rawTo === 'ALL' ? 'ALL' : rawTo.replace(/\D/g, '');
+        if (toLogin !== 'ALL' && !/^\d{10,15}$/.test(toLogin)) return out({ ok: false, error: 'bad_to_login' });
+        var title = String((req.payload && req.payload.title) || '').slice(0, 80);
+        var summary = String((req.payload && req.payload.summary) || '').slice(0, 200);
         var sjson = JSON.stringify({ items: (req.payload && req.payload.items) || [] });
         if (sjson.length > CHUNK * SHARE_MAXCH) return out({ ok: false, error: 'too_big' });
         var schunks = [];
@@ -129,7 +136,7 @@ function doPost(e) {
         var ssh = getShareSheet();
         var shareId = Utilities.getUuid();
         var itemCount = (req.payload && req.payload.items && req.payload.items.length) || 0;
-        ssh.appendRow([shareId, login, toLogin, new Date().toISOString(), itemCount].concat(schunks));
+        ssh.appendRow([shareId, login, toLogin, new Date().toISOString(), itemCount, title, summary].concat(schunks));
         return out({ ok: true, id: shareId });
       }
 
@@ -140,10 +147,14 @@ function doPost(e) {
         var last2 = ssh2.getLastRow();
         var shares = [];
         if (last2 >= 2) {
-          var rows2 = ssh2.getRange(2, 1, last2 - 1, 5).getDisplayValues();
+          var rows2 = ssh2.getRange(2, 1, last2 - 1, 7).getDisplayValues();
           for (var m = 0; m < rows2.length; m++) {
-            if (String(rows2[m][2]).replace(/\D/g, '') === login) {
-              shares.push({ id: rows2[m][0], fromLogin: rows2[m][1], created: rows2[m][3], itemCount: +rows2[m][4] || 0 });
+            var rowToLogin = String(rows2[m][2]);
+            if (rowToLogin.replace(/\D/g, '') === login || rowToLogin === 'ALL') {
+              shares.push({
+                id: rows2[m][0], fromLogin: rows2[m][1], toLogin: rowToLogin, created: rows2[m][3],
+                itemCount: +rows2[m][4] || 0, title: rows2[m][5] || '', summary: rows2[m][6] || ''
+              });
             }
           }
         }
@@ -155,7 +166,7 @@ function doPost(e) {
         if (getPin(sh, row) !== pin) return out({ ok: false, error: 'wrong_pin' });
         var frow = findShareRowForRecipient(getShareSheet(), String((req.payload && req.payload.id) || ''), login);
         if (frow === -1) return out({ ok: false, error: 'share_not_found' });
-        var fvals = getShareSheet().getRange(frow, 6, 1, SHARE_MAXCH).getDisplayValues()[0];
+        var fvals = getShareSheet().getRange(frow, 8, 1, SHARE_MAXCH).getDisplayValues()[0];
         var fdata = fvals.join('');
         return out({ ok: true, payload: fdata ? JSON.parse(fdata) : { items: [] } });
       }
@@ -221,20 +232,22 @@ function getShareSheet() {
   var sh = ss.getSheetByName(SHARE_SHEET_NAME);
   if (!sh) {
     sh = ss.insertSheet(SHARE_SHEET_NAME);
-    var head = ['id', 'fromLogin', 'toLogin', 'created', 'itemCount'];
+    var head = ['id', 'fromLogin', 'toLogin', 'created', 'itemCount', 'title', 'summary'];
     for (var i = 1; i <= SHARE_MAXCH; i++) head.push('chunk' + i);
     sh.appendRow(head);
   }
   return sh;
 }
 
-// строка отдаётся/удаляется только тому, кому адресована (toLogin), это и есть проверка доступа
+// строка отдаётся тому, кому адресована (toLogin), либо любому, если это публичное
+// предложение "всем" (toLogin === 'ALL') — это и есть проверка доступа
 function findShareRowForRecipient(sh, id, toLogin) {
   var last = sh.getLastRow();
   if (last < 2 || !id) return -1;
   var vals = sh.getRange(2, 1, last - 1, 3).getDisplayValues();
   for (var i = 0; i < vals.length; i++) {
-    if (String(vals[i][0]) === id && String(vals[i][2]).replace(/\D/g, '') === toLogin) return i + 2;
+    var rowTo = String(vals[i][2]);
+    if (String(vals[i][0]) === id && (rowTo.replace(/\D/g, '') === toLogin || rowTo === 'ALL')) return i + 2;
   }
   return -1;
 }
