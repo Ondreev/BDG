@@ -80,11 +80,26 @@ input,select{font-family:inherit}
 }
 .icon-btn:active{transform:scale(.92)}
 .print-top-btn{
-  display:none;align-items:center;gap:7px;border:none;background:var(--card);
-  box-shadow:var(--shadow);border-radius:14px;padding:0 16px;height:44px;font-size:13.5px;font-weight:800;
-  cursor:pointer;color:var(--text);flex:none;transition:transform .12s;
+  display:none;align-items:center;gap:7px;border:none;
+  background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;
+  box-shadow:0 6px 16px rgba(99,102,241,.35);border-radius:14px;padding:0 16px;height:44px;font-size:13.5px;font-weight:800;
+  cursor:pointer;flex:none;transition:transform .12s,filter .12s;
 }
 .print-top-btn:active{transform:scale(.96)}
+.print-primary-btn{
+  display:none;align-items:center;gap:7px;border:none;background:var(--card);
+  box-shadow:var(--shadow);border-radius:14px;padding:0 14px;height:44px;font-size:13.5px;font-weight:800;
+  cursor:pointer;color:var(--muted);flex:none;transition:transform .12s,background .15s,color .15s,box-shadow .15s;
+}
+.print-primary-btn:active{transform:scale(.96)}
+.print-primary-btn .chk{
+  width:17px;height:17px;border-radius:99px;flex:none;border:2px solid var(--line);
+  display:flex;align-items:center;justify-content:center;transition:background .15s,border-color .15s;
+}
+.print-primary-btn .chk svg{opacity:0;transition:opacity .15s}
+.print-primary-btn.on{background:var(--green);color:#fff;box-shadow:0 6px 16px rgba(16,185,129,.4)}
+.print-primary-btn.on .chk{background:rgba(255,255,255,.25);border-color:#fff}
+.print-primary-btn.on .chk svg{opacity:1}
 .curr-top-btn{
   display:flex;align-items:center;gap:5px;border:none;background:var(--card);
   box-shadow:var(--shadow);border-radius:14px;padding:0 12px;height:44px;font-size:13.5px;font-weight:800;
@@ -789,6 +804,9 @@ input[type=file]{display:none}
 @media(hover:hover){
   .nav-btn:hover{color:var(--accent)}
   .print-btn:hover{color:var(--accent)}
+  .print-top-btn:hover{filter:brightness(1.06)}
+  .print-primary-btn:hover{background:var(--line)}
+  .print-primary-btn.on:hover{filter:brightness(1.06);background:var(--green)}
   .slot-chip:hover{filter:brightness(.95)}
   .emp-cell:hover .emp-name{color:var(--accent)}
   .inv-del:hover{color:var(--red)}
@@ -817,6 +835,8 @@ input[type=file]{display:none}
   .topbar{padding:18px 4px 16px}
   #topNavSlot{flex:1;display:flex;justify-content:center;min-width:0}
   .print-top-btn.view-shop{display:flex}
+  .print-primary-btn.view-shop{display:flex}
+  #mobilePrintBtn{display:none !important}
   .topbar .bottom-nav{
     position:static;transform:none;left:auto;bottom:auto;max-width:none;
     background:none;backdrop-filter:none;-webkit-backdrop-filter:none;box-shadow:none;padding:0;
@@ -856,6 +876,10 @@ input[type=file]{display:none}
     </div>
     <div id="topNavSlot"></div>
     <div style="display:flex;gap:8px">
+      <button class="print-primary-btn view-shop" id="printPrimaryBtn" onclick="togglePrintPrimary()" aria-label="Сделать этот компьютер основным для печати">
+        <span class="chk"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 12.5l5 5 10-11"/></svg></span>
+        <span data-i18n="print_primary_btn">Основной</span>
+      </button>
       <button class="print-top-btn view-shop" id="printTopBtn" onclick="openPrintListSheet()" aria-label="Печать списка" data-i18n-aria="print_top_aria">
         <span class="ic" data-icon="printer"></span><span data-i18n="btn_print">Печать</span>
       </button>
@@ -934,6 +958,11 @@ input[type=file]{display:none}
 
   <div class="main">
   <div id="stores"></div>
+
+  <button class="btn btn-primary" id="mobilePrintBtn" style="margin-top:14px;display:none" onclick="openPrintListSheet()">
+    <span class="ic" data-icon="printer"></span>
+    <span data-i18n="print_send_btn">Отправить на печать</span>
+  </button>
 
   <div class="empty-state" id="emptyState" onclick="openStoreSheet()" role="button">
     <div class="art">
@@ -2166,6 +2195,10 @@ const I18N = {
     print_hint_doc: 'В накладную попадут все товары из списка с указанным количеством.',
     btn_print: 'Печать',
     print_top_aria: 'Печать списка',
+    print_send_btn: 'Отправить на печать',
+    print_primary_btn: 'Основной',
+    print_primary_aria_on: 'Этот компьютер основной для печати — нажмите, чтобы отключить',
+    print_primary_aria_off: 'Сделать этот компьютер основным для печати',
     print_no_labels: 'Нет товаров для печати этикеток',
     print_no_qty: 'Укажите количество для печати',
     print_invoice_title: 'Накладная',
@@ -2647,6 +2680,10 @@ const I18N = {
     print_hint_doc: 'The invoice will include all list items with the specified quantity.',
     btn_print: 'Print',
     print_top_aria: 'Print list',
+    print_send_btn: 'Send to print',
+    print_primary_btn: 'Primary',
+    print_primary_aria_on: 'This computer receives print jobs — tap to turn off',
+    print_primary_aria_off: 'Make this computer the print receiver',
     print_no_labels: 'No products to print labels for',
     print_no_qty: 'Set the quantity to print',
     print_invoice_title: 'Invoice',
@@ -3128,6 +3165,10 @@ const I18N = {
     print_hint_doc: 'Die Rechnung enthält alle Listenartikel mit der angegebenen Menge.',
     btn_print: 'Drucken',
     print_top_aria: 'Liste drucken',
+    print_send_btn: 'Zum Drucken senden',
+    print_primary_btn: 'Primär',
+    print_primary_aria_on: 'Dieser Computer empfängt Druckaufträge — zum Ausschalten tippen',
+    print_primary_aria_off: 'Diesen Computer als Druckempfänger festlegen',
     print_no_labels: 'Keine Produkte zum Drucken von Etiketten',
     print_no_qty: 'Lege die zu druckende Menge fest',
     print_invoice_title: 'Rechnung',
@@ -3609,6 +3650,10 @@ const I18N = {
     print_hint_doc: 'La factura incluirá todos los artículos de la lista con la cantidad indicada.',
     btn_print: 'Imprimir',
     print_top_aria: 'Imprimir lista',
+    print_send_btn: 'Enviar a impresión',
+    print_primary_btn: 'Principal',
+    print_primary_aria_on: 'Este ordenador recibe trabajos de impresión — toca para desactivar',
+    print_primary_aria_off: 'Convertir este ordenador en el receptor de impresión',
     print_no_labels: 'No hay productos para imprimir etiquetas',
     print_no_qty: 'Define la cantidad a imprimir',
     print_invoice_title: 'Factura',
@@ -4090,6 +4135,10 @@ const I18N = {
     print_hint_doc: 'La facture inclura tous les articles de la liste avec la quantité indiquée.',
     btn_print: 'Imprimer',
     print_top_aria: 'Imprimer la liste',
+    print_send_btn: 'Envoyer à l’impression',
+    print_primary_btn: 'Principal',
+    print_primary_aria_on: 'Cet ordinateur reçoit les travaux d’impression — appuyez pour désactiver',
+    print_primary_aria_off: 'Définir cet ordinateur comme récepteur d’impression',
     print_no_labels: 'Aucun produit pour imprimer des étiquettes',
     print_no_qty: 'Définissez la quantité à imprimer',
     print_invoice_title: 'Facture',
@@ -4571,6 +4620,10 @@ const I18N = {
     print_hint_doc: '发票将包含清单中所有商品及指定数量。',
     btn_print: '打印',
     print_top_aria: '打印清单',
+    print_send_btn: '发送打印',
+    print_primary_btn: '主设备',
+    print_primary_aria_on: '此电脑正在接收打印任务 — 点击关闭',
+    print_primary_aria_off: '将此电脑设为打印接收设备',
     print_no_labels: '没有可打印标签的商品',
     print_no_qty: '请设置要打印的数量',
     print_invoice_title: '发票',
@@ -5052,6 +5105,10 @@ const I18N = {
     print_hint_doc: 'Hóa đơn sẽ bao gồm tất cả sản phẩm trong danh sách với số lượng đã chỉ định.',
     btn_print: 'In',
     print_top_aria: 'In danh sách',
+    print_send_btn: 'Gửi đi in',
+    print_primary_btn: 'Chính',
+    print_primary_aria_on: 'Máy tính này đang nhận lệnh in — chạm để tắt',
+    print_primary_aria_off: 'Đặt máy tính này làm thiết bị nhận lệnh in',
     print_no_labels: 'Không có sản phẩm để in nhãn',
     print_no_qty: 'Hãy đặt số lượng cần in',
     print_invoice_title: 'Hóa đơn',
@@ -5533,6 +5590,10 @@ const I18N = {
     print_hint_doc: 'Hisob-fakturaga ro‘yxatdagi barcha mahsulotlar belgilangan miqdorda kiritiladi.',
     btn_print: 'Chop etish',
     print_top_aria: 'Ro‘yxatni chop etish',
+    print_send_btn: 'Chop etishga yuborish',
+    print_primary_btn: 'Asosiy',
+    print_primary_aria_on: 'Bu kompyuter chop etish buyurtmalarini qabul qilmoqda — o‘chirish uchun bosing',
+    print_primary_aria_off: 'Bu kompyuterni chop etishni qabul qiluvchi qiling',
     print_no_labels: 'Yorliq chop etish uchun mahsulot yo‘q',
     print_no_qty: 'Chop etish miqdorini belgilang',
     print_invoice_title: 'Hisob-faktura',
@@ -6014,6 +6075,10 @@ const I18N = {
     print_hint_doc: 'Накладнойго тизмедеги бардык товарлар көрсөтүлгөн санда киргизилет.',
     btn_print: 'Басып чыгаруу',
     print_top_aria: 'Тизмени басып чыгаруу',
+    print_send_btn: 'Басып чыгарууга жөнөтүү',
+    print_primary_btn: 'Негизги',
+    print_primary_aria_on: 'Бул компьютер басып чыгаруу тапшырмаларын кабыл алууда — өчүрүү үчүн басыңыз',
+    print_primary_aria_off: 'Бул компьютерди басып чыгарууну кабыл алуучу кылуу',
     print_no_labels: 'Этикетка басып чыгаруу үчүн товар жок',
     print_no_qty: 'Басып чыгаруу санын коюңуз',
     print_invoice_title: 'Накладной',
@@ -6495,6 +6560,10 @@ const I18N = {
     print_hint_doc: 'Фактура ҳамаи маҳсулоти рӯйхатро бо миқдори таъиншуда дар бар мегирад.',
     btn_print: 'Чоп кардан',
     print_top_aria: 'Чопи рӯйхат',
+    print_send_btn: 'Фиристодан ба чоп',
+    print_primary_btn: 'Асосӣ',
+    print_primary_aria_on: 'Ин компютер супоришҳои чопро қабул мекунад — барои хомӯш кардан пахш кунед',
+    print_primary_aria_off: 'Ин компютерро қабулкунандаи чоп кунед',
     print_no_labels: 'Барои чопи этикетка маҳсулот нест',
     print_no_qty: 'Миқдори чопро таъин кунед',
     print_invoice_title: 'Фактура',
@@ -6976,6 +7045,10 @@ const I18N = {
     print_hint_doc: 'ინვოისში შევა სიის ყველა პროდუქტი მითითებული რაოდენობით.',
     btn_print: 'ბეჭდვა',
     print_top_aria: 'სიის ბეჭდვა',
+    print_send_btn: 'ბეჭდვაზე გაგზავნა',
+    print_primary_btn: 'მთავარი',
+    print_primary_aria_on: 'ეს კომპიუტერი იღებს ბეჭდვის დავალებებს — შეეხეთ გამოსართავად',
+    print_primary_aria_off: 'ამ კომპიუტერის ბეჭდვის მიმღებად დაყენება',
     print_no_labels: 'ეტიკეტების დასაბეჭდად პროდუქტი არ არის',
     print_no_qty: 'დააყენეთ დასაბეჭდი რაოდენობა',
     print_invoice_title: 'ინვოისი',
@@ -7457,6 +7530,10 @@ const I18N = {
     print_hint_doc: 'Հաշիվ-ապրանքագիրը կներառի ցանկի բոլոր ապրանքները նշված քանակով։',
     btn_print: 'Տպել',
     print_top_aria: 'Տպել ցանկը',
+    print_send_btn: 'Ուղարկել տպելու',
+    print_primary_btn: 'Հիմնական',
+    print_primary_aria_on: 'Այս համակարգիչն ընդունում է տպման առաջադրանքները — հպեք անջատելու համար',
+    print_primary_aria_off: 'Դարձնել այս համակարգիչը տպման ընդունիչ',
     print_no_labels: 'Պիտակներ տպելու համար ապրանք չկա',
     print_no_qty: 'Սահմանեք տպելու քանակը',
     print_invoice_title: 'Հաշիվ-ապրանքագիր',
@@ -7938,6 +8015,10 @@ const I18N = {
     print_hint_doc: 'Ахьӡынҵа аҟны зегь апродуктқәа рыҟоуп.',
     btn_print: 'Апечать',
     print_top_aria: 'Ахьӡынҵа апечать',
+    print_send_btn: 'Апечать аныргара',
+    print_primary_btn: 'Иреиҳау',
+    print_primary_aria_on: 'Ари акомпьютер апечать аусқәа рхыркуеит — иаԥыхразы шәнажәал',
+    print_primary_aria_off: 'Ари акомпьютер апечать ду аиашьуара',
     print_no_labels: 'Этикетқәа рзы апродукт ыҟаӡам',
     print_no_qty: 'Апечать аԥхьаӡара иҟаҵа',
     print_invoice_title: 'Ахьӡынҵа',
@@ -8195,6 +8276,7 @@ function applyI18n() {
   const budgetSym = document.getElementById('budgetCurSym');
   if (budgetSym) budgetSym.textContent = currSym();
   document.title = t('page_title');
+  renderPrintReceiverSheet();
 }
 function renderLangTopBadge() {
   const l = LANGUAGES.find(x => x.code === appLang) || LANGUAGES[0];
@@ -8586,6 +8668,7 @@ function renderStores() {
   const cont = document.getElementById('stores');
   const hasStores = d.stores.length > 0;
   document.getElementById('emptyState').style.display = hasStores ? 'none' : 'block';
+  document.getElementById('mobilePrintBtn').style.display = hasStores ? 'flex' : 'none';
 
   cont.innerHTML = d.stores.map(s => {
     const subtotal = s.items.reduce((t, it) => t + (+it.qty || 0) * (+it.price || 0), 0);
@@ -9389,6 +9472,11 @@ function setPrintReceiver(on) {
   renderPrintReceiverSheet();
   if (on) startPrintReceiver(); else stopPrintReceiver();
 }
+function togglePrintPrimary() {
+  const s = syncState();
+  if (!s.login || !s.pin) { openPrintReceiverSheet(); return; }
+  setPrintReceiver(!printReceiverOn());
+}
 function openPrintReceiverSheet() {
   closeSheet('menuSheet');
   renderPrintReceiverSheet();
@@ -9402,6 +9490,9 @@ function renderPrintReceiverSheet() {
   document.getElementById('printReceiverStatus').textContent = (!s.login || !s.pin)
     ? t('print_receiver_need_cloud')
     : (on ? t('print_receiver_waiting') : t('print_receiver_disabled'));
+  const primaryBtn = document.getElementById('printPrimaryBtn');
+  primaryBtn.classList.toggle('on', on);
+  primaryBtn.setAttribute('aria-label', t(on ? 'print_primary_aria_on' : 'print_primary_aria_off'));
 }
 function pollPrintJob() {
   const s = syncState();
