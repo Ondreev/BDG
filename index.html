@@ -1437,6 +1437,10 @@ input[type=file]{display:none}
       <button id="shmCat" onclick="setShareMode('cat')" data-i18n="share_mode_cat">По категории</button>
       <button id="shmAll" onclick="setShareMode('all')" data-i18n="share_mode_all">Все</button>
     </div>
+    <div class="search-wrap" id="shareSearchWrap" style="display:none">
+      <span class="sic"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="6.5"/><path d="M20.2 20.2l-4.6-4.6"/></svg></span>
+      <input id="shareSearch" type="text" placeholder="Название, цена или категория" data-i18n-ph="cat_search_ph" autocomplete="off" oninput="renderShareCatalogSheet()">
+    </div>
     <div class="chips" id="shareCatChips" style="display:none"></div>
     <div id="shareRows" style="max-height:44vh;overflow-y:auto"></div>
     <p style="color:var(--muted);font-size:13px;margin:10px 4px" id="shareCountText"></p>
@@ -1475,6 +1479,22 @@ input[type=file]{display:none}
     <h2 data-i18n="incoming_shares_title">Входящие товары</h2>
     <p style="color:var(--muted);font-size:13.5px;margin:0 0 12px" data-i18n="incoming_shares_sub">Примите — товары добавятся в каталог в категорию «Принятые»</p>
     <div id="incomingSharesRows"></div>
+  </div>
+</div>
+
+<div class="sheet-wrap" id="shareReviewSheet"><div class="backdrop" onclick="closeSheet('shareReviewSheet')"></div>
+  <div class="sheet">
+    <div class="grab"></div>
+    <h2 data-i18n="share_review_title">Выберите нужные товары</h2>
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin:0 0 10px">
+      <p style="color:var(--muted);font-size:13.5px;margin:0" id="shareReviewCount"></p>
+      <div style="display:flex;gap:14px;flex:none">
+        <button type="button" onclick="setShareReviewAll(true)" style="border:none;background:none;color:var(--accent);font-size:13px;font-weight:800;cursor:pointer;padding:0" data-i18n="share_review_all_btn">Все</button>
+        <button type="button" onclick="setShareReviewAll(false)" style="border:none;background:none;color:var(--muted);font-size:13px;font-weight:800;cursor:pointer;padding:0" data-i18n="share_review_none_btn">Ничего</button>
+      </div>
+    </div>
+    <div id="shareReviewRows" style="max-height:48vh;overflow-y:auto"></div>
+    <button class="btn btn-primary" style="margin-top:12px" onclick="confirmShareReview()" data-i18n="share_review_confirm_btn">Добавить выбранные</button>
   </div>
 </div>
 
@@ -2654,6 +2674,12 @@ const I18N = {
     share_none: 'Пока нет входящих предложений',
     share_accept_aria: 'Принять',
     share_decline_aria: 'Отклонить',
+    share_review_title: 'Выберите нужные товары',
+    share_review_count: '{n} из {total} выбрано',
+    share_review_all_btn: 'Все',
+    share_review_none_btn: 'Ничего',
+    share_review_confirm_btn: 'Добавить выбранные',
+    share_review_none_toast: 'Ничего не добавлено',
     share_accepted_toast: 'Товары добавлены в каталог',
     share_badge_aria: 'Входящих предложений: {n} — нажмите, чтобы посмотреть',
     cat_accepted_name: 'Принятые',
@@ -3193,6 +3219,12 @@ const I18N = {
     share_none: 'No incoming offers yet',
     share_accept_aria: 'Accept',
     share_decline_aria: 'Decline',
+    share_review_title: 'Choose the products you need',
+    share_review_count: '{n} of {total} selected',
+    share_review_all_btn: 'All',
+    share_review_none_btn: 'None',
+    share_review_confirm_btn: 'Add selected',
+    share_review_none_toast: 'Nothing added',
     share_accepted_toast: 'Products added to the catalog',
     share_badge_aria: 'Incoming offers: {n} — tap to view',
     cat_accepted_name: 'Accepted',
@@ -3731,6 +3763,12 @@ const I18N = {
     share_none: 'Noch keine eingehenden Angebote',
     share_accept_aria: 'Annehmen',
     share_decline_aria: 'Ablehnen',
+    share_review_title: 'Gewünschte Produkte auswählen',
+    share_review_count: '{n} von {total} ausgewählt',
+    share_review_all_btn: 'Alle',
+    share_review_none_btn: 'Keine',
+    share_review_confirm_btn: 'Ausgewählte hinzufügen',
+    share_review_none_toast: 'Nichts hinzugefügt',
     share_accepted_toast: 'Produkte zum Katalog hinzugefügt',
     share_badge_aria: 'Eingehende Angebote: {n} — zum Anzeigen tippen',
     cat_accepted_name: 'Angenommen',
@@ -4269,6 +4307,12 @@ const I18N = {
     share_none: 'Aún no hay ofertas entrantes',
     share_accept_aria: 'Aceptar',
     share_decline_aria: 'Rechazar',
+    share_review_title: 'Elige los productos que necesitas',
+    share_review_count: '{n} de {total} seleccionados',
+    share_review_all_btn: 'Todos',
+    share_review_none_btn: 'Ninguno',
+    share_review_confirm_btn: 'Añadir seleccionados',
+    share_review_none_toast: 'No se añadió nada',
     share_accepted_toast: 'Productos añadidos al catálogo',
     share_badge_aria: 'Ofertas entrantes: {n} — toca para ver',
     cat_accepted_name: 'Aceptados',
@@ -4807,6 +4851,12 @@ const I18N = {
     share_none: 'Aucune offre entrante pour l’instant',
     share_accept_aria: 'Accepter',
     share_decline_aria: 'Refuser',
+    share_review_title: 'Choisissez les produits dont vous avez besoin',
+    share_review_count: '{n} sur {total} sélectionné(s)',
+    share_review_all_btn: 'Tous',
+    share_review_none_btn: 'Aucun',
+    share_review_confirm_btn: 'Ajouter la sélection',
+    share_review_none_toast: 'Rien n\'a été ajouté',
     share_accepted_toast: 'Produits ajoutés au catalogue',
     share_badge_aria: 'Offres entrantes : {n} — appuyez pour voir',
     cat_accepted_name: 'Acceptés',
@@ -5345,6 +5395,12 @@ const I18N = {
     share_none: '暂无收到的商品',
     share_accept_aria: '接受',
     share_decline_aria: '拒绝',
+    share_review_title: '选择需要的商品',
+    share_review_count: '已选 {n}/{total}',
+    share_review_all_btn: '全选',
+    share_review_none_btn: '不选',
+    share_review_confirm_btn: '添加所选',
+    share_review_none_toast: '未添加任何商品',
     share_accepted_toast: '商品已添加到目录',
     share_badge_aria: '收到{n}个商品分享 — 点击查看',
     cat_accepted_name: '已接受',
@@ -5883,6 +5939,12 @@ const I18N = {
     share_none: 'Chưa có đề nghị nào gửi đến',
     share_accept_aria: 'Chấp nhận',
     share_decline_aria: 'Từ chối',
+    share_review_title: 'Chọn các sản phẩm bạn cần',
+    share_review_count: 'Đã chọn {n}/{total}',
+    share_review_all_btn: 'Tất cả',
+    share_review_none_btn: 'Không chọn',
+    share_review_confirm_btn: 'Thêm mục đã chọn',
+    share_review_none_toast: 'Không có gì được thêm vào',
     share_accepted_toast: 'Đã thêm sản phẩm vào danh mục',
     share_badge_aria: 'Có {n} đề nghị gửi đến — chạm để xem',
     cat_accepted_name: 'Đã chấp nhận',
@@ -6421,6 +6483,12 @@ const I18N = {
     share_none: 'Hozircha kiruvchi takliflar yo‘q',
     share_accept_aria: 'Qabul qilish',
     share_decline_aria: 'Rad etish',
+    share_review_title: 'Kerakli mahsulotlarni tanlang',
+    share_review_count: '{total} tadan {n} tasi tanlandi',
+    share_review_all_btn: 'Barchasi',
+    share_review_none_btn: 'Hech biri',
+    share_review_confirm_btn: 'Tanlanganlarni qo\'shish',
+    share_review_none_toast: 'Hech narsa qo\'shilmadi',
     share_accepted_toast: 'Mahsulotlar katalogga qo‘shildi',
     share_badge_aria: 'Kiruvchi takliflar: {n} — ko‘rish uchun bosing',
     cat_accepted_name: 'Qabul qilinganlar',
@@ -6959,6 +7027,12 @@ const I18N = {
     share_none: 'Азырынча кирүүчү сунуштар жок',
     share_accept_aria: 'Кабыл алуу',
     share_decline_aria: 'Четке кагуу',
+    share_review_title: 'Керектүү товарларды тандаңыз',
+    share_review_count: '{total}дөн {n} тандалды',
+    share_review_all_btn: 'Баары',
+    share_review_none_btn: 'Эч бири',
+    share_review_confirm_btn: 'Тандалганды кошуу',
+    share_review_none_toast: 'Эч нерсе кошулган жок',
     share_accepted_toast: 'Товарлар каталогго кошулду',
     share_badge_aria: 'Кирүүчү сунуштар: {n} — көрүү үчүн басыңыз',
     cat_accepted_name: 'Кабыл алынгандар',
@@ -7497,6 +7571,12 @@ const I18N = {
     share_none: 'То ҳол пешниҳоди воридотӣ нест',
     share_accept_aria: 'Қабул кардан',
     share_decline_aria: 'Рад кардан',
+    share_review_title: 'Маҳсулоти лозимаро интихоб кунед',
+    share_review_count: '{n} аз {total} интихоб шуд',
+    share_review_all_btn: 'Ҳама',
+    share_review_none_btn: 'Ҳеҷ кадом',
+    share_review_confirm_btn: 'Илова кардани интихобшуда',
+    share_review_none_toast: 'Ҳеҷ чиз илова нашуд',
     share_accepted_toast: 'Маҳсулот ба каталог илова шуд',
     share_badge_aria: 'Пешниҳоди воридотӣ: {n} — барои дидан пахш кунед',
     cat_accepted_name: 'Қабулшуда',
@@ -8035,6 +8115,12 @@ const I18N = {
     share_none: 'ჯერჯერობით შემომავალი შეთავაზებები არ არის',
     share_accept_aria: 'მიღება',
     share_decline_aria: 'უარყოფა',
+    share_review_title: 'აირჩიეთ საჭირო პროდუქტები',
+    share_review_count: 'არჩეულია {n}/{total}',
+    share_review_all_btn: 'ყველა',
+    share_review_none_btn: 'არცერთი',
+    share_review_confirm_btn: 'არჩეულის დამატება',
+    share_review_none_toast: 'არაფერი დაემატა',
     share_accepted_toast: 'პროდუქტები დაემატა კატალოგს',
     share_badge_aria: 'შემომავალი შეთავაზებები: {n} — შეეხეთ სანახავად',
     cat_accepted_name: 'მიღებული',
@@ -8573,6 +8659,12 @@ const I18N = {
     share_none: 'Առայժմ մուտքային առաջարկներ չկան',
     share_accept_aria: 'Ընդունել',
     share_decline_aria: 'Մերժել',
+    share_review_title: 'Ընտրեք անհրաժեշտ ապրանքները',
+    share_review_count: 'Ընտրված է՝ {n}/{total}',
+    share_review_all_btn: 'Բոլորը',
+    share_review_none_btn: 'Ոչ մեկը',
+    share_review_confirm_btn: 'Ավելացնել ընտրվածները',
+    share_review_none_toast: 'Ոչինչ չավելացվեց',
     share_accepted_toast: 'Ապրանքներն ավելացվեցին կատալոգում',
     share_badge_aria: 'Մուտքային առաջարկներ՝ {n} — հպեք դիտելու համար',
     cat_accepted_name: 'Ընդունված',
@@ -9111,6 +9203,12 @@ const I18N = {
     share_none: 'Наӡа иаауа ажәтара рыҟаӡам',
     share_accept_aria: 'Адырхра',
     share_decline_aria: 'Аҟаҵаӡом',
+    share_review_title: 'Иаанагоу апродуктқәа алышәх',
+    share_review_count: '{total} рҟынтә {n} алху',
+    share_review_all_btn: 'Зегьы',
+    share_review_none_btn: 'Акгьы мап',
+    share_review_confirm_btn: 'Алхуа атәара',
+    share_review_none_toast: 'Акгьы ацәыхьчаӡам',
     share_accepted_toast: 'Апродуктқәа акаталог алышәхуп',
     share_badge_aria: 'Иаауа ажәтара: {n} — рзырбаразы шәнажәал',
     cat_accepted_name: 'Ирыдыркит',
@@ -10410,6 +10508,7 @@ function openShareCatalogSheet() {
   document.getElementById('shmManual').classList.add('on');
   document.getElementById('shmCat').classList.remove('on');
   document.getElementById('shmAll').classList.remove('on');
+  document.getElementById('shareSearch').value = '';
   renderShareCatalogSheet();
   openSheet('shareCatalogSheet');
 }
@@ -10419,6 +10518,7 @@ function setShareMode(m) {
   document.getElementById('shmAll').classList.toggle('on', m === 'all');
   document.getElementById('shmCat').classList.toggle('on', m === 'cat');
   document.getElementById('shmManual').classList.toggle('on', m === 'manual');
+  document.getElementById('shareSearch').value = '';
   renderShareCatalogSheet();
 }
 function renderShareCatalogSheet() {
@@ -10426,13 +10526,16 @@ function renderShareCatalogSheet() {
   const chips = document.getElementById('shareCatChips');
   const rows = document.getElementById('shareRows');
   chips.style.display = shareMode === 'cat' ? 'flex' : 'none';
+  document.getElementById('shareSearchWrap').style.display = shareMode === 'manual' ? 'block' : 'none';
   if (shareMode === 'cat') {
     chips.innerHTML = db.categories.length
       ? db.categories.map(c => `<button class="chip ${shareCatPicked === c.id ? 'on' : ''}" onclick="pickShareCat('${c.id}')">${esc(c.name)}</button>`).join('')
       : `<span style="color:var(--muted);font-size:13px">${t('cat_empty')}</span>`;
     rows.innerHTML = '';
   } else if (shareMode === 'manual') {
-    rows.innerHTML = db.products.length ? db.products.map(p => `
+    const q = document.getElementById('shareSearch').value.trim();
+    const prods = db.products.filter(p => productMatches(p, q));
+    rows.innerHTML = prods.length ? prods.map(p => `
       <div class="fav-pick-row ${sharePicked.has(p.id) ? 'picked' : ''}" id="sharePick-${p.id}">
         <button class="check" onclick="toggleSharePick('${p.id}')" aria-label="${t('btn_choose')}">
           <span class="box"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 12.5l5 5 10-11"/></svg></span>
@@ -10441,7 +10544,7 @@ function renderShareCatalogSheet() {
           <div class="inv-name">${esc(p.name)}</div>
           <div class="fav-pick-price">${money(p.price)}</div>
         </div>
-      </div>`).join('') : `<div class="cat-empty">${t('cat_empty')}</div>`;
+      </div>`).join('') : `<div class="cat-empty">${db.products.length ? t('cat_not_found') : t('cat_empty')}</div>`;
   } else {
     rows.innerHTML = '';
   }
@@ -10609,57 +10712,102 @@ function acceptShare(id) {
   const s = syncState();
   const creds = { login: s.login, pin: s.pin, url: s.url || DEFAULT_SYNC_URL };
   const share = pendingShares.find(x => x.id === id);
-  const fromLogin = share ? share.fromLogin : '';
   syncCall(creds, 'share_fetch', { id })
     .then(res => {
       const items = (res.payload && res.payload.items) || [];
-      const catId = ensureAcceptedCategory();
-      let added = 0, updated = 0;
-      items.forEach(it => {
-        const sku = it.sku || '';
-        // место передаём вместе с его магазином (код + полное название) — заводим/находим
-        // такой же магазин в СВОЁМ справочнике и привязываем к нему место, чтобы было видно,
-        // где покупать; если получатель уже сам назначил этому месту другой магазин — не трогаем
-        if (it.loc) {
-          const loc = findOrCreateLocation(it.loc);
-          if (loc && !loc.storeId && it.storeCode) {
-            const dir = findOrCreateStoreDir(it.storeCode, it.storeFullName);
-            if (dir) loc.storeId = dir.id;
-          }
-        }
-        // артикул — это и есть ID товара (он же зашит в QR), поэтому повторная
-        // передача от того же поставщика с тем же артикулом обновляет цену,
-        // а не плодит дубли; новый артикул — новая карточка в «Принятые»
-        const existing = sku ? state.catalogDB.products.find(p => p.shareFrom === fromLogin && p.sku === sku) : null;
-        if (existing) {
-          existing.price = +it.price || 0;
-          existing.name = it.name || existing.name;
-          existing.loc = it.loc || existing.loc;
-          updated++;
-        } else {
-          state.catalogDB.products.push({
-            id: uid(), name: it.name || '', price: +it.price || 0, categoryId: catId,
-            loc: it.loc || '', sku, favorite: false, shareFrom: fromLogin
-          });
-          added++;
-        }
-      });
-      save(); renderCatalog();
-      // предложение "всем" остаётся на сервере для остальных получателей — прячем
-      // его только у себя; адресное предложение удаляем из почтового ящика как раньше
-      const cleanup = isBroadcastShare(share)
-        ? Promise.resolve().then(() => { if (!state.dismissedShares.includes(id)) state.dismissedShares.push(id); save(); })
-        : syncCall(creds, 'share_remove', { id });
-      return cleanup.then(() => ({ added, updated }));
-    })
-    .then(({ added, updated }) => {
-      pendingShares = pendingShares.filter(x => x.id !== id);
-      renderIncomingShares(); renderShareBadge();
-      toast(updated > 0 ? tf('share_accept_result_toast', { added, updated }) : t('share_accepted_toast'));
-      vibrate(10);
-      if (!pendingShares.length) closeSheet('incomingSharesSheet');
+      // если товаров несколько — дадим отметить нужные, а не тащить все в каталог не глядя;
+      // одну позицию выбирать не из чего, принимаем сразу как раньше
+      if (items.length > 1) { openShareReviewSheet(id, share, creds, items); return; }
+      finalizeShareAccept(id, share, creds, items);
     })
     .catch(err => toast(errToMsg(err)));
+}
+let shareReviewId = null, shareReviewShare = null, shareReviewCreds = null, shareReviewItems = [], shareReviewPicked = new Set();
+function openShareReviewSheet(id, share, creds, items) {
+  shareReviewId = id; shareReviewShare = share; shareReviewCreds = creds;
+  shareReviewItems = items;
+  shareReviewPicked = new Set(items.map((_, i) => i));
+  renderShareReviewRows();
+  openSheet('shareReviewSheet');
+}
+function renderShareReviewRows() {
+  document.getElementById('shareReviewRows').innerHTML = shareReviewItems.map((it, i) => `
+    <div class="fav-pick-row ${shareReviewPicked.has(i) ? 'picked' : ''}" id="shrevPick-${i}">
+      <button class="check" onclick="toggleShareReviewPick(${i})" aria-label="${t('btn_choose')}">
+        <span class="box"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 12.5l5 5 10-11"/></svg></span>
+      </button>
+      <div style="flex:1;min-width:0;cursor:pointer" onclick="toggleShareReviewPick(${i})">
+        <div class="inv-name">${esc(it.name || '')}</div>
+        <div class="fav-pick-price">${money(+it.price || 0)}${it.loc ? ' · ' + esc(it.loc) : ''}</div>
+      </div>
+    </div>`).join('');
+  updateShareReviewCount();
+}
+function updateShareReviewCount() {
+  document.getElementById('shareReviewCount').textContent = tf('share_review_count', { n: shareReviewPicked.size, total: shareReviewItems.length });
+}
+function toggleShareReviewPick(i) {
+  if (shareReviewPicked.has(i)) shareReviewPicked.delete(i); else shareReviewPicked.add(i);
+  const row = document.getElementById('shrevPick-' + i);
+  if (row) row.classList.toggle('picked', shareReviewPicked.has(i));
+  updateShareReviewCount();
+}
+function setShareReviewAll(on) {
+  shareReviewPicked = on ? new Set(shareReviewItems.map((_, i) => i)) : new Set();
+  renderShareReviewRows();
+}
+function confirmShareReview() {
+  const items = shareReviewItems.filter((_, i) => shareReviewPicked.has(i));
+  closeSheet('shareReviewSheet');
+  finalizeShareAccept(shareReviewId, shareReviewShare, shareReviewCreds, items);
+}
+function finalizeShareAccept(id, share, creds, items) {
+  const fromLogin = share ? share.fromLogin : '';
+  const catId = ensureAcceptedCategory();
+  let added = 0, updated = 0;
+  items.forEach(it => {
+    const sku = it.sku || '';
+    // место передаём вместе с его магазином (код + полное название) — заводим/находим
+    // такой же магазин в СВОЁМ справочнике и привязываем к нему место, чтобы было видно,
+    // где покупать; если получатель уже сам назначил этому месту другой магазин — не трогаем
+    if (it.loc) {
+      const loc = findOrCreateLocation(it.loc);
+      if (loc && !loc.storeId && it.storeCode) {
+        const dir = findOrCreateStoreDir(it.storeCode, it.storeFullName);
+        if (dir) loc.storeId = dir.id;
+      }
+    }
+    // артикул — это и есть ID товара (он же зашит в QR), поэтому повторная
+    // передача от того же поставщика с тем же артикулом обновляет цену,
+    // а не плодит дубли; новый артикул — новая карточка в «Принятые»
+    const existing = sku ? state.catalogDB.products.find(p => p.shareFrom === fromLogin && p.sku === sku) : null;
+    if (existing) {
+      existing.price = +it.price || 0;
+      existing.name = it.name || existing.name;
+      existing.loc = it.loc || existing.loc;
+      updated++;
+    } else {
+      state.catalogDB.products.push({
+        id: uid(), name: it.name || '', price: +it.price || 0, categoryId: catId,
+        loc: it.loc || '', sku, favorite: false, shareFrom: fromLogin
+      });
+      added++;
+    }
+  });
+  save(); renderCatalog();
+  // предложение "всем" остаётся на сервере для остальных получателей — прячем
+  // его только у себя; адресное предложение удаляем из почтового ящика как раньше.
+  // если пользователь снял галочки со всех позиций — это просто равнозначно отклонению
+  const cleanup = isBroadcastShare(share)
+    ? Promise.resolve().then(() => { if (!state.dismissedShares.includes(id)) state.dismissedShares.push(id); save(); })
+    : syncCall(creds, 'share_remove', { id });
+  cleanup.then(() => {
+    pendingShares = pendingShares.filter(x => x.id !== id);
+    renderIncomingShares(); renderShareBadge();
+    toast(!items.length ? t('share_review_none_toast') : (updated > 0 ? tf('share_accept_result_toast', { added, updated }) : t('share_accepted_toast')));
+    vibrate(10);
+    if (!pendingShares.length) closeSheet('incomingSharesSheet');
+  }).catch(err => toast(errToMsg(err)));
 }
 function ensureAcceptedCategory() {
   let c = state.catalogDB.categories.find(x => x.special === 'accepted');
