@@ -93,6 +93,8 @@ input,select{font-family:inherit}
   transition:transform .12s;
 }
 .icon-btn:active{transform:scale(.92)}
+.icon-btn.on{background:var(--accent);color:#fff}
+.icon-btn.on svg{stroke:#fff}
 .print-top-btn{
   display:none;align-items:center;gap:5px;border:none;
   background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;
@@ -294,6 +296,9 @@ input,select{font-family:inherit}
 .cat-add:active{background:#DDE0FD}
 .cat-fav{width:34px;height:42px;flex:none;border:none;background:none;cursor:pointer;display:flex;align-items:center;justify-content:center}
 .cat-empty{text-align:center;color:var(--muted);font-size:13.5px;padding:26px 0}
+.cat-row.picked{background:var(--accent-soft);border-radius:12px}
+.cat-row.picked .check .box{background:var(--green);border-color:var(--green)}
+.cat-row.picked .check .box svg{opacity:1;transform:scale(1)}
 .fav-banner{
   display:flex;align-items:center;gap:9px;width:100%;margin-top:14px;padding:12px 14px;border:none;border-radius:16px;
   background:linear-gradient(90deg,#FFFBEB,#FEF3C7);color:#92400E;font-size:13.5px;font-weight:800;cursor:pointer;text-align:left;
@@ -328,6 +333,7 @@ input,select{font-family:inherit}
   padding:3px 8px;border-radius:99px;
 }
 .store-title .count.full{color:#047857;background:var(--green-soft)}
+.store-title .fullname{flex:1;min-width:0;font-size:12px;font-weight:700;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .store-sub{font-size:14.5px;font-weight:800;color:var(--muted);white-space:nowrap}
 .store-more{
   width:42px;height:42px;border:none;background:none;border-radius:12px;cursor:pointer;flex:none;
@@ -1175,7 +1181,11 @@ input[type=file]{display:none}
     <h2 id="storeSheetTitle" data-i18n="store_sheet_new_title">Новый магазин</h2>
     <div class="field">
       <label data-i18n="field_name">Название</label>
-      <input id="storeNameInput" type="text" placeholder="Например: Пятёрочка" data-i18n-ph="store_name_ph" autocomplete="off" enterkeyhint="done">
+      <input id="storeNameInput" type="text" placeholder="Например: LUB" data-i18n-ph="store_name_ph" autocomplete="off" enterkeyhint="next">
+    </div>
+    <div class="field">
+      <label data-i18n="store_fullname_label">Полное название (необязательно)</label>
+      <input id="storeFullNameInput" type="text" placeholder="Например: ТЯК Москва Люблино" data-i18n-ph="store_fullname_ph" autocomplete="off" enterkeyhint="done">
     </div>
     <button class="btn btn-primary" id="storeSaveBtn" onclick="saveStoreSheet()" data-i18n="btn_add">Добавить</button>
   </div>
@@ -1369,14 +1379,31 @@ input[type=file]{display:none}
         <span class="sic"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="6.5"/><path d="M20.2 20.2l-4.6-4.6"/></svg></span>
         <input id="catSearch" type="text" placeholder="Название, цена или категория" data-i18n-ph="cat_search_ph" autocomplete="off" oninput="renderCatalog()" onkeydown="if(event.key==='Enter')catSearchEnter()">
       </div>
+      <button class="icon-btn" id="catSelectModeBtn" onclick="toggleCatSelectMode()" aria-label="Выбрать несколько" data-i18n-aria="cat_select_mode_aria">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#475569" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4.5" width="6" height="6" rx="1.3"/><path d="M5.3 7.5 6.5 8.7 8.7 6.3"/><rect x="4" y="13.5" width="6" height="6" rx="1.3"/><path d="M13.5 7.5h6M13.5 16.5h6"/></svg>
+      </button>
       <button class="icon-btn" onclick="openScanSheet()" aria-label="Сканировать QR-код" data-i18n-aria="aria_scan">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#475569" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8V5.5A1.5 1.5 0 0 1 5.5 4H8M16 4h2.5A1.5 1.5 0 0 1 20 5.5V8M20 16v2.5a1.5 1.5 0 0 1-1.5 1.5H16M8 20H5.5A1.5 1.5 0 0 1 4 18.5V16"/><rect x="9" y="9" width="6" height="6" rx="1"/></svg>
       </button>
     </div>
     <div class="chips" id="catChips"></div>
-    <div class="chips" id="catLocChips"></div>
+    <div style="display:flex;align-items:center;gap:6px">
+      <div class="chips" id="catLocChips" style="flex:1"></div>
+      <button class="icon-btn" id="locManageBtn" onclick="openLocManageSheet()" style="width:36px;height:36px;border-radius:11px;flex:none;display:none" aria-label="Места и магазины" data-i18n-aria="loc_manage_aria">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#475569" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9.5 5.5 4h13L20 9.5M5 10v10h14V10M9.5 20v-5.5h5V20"/></svg>
+      </button>
+    </div>
     <div class="cat-list" id="catList"></div>
-    <button class="btn btn-primary" onclick="openCatProductSheet()">
+    <div id="catBulkBar" style="display:none;margin-bottom:12px">
+      <p style="color:var(--muted);font-size:13px;margin:0 0 8px" id="catBulkCount"></p>
+      <div class="field-row">
+        <div class="field" style="margin-bottom:0">
+          <select id="catBulkCategorySelect"></select>
+        </div>
+        <button class="btn btn-primary" style="width:auto;padding:0 18px" onclick="applyCatBulkCategory()" data-i18n="btn_apply">Применить</button>
+      </div>
+    </div>
+    <button class="btn btn-primary" id="catAddProductBtn" onclick="openCatProductSheet()">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.8" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
       <span data-i18n="cat_add_product_btn">Товар в каталог</span>
     </button>
@@ -1384,6 +1411,20 @@ input[type=file]{display:none}
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="12" r="2.5"/><circle cx="17" cy="6" r="2.5"/><circle cx="17" cy="18" r="2.5"/><path d="M8.4 10.9l6.2-3.7M8.4 13.1l6.2 3.7"/></svg>
       <span data-i18n="share_catalog_btn">Поделиться товарами</span>
     </button>
+  </div>
+</div>
+
+<div class="sheet-wrap" id="locManageSheet"><div class="backdrop" onclick="closeSheet('locManageSheet')"></div>
+  <div class="sheet">
+    <div class="grab"></div>
+    <h2 data-i18n="loc_manage_title">Места и магазины</h2>
+    <p style="color:var(--muted);font-size:13.5px;margin:0 0 12px" data-i18n="loc_manage_sub">Отметьте места и присвойте им магазин — можно сразу несколько</p>
+    <div id="locManageRows" style="max-height:44vh;overflow-y:auto"></div>
+    <div class="field" style="margin-top:12px">
+      <label data-i18n="loc_manage_assign_label">Присвоить магазин выбранным местам</label>
+      <select id="locManageStoreSelect"></select>
+    </div>
+    <button class="btn btn-primary" onclick="applyLocManageStore()" data-i18n="btn_apply">Применить</button>
   </div>
 </div>
 
@@ -1466,7 +1507,10 @@ input[type=file]{display:none}
     <div class="field">
       <label data-i18n="field_location">Место (ряд, полка)</label>
       <div class="chips" id="catProdLocChips"></div>
-      <input id="catProdLoc" type="text" placeholder="Например: 2Г, линия 2А" data-i18n-ph="field_location_ph" autocomplete="off" oninput="renderCatProdLocChips()">
+      <div style="display:flex;gap:8px">
+        <input id="catProdLoc" type="text" placeholder="Например: 2Г, линия 2А" data-i18n-ph="field_location_ph" autocomplete="off" oninput="renderCatProdLocChips();refreshCatProdLocStore()" style="flex:1.3;min-width:0">
+        <select id="catProdLocStore" onchange="onCatProdLocStoreChange()" style="flex:1;min-width:0"></select>
+      </div>
     </div>
     <div class="field">
       <div class="sku-head">
@@ -1984,6 +2028,33 @@ function sanitizeCatalogDB(s) {
   s.catalogDB.products = Array.isArray(s.catalogDB.products) ? s.catalogDB.products : [];
   s.catalogDB.categories.forEach(c => { c.id = c.id || uid(); c.name = c.name || 'Категория'; });
   s.catalogDB.products.forEach(p => { p.id = p.id || uid(); p.price = +p.price || 0; p.categoryId = p.categoryId || null; p.sku = p.sku || ''; p.favorite = !!p.favorite; });
+
+  // единый справочник магазинов (код + полное название) — общий для магазинов в списках закупок
+  // и для мест каталога, чтобы, например, LUB в любом списке и LUB в местах товара были одним
+  // и тем же магазином с одним полным названием, а не расходились по разным спискам
+  s.storeDirectory = Array.isArray(s.storeDirectory) ? s.storeDirectory : [];
+  s.storeDirectory.forEach(d => { d.id = d.id || uid(); d.code = d.code || ''; d.fullName = d.fullName || ''; });
+  const findDirByCode = code => s.storeDirectory.find(d => d.code.toLowerCase() === code.toLowerCase());
+  (s.lists || []).forEach(l => {
+    ((l.data && l.data.stores) || []).forEach(st => {
+      if (!st.storeDirId || !s.storeDirectory.some(d => d.id === st.storeDirId)) {
+        const name = (st.name || '').trim();
+        let dir = name ? findDirByCode(name) : null;
+        if (!dir && name) { dir = { id: uid(), code: name, fullName: '' }; s.storeDirectory.push(dir); }
+        st.storeDirId = dir ? dir.id : null;
+      }
+    });
+  });
+
+  // места (Место / ряд-полка) раньше были просто текстом на товаре, теперь ещё и отдельная
+  // запись с привязкой к магазину из справочника выше; старые места мигрируют без магазина —
+  // их можно присвоить магазину массово в каталоге (Управление местами)
+  s.catalogDB.locations = Array.isArray(s.catalogDB.locations) ? s.catalogDB.locations : [];
+  s.catalogDB.locations.forEach(l => { l.id = l.id || uid(); l.name = l.name || ''; l.storeId = l.storeId || null; });
+  const existingLocNames = new Set(s.catalogDB.locations.map(l => l.name));
+  [...new Set(s.catalogDB.products.map(p => (p.loc || '').trim()).filter(Boolean))].forEach(name => {
+    if (!existingLocNames.has(name)) s.catalogDB.locations.push({ id: uid(), name, storeId: null });
+  });
   // debts / staff / inventory modules
   s.debts = Array.isArray(s.debts) ? s.debts : [];
   s.debts.forEach(d => { d.id = d.id || uid(); d.amount = +d.amount || 0; d.paid = !!d.paid; });
@@ -2162,6 +2233,8 @@ const I18N = {
     store_sheet_edit_title: 'Переименовать магазин',
     field_name: 'Название',
     store_name_ph: 'Например: Пятёрочка',
+    store_fullname_label: 'Полное название (необязательно)',
+    store_fullname_ph: 'Например: ТЯК Москва Люблино',
     btn_add: 'Добавить',
     btn_save: 'Сохранить',
 
@@ -2238,6 +2311,16 @@ const I18N = {
     cat_search_ph: 'Название, цена или категория',
     aria_scan: 'Сканировать QR-код',
     cat_add_product_btn: 'Товар в каталог',
+    cat_select_mode_aria: 'Выбрать несколько',
+    cat_bulk_count: '{n} выбрано',
+    cat_bulk_applied_toast: 'Категория присвоена: {n} товаров',
+    loc_manage_aria: 'Места и магазины',
+    loc_manage_title: 'Места и магазины',
+    loc_manage_sub: 'Отметьте места и присвойте им магазин — можно сразу несколько',
+    loc_manage_assign_label: 'Присвоить магазин выбранным местам',
+    loc_store_none: 'Без магазина',
+    loc_manage_empty: 'Мест пока нет',
+    loc_manage_applied_toast: 'Магазин присвоен: {n} мест',
     cat_product_sheet_title: 'Товар каталога',
     cat_product_edit_title: 'Редактировать товар',
     aria_favorite: 'Избранное',
@@ -2689,6 +2772,8 @@ const I18N = {
     store_sheet_edit_title: 'Rename store',
     field_name: 'Name',
     store_name_ph: 'E.g.: Whole Foods',
+    store_fullname_label: 'Full name (optional)',
+    store_fullname_ph: 'E.g.: Downtown Mall',
     btn_add: 'Add',
     btn_save: 'Save',
 
@@ -2765,6 +2850,16 @@ const I18N = {
     cat_search_ph: 'Name, price or category',
     aria_scan: 'Scan QR code',
     cat_add_product_btn: 'Add product to catalog',
+    cat_select_mode_aria: 'Select multiple',
+    cat_bulk_count: '{n} selected',
+    cat_bulk_applied_toast: 'Category applied to {n} products',
+    loc_manage_aria: 'Locations and stores',
+    loc_manage_title: 'Locations and stores',
+    loc_manage_sub: 'Check locations and assign them a store — you can pick several at once',
+    loc_manage_assign_label: 'Assign a store to the selected locations',
+    loc_store_none: 'No store',
+    loc_manage_empty: 'No locations yet',
+    loc_manage_applied_toast: 'Store assigned to {n} locations',
     cat_product_sheet_title: 'Catalog product',
     cat_product_edit_title: 'Edit product',
     aria_favorite: 'Favorite',
@@ -3216,6 +3311,8 @@ const I18N = {
     store_sheet_edit_title: 'Laden umbenennen',
     field_name: 'Name',
     store_name_ph: 'Z. B.: Rewe',
+    store_fullname_label: 'Vollständiger Name (optional)',
+    store_fullname_ph: 'Z. B.: Innenstadt-Center',
     btn_add: 'Hinzufügen',
     btn_save: 'Speichern',
 
@@ -3292,6 +3389,16 @@ const I18N = {
     cat_search_ph: 'Name, Preis oder Kategorie',
     aria_scan: 'QR-Code scannen',
     cat_add_product_btn: 'Produkt zum Katalog hinzufügen',
+    cat_select_mode_aria: 'Mehrere auswählen',
+    cat_bulk_count: '{n} ausgewählt',
+    cat_bulk_applied_toast: 'Kategorie auf {n} Produkte angewendet',
+    loc_manage_aria: 'Standorte und Geschäfte',
+    loc_manage_title: 'Standorte und Geschäfte',
+    loc_manage_sub: 'Standorte markieren und ein Geschäft zuweisen — mehrere auf einmal möglich',
+    loc_manage_assign_label: 'Geschäft den ausgewählten Standorten zuweisen',
+    loc_store_none: 'Kein Geschäft',
+    loc_manage_empty: 'Noch keine Standorte',
+    loc_manage_applied_toast: 'Geschäft {n} Standorten zugewiesen',
     cat_product_sheet_title: 'Katalogprodukt',
     cat_product_edit_title: 'Produkt bearbeiten',
     aria_favorite: 'Favorit',
@@ -3742,6 +3849,8 @@ const I18N = {
     store_sheet_edit_title: 'Renombrar tienda',
     field_name: 'Nombre',
     store_name_ph: 'Ej.: Mercadona',
+    store_fullname_label: 'Nombre completo (opcional)',
+    store_fullname_ph: 'Ej.: Centro Comercial Norte',
     btn_add: 'Añadir',
     btn_save: 'Guardar',
 
@@ -3818,6 +3927,16 @@ const I18N = {
     cat_search_ph: 'Nombre, precio o categoría',
     aria_scan: 'Escanear código QR',
     cat_add_product_btn: 'Añadir producto al catálogo',
+    cat_select_mode_aria: 'Seleccionar varios',
+    cat_bulk_count: '{n} seleccionados',
+    cat_bulk_applied_toast: 'Categoría aplicada a {n} productos',
+    loc_manage_aria: 'Ubicaciones y tiendas',
+    loc_manage_title: 'Ubicaciones y tiendas',
+    loc_manage_sub: 'Marca ubicaciones y asígnales una tienda — puedes elegir varias a la vez',
+    loc_manage_assign_label: 'Asignar tienda a las ubicaciones seleccionadas',
+    loc_store_none: 'Sin tienda',
+    loc_manage_empty: 'Aún no hay ubicaciones',
+    loc_manage_applied_toast: 'Tienda asignada a {n} ubicaciones',
     cat_product_sheet_title: 'Producto del catálogo',
     cat_product_edit_title: 'Editar producto',
     aria_favorite: 'Favorito',
@@ -4268,6 +4387,8 @@ const I18N = {
     store_sheet_edit_title: 'Renommer le magasin',
     field_name: 'Nom',
     store_name_ph: 'Ex. : Carrefour',
+    store_fullname_label: 'Nom complet (facultatif)',
+    store_fullname_ph: 'Ex. : Centre commercial Nord',
     btn_add: 'Ajouter',
     btn_save: 'Enregistrer',
 
@@ -4344,6 +4465,16 @@ const I18N = {
     cat_search_ph: 'Nom, prix ou catégorie',
     aria_scan: 'Scanner le code QR',
     cat_add_product_btn: 'Ajouter le produit au catalogue',
+    cat_select_mode_aria: 'Sélectionner plusieurs',
+    cat_bulk_count: '{n} sélectionné(s)',
+    cat_bulk_applied_toast: 'Catégorie appliquée à {n} produits',
+    loc_manage_aria: 'Emplacements et magasins',
+    loc_manage_title: 'Emplacements et magasins',
+    loc_manage_sub: 'Cochez des emplacements et assignez-leur un magasin — plusieurs à la fois',
+    loc_manage_assign_label: 'Assigner un magasin aux emplacements sélectionnés',
+    loc_store_none: 'Aucun magasin',
+    loc_manage_empty: 'Pas encore d\'emplacements',
+    loc_manage_applied_toast: 'Magasin assigné à {n} emplacements',
     cat_product_sheet_title: 'Produit du catalogue',
     cat_product_edit_title: 'Modifier le produit',
     aria_favorite: 'Favori',
@@ -4794,6 +4925,8 @@ const I18N = {
     store_sheet_edit_title: '重命名商店',
     field_name: '名称',
     store_name_ph: '例如：全食超市',
+    store_fullname_label: '完整名称（可选）',
+    store_fullname_ph: '例如：市中心商场',
     btn_add: '添加',
     btn_save: '保存',
 
@@ -4870,6 +5003,16 @@ const I18N = {
     cat_search_ph: '名称、价格或分类',
     aria_scan: '扫描二维码',
     cat_add_product_btn: '将商品添加到目录',
+    cat_select_mode_aria: '多选',
+    cat_bulk_count: '已选 {n} 项',
+    cat_bulk_applied_toast: '已为 {n} 件商品设置分类',
+    loc_manage_aria: '位置与商店',
+    loc_manage_title: '位置与商店',
+    loc_manage_sub: '勾选位置并为其指定商店 — 可一次选择多个',
+    loc_manage_assign_label: '为选中的位置指定商店',
+    loc_store_none: '无商店',
+    loc_manage_empty: '暂无位置',
+    loc_manage_applied_toast: '已为 {n} 个位置指定商店',
     cat_product_sheet_title: '目录商品',
     cat_product_edit_title: '编辑商品',
     aria_favorite: '收藏',
@@ -5320,6 +5463,8 @@ const I18N = {
     store_sheet_edit_title: 'Đổi tên cửa hàng',
     field_name: 'Tên',
     store_name_ph: 'VD: Big C',
+    store_fullname_label: 'Tên đầy đủ (không bắt buộc)',
+    store_fullname_ph: 'VD: Trung tâm thương mại',
     btn_add: 'Thêm',
     btn_save: 'Lưu',
 
@@ -5396,6 +5541,16 @@ const I18N = {
     cat_search_ph: 'Tên, giá hoặc danh mục',
     aria_scan: 'Quét mã QR',
     cat_add_product_btn: 'Thêm sản phẩm vào danh mục',
+    cat_select_mode_aria: 'Chọn nhiều',
+    cat_bulk_count: 'Đã chọn {n}',
+    cat_bulk_applied_toast: 'Đã gán danh mục cho {n} sản phẩm',
+    loc_manage_aria: 'Vị trí và cửa hàng',
+    loc_manage_title: 'Vị trí và cửa hàng',
+    loc_manage_sub: 'Đánh dấu vị trí và gán cửa hàng cho chúng — có thể chọn nhiều cùng lúc',
+    loc_manage_assign_label: 'Gán cửa hàng cho các vị trí đã chọn',
+    loc_store_none: 'Không có cửa hàng',
+    loc_manage_empty: 'Chưa có vị trí nào',
+    loc_manage_applied_toast: 'Đã gán cửa hàng cho {n} vị trí',
     cat_product_sheet_title: 'Sản phẩm trong danh mục',
     cat_product_edit_title: 'Sửa sản phẩm',
     aria_favorite: 'Yêu thích',
@@ -5846,6 +6001,8 @@ const I18N = {
     store_sheet_edit_title: 'Do‘kon nomini o‘zgartirish',
     field_name: 'Nomi',
     store_name_ph: 'Masalan: Korzinka',
+    store_fullname_label: 'To\'liq nomi (ixtiyoriy)',
+    store_fullname_ph: 'Masalan: Markaziy savdo markazi',
     btn_add: 'Qo‘shish',
     btn_save: 'Saqlash',
 
@@ -5922,6 +6079,16 @@ const I18N = {
     cat_search_ph: 'Nomi, narxi yoki kategoriyasi',
     aria_scan: 'QR kodni skanerlash',
     cat_add_product_btn: 'Katalogga mahsulot qo‘shish',
+    cat_select_mode_aria: 'Bir nechtasini tanlash',
+    cat_bulk_count: '{n} ta tanlandi',
+    cat_bulk_applied_toast: 'Kategoriya {n} ta mahsulotga qo\'llanildi',
+    loc_manage_aria: 'Joylar va do\'konlar',
+    loc_manage_title: 'Joylar va do\'konlar',
+    loc_manage_sub: 'Joylarni belgilab, ularga do\'kon biriktiring — bir nechtasini birga tanlash mumkin',
+    loc_manage_assign_label: 'Tanlangan joylarga do\'kon biriktirish',
+    loc_store_none: 'Do\'kon yo\'q',
+    loc_manage_empty: 'Hozircha joylar yo\'q',
+    loc_manage_applied_toast: 'Do\'kon {n} ta joyga biriktirildi',
     cat_product_sheet_title: 'Katalog mahsuloti',
     cat_product_edit_title: 'Mahsulotni tahrirlash',
     aria_favorite: 'Sevimli',
@@ -6372,6 +6539,8 @@ const I18N = {
     store_sheet_edit_title: 'Дүкөндүн атын өзгөртүү',
     field_name: 'Аты',
     store_name_ph: 'Мисалы: Народный',
+    store_fullname_label: 'Толук аталышы (милдеттүү эмес)',
+    store_fullname_ph: 'Мисалы: Борбордук соода борбору',
     btn_add: 'Кошуу',
     btn_save: 'Сактоо',
 
@@ -6448,6 +6617,16 @@ const I18N = {
     cat_search_ph: 'Аты, баасы же категориясы',
     aria_scan: 'QR кодду сканерлөө',
     cat_add_product_btn: 'Товарды каталогго кошуу',
+    cat_select_mode_aria: 'Бир нечесин тандоо',
+    cat_bulk_count: '{n} тандалды',
+    cat_bulk_applied_toast: 'Категория {n} товарга дайындалды',
+    loc_manage_aria: 'Орундар жана дүкөндөр',
+    loc_manage_title: 'Орундар жана дүкөндөр',
+    loc_manage_sub: 'Орундарды белгилеп, аларга дүкөн дайындаңыз — бир нечесин бирге тандаса болот',
+    loc_manage_assign_label: 'Тандалган орундарга дүкөн дайындоо',
+    loc_store_none: 'Дүкөнсүз',
+    loc_manage_empty: 'Азырынча орундар жок',
+    loc_manage_applied_toast: 'Дүкөн {n} орунга дайындалды',
     cat_product_sheet_title: 'Каталог товары',
     cat_product_edit_title: 'Товарды түзөтүү',
     aria_favorite: 'Тандалма',
@@ -6898,6 +7077,8 @@ const I18N = {
     store_sheet_edit_title: 'Иваз кардани номи мағоза',
     field_name: 'Ном',
     store_name_ph: 'Масалан: Ашан',
+    store_fullname_label: 'Номи пурра (ихтиёрӣ)',
+    store_fullname_ph: 'Масалан: Маркази марказии савдо',
     btn_add: 'Илова кардан',
     btn_save: 'Захира',
 
@@ -6974,6 +7155,16 @@ const I18N = {
     cat_search_ph: 'Ном, нарх ё категория',
     aria_scan: 'Сканеркунии рамзи QR',
     cat_add_product_btn: 'Илова кардани маҳсулот ба каталог',
+    cat_select_mode_aria: 'Якчанд интихоб кардан',
+    cat_bulk_count: '{n} интихоб шуд',
+    cat_bulk_applied_toast: 'Категория ба {n} маҳсулот татбиқ шуд',
+    loc_manage_aria: 'Ҷойҳо ва мағозаҳо',
+    loc_manage_title: 'Ҷойҳо ва мағозаҳо',
+    loc_manage_sub: 'Ҷойҳоро қайд карда, ба онҳо мағоза таъин кунед — якчанд тояшро якбора мумкин аст',
+    loc_manage_assign_label: 'Ба ҷойҳои интихобшуда мағоза таъин кунед',
+    loc_store_none: 'Бе мағоза',
+    loc_manage_empty: 'Ҳанӯз ҷой нест',
+    loc_manage_applied_toast: 'Мағоза ба {n} ҷой таъин шуд',
     cat_product_sheet_title: 'Маҳсулоти каталог',
     cat_product_edit_title: 'Таҳрири маҳсулот',
     aria_favorite: 'Дӯстдошта',
@@ -7424,6 +7615,8 @@ const I18N = {
     store_sheet_edit_title: 'მაღაზიის გადარქმევა',
     field_name: 'სახელი',
     store_name_ph: 'მაგ.: სუპერმარკეტი',
+    store_fullname_label: 'სრული სახელი (არასავალდებულო)',
+    store_fullname_ph: 'მაგ.: ცენტრალური სავაჭრო ცენტრი',
     btn_add: 'დამატება',
     btn_save: 'შენახვა',
 
@@ -7500,6 +7693,16 @@ const I18N = {
     cat_search_ph: 'სახელი, ფასი ან კატეგორია',
     aria_scan: 'QR კოდის სკანირება',
     cat_add_product_btn: 'პროდუქტის დამატება კატალოგში',
+    cat_select_mode_aria: 'რამდენიმეს არჩევა',
+    cat_bulk_count: 'არჩეულია {n}',
+    cat_bulk_applied_toast: 'კატეგორია მიენიჭა {n} პროდუქტს',
+    loc_manage_aria: 'ადგილები და მაღაზიები',
+    loc_manage_title: 'ადგილები და მაღაზიები',
+    loc_manage_sub: 'მონიშნეთ ადგილები და მიანიჭეთ მაღაზია — შეგიძლიათ რამდენიმე ერთად',
+    loc_manage_assign_label: 'მაღაზიის მინიჭება არჩეულ ადგილებზე',
+    loc_store_none: 'მაღაზიის გარეშე',
+    loc_manage_empty: 'ჯერ არ არის ადგილები',
+    loc_manage_applied_toast: 'მაღაზია მიენიჭა {n} ადგილს',
     cat_product_sheet_title: 'კატალოგის პროდუქტი',
     cat_product_edit_title: 'პროდუქტის რედაქტირება',
     aria_favorite: 'რჩეული',
@@ -7950,6 +8153,8 @@ const I18N = {
     store_sheet_edit_title: 'Վերանվանել խանութը',
     field_name: 'Անուն',
     store_name_ph: 'Օր.՝ Սուպերմարկետ',
+    store_fullname_label: 'Լրիվ անվանում (ոչ պարտադիր)',
+    store_fullname_ph: 'Օր.՝ Կենտրոնական առևտրի կենտրոն',
     btn_add: 'Ավելացնել',
     btn_save: 'Պահպանել',
 
@@ -8026,6 +8231,16 @@ const I18N = {
     cat_search_ph: 'Անուն, գին կամ կատեգորիա',
     aria_scan: 'Սկանավորել QR կոդը',
     cat_add_product_btn: 'Ավելացնել ապրանք կատալոգում',
+    cat_select_mode_aria: 'Ընտրել մի քանիսը',
+    cat_bulk_count: 'Ընտրված է՝ {n}',
+    cat_bulk_applied_toast: 'Կատեգորիան կիրառվեց {n} ապրանքի վրա',
+    loc_manage_aria: 'Վայրեր և խանութներ',
+    loc_manage_title: 'Վայրեր և խանութներ',
+    loc_manage_sub: 'Նշեք վայրերը և նշանակեք դրանց խանութ — կարող եք մի քանիսը միասին',
+    loc_manage_assign_label: 'Նշանակել խանութ ընտրված վայրերին',
+    loc_store_none: 'Առանց խանութի',
+    loc_manage_empty: 'Դեռ վայրեր չկան',
+    loc_manage_applied_toast: 'Խանութը նշանակվեց {n} վայրի',
     cat_product_sheet_title: 'Կատալոգի ապրանք',
     cat_product_edit_title: 'Խմբագրել ապրանքը',
     aria_favorite: 'Ընտրյալ',
@@ -8476,6 +8691,8 @@ const I18N = {
     store_sheet_edit_title: 'Амаркет ахьӡ аԥсахра',
     field_name: 'Ахьӡ',
     store_name_ph: 'Абра: Маркет',
+    store_fullname_label: 'Ахьӡ иалнакгаз (мап ацужь)',
+    store_fullname_ph: 'Абра: Ациклатә аҵакырадгьыл',
     btn_add: 'Алышәх',
     btn_save: 'Адырхра',
 
@@ -8552,6 +8769,16 @@ const I18N = {
     cat_search_ph: 'Ахьӡ, ахә ца акатегориа',
     aria_scan: 'QR-код асканирование',
     cat_add_product_btn: 'Апродукт акаталог алышәх',
+    cat_select_mode_aria: 'Жәпагьы алхра',
+    cat_bulk_count: '{n} алху',
+    cat_bulk_applied_toast: 'Акатегориа {n} апродукт рзы иамоуп',
+    loc_manage_aria: 'Аҭыԥқәа ирыдоу амарҭаққа',
+    loc_manage_title: 'Аҭыԥқәа ирыдоу амарҭаққа',
+    loc_manage_sub: 'Аҭыԥқәа шәыхлеит, урҭ рзы амарҭаққа шәышьҭ — жәпагьы алхра ҟалоит',
+    loc_manage_assign_label: 'Алху аҭыԥқәа рзы амарҭаққа шьҭра',
+    loc_store_none: 'Амарҭаққа мап',
+    loc_manage_empty: 'Аҭыԥқәа гыҵәаны рацәаӡам',
+    loc_manage_applied_toast: 'Амарҭаққа {n} аҭыԥ рзы иашьҭыз',
     cat_product_sheet_title: 'Акаталог апродукт',
     cat_product_edit_title: 'Апродукт аԥсахра',
     aria_favorite: 'Иҭаху',
@@ -9321,12 +9548,14 @@ function renderStores() {
     const subtotal = s.items.reduce((t, it) => t + (+it.qty || 0) * (+it.price || 0), 0);
     const bought = s.items.filter(i => i.bought).length;
     const rows = storeItemsHTML(s);
+    const dir = storeDirById(s.storeDirId);
     return `
     <section class="store-card ${s.collapsed ? 'collapsed' : ''}" data-store-card="${s.id}">
       <div class="store-head" onclick="toggleCollapse('${s.id}')">
         <div class="store-title">
           <span class="name">${esc(s.name)}</span>
           <span class="count ${s.items.length && bought === s.items.length ? 'full' : ''}">${bought}/${s.items.length}</span>
+          ${dir && dir.fullName ? `<span class="fullname">${esc(dir.fullName)}</span>` : ''}
         </div>
         <span class="store-sub">${money(subtotal)}</span>
         <button class="store-more" onclick="event.stopPropagation();openStoreMenu('${s.id}')" aria-label="${t('aria_store_actions')}">
@@ -9472,17 +9701,31 @@ function openStoreSheet(editId) {
   storeSheetEditId = editId || null;
   document.getElementById('storeSheetTitle').textContent = editId ? t('store_sheet_edit_title') : t('store_sheet_new_title');
   document.getElementById('storeSaveBtn').textContent = editId ? t('btn_save') : t('btn_add');
-  document.getElementById('storeNameInput').value = editId ? findStore(editId).name : '';
+  const st = editId ? findStore(editId) : null;
+  const dir = st ? storeDirById(st.storeDirId) : null;
+  document.getElementById('storeNameInput').value = st ? st.name : '';
+  document.getElementById('storeFullNameInput').value = dir ? dir.fullName : '';
   openSheet('storeSheet');
   setTimeout(() => document.getElementById('storeNameInput').focus(), 320);
 }
 function saveStoreSheet() {
   const name = document.getElementById('storeNameInput').value.trim();
   if (!name) return;
+  const fullName = document.getElementById('storeFullNameInput').value.trim();
+  // единый справочник магазинов: код (например LUB) — общая идентичность магазина для всех
+  // списков закупок и мест каталога, поэтому меняем запись в справочнике, а не только в списке
   if (storeSheetEditId) {
-    findStore(storeSheetEditId).name = name;
+    const st = findStore(storeSheetEditId);
+    st.name = name;
+    let dir = storeDirById(st.storeDirId);
+    if (!dir) { dir = { id: uid(), code: name, fullName: '' }; state.storeDirectory.push(dir); st.storeDirId = dir.id; }
+    dir.code = name;
+    dir.fullName = fullName;
   } else {
-    data().stores.push({ id: uid(), name, collapsed: false, items: [] });
+    let dir = state.storeDirectory.find(d => d.code.toLowerCase() === name.toLowerCase());
+    if (!dir) { dir = { id: uid(), code: name, fullName: '' }; state.storeDirectory.push(dir); }
+    if (fullName) dir.fullName = fullName;
+    data().stores.push({ id: uid(), name, storeDirId: dir.id, collapsed: false, items: [] });
   }
   save(); render(); closeSheet('storeSheet'); vibrate(10);
 }
@@ -10723,9 +10966,21 @@ function maybeOfferTour() {
 
 /* ================= catalog ================= */
 let catFilter = null, catLocFilter = null, catEditProductId = null, catAddProductId = null, catEditCategoryId = null;
+let catSelectMode = false, catSelectedIds = new Set();
+let locManagePicked = new Set();
 
 const catById = id => state.catalogDB.categories.find(c => c.id === id);
 const prodById = id => state.catalogDB.products.find(p => p.id === id);
+const storeDirById = id => state.storeDirectory.find(d => d.id === id);
+const storeDirLabel = d => d ? (d.fullName ? `${d.code} · ${d.fullName}` : d.code) : '';
+const locByName = name => state.catalogDB.locations.find(l => l.name === name);
+function findOrCreateLocation(name) {
+  name = (name || '').trim();
+  if (!name) return null;
+  let loc = locByName(name);
+  if (!loc) { loc = { id: uid(), name, storeId: null }; state.catalogDB.locations.push(loc); }
+  return loc;
+}
 function favStarSvg(on) {
   return `<svg width="18" height="18" viewBox="0 0 24 24" fill="${on ? '#F59E0B' : 'none'}" stroke="${on ? '#F59E0B' : '#94A3B8'}" stroke-width="1.7" stroke-linejoin="round">${ICONS.star}</svg>`;
 }
@@ -10769,6 +11024,7 @@ function openCatalogSheet(target) {
   catFilter = null;
   catLocFilter = null;
   document.getElementById('catSearch').value = '';
+  if (catSelectMode) toggleCatSelectMode();
   renderCatalog();
   openSheet('catalogSheet');
 }
@@ -10931,6 +11187,7 @@ function renderCatalog() {
     ? `<button class="chip ${!catLocFilter ? 'on' : ''}" onclick="setCatLocFilter(null)">${t('chip_all_locations')}</button>` +
       locs.map(l => `<button class="chip ${catLocFilter === l ? 'on' : ''}" data-loc="${esc(l)}" onclick="setCatLocFilter(this.dataset.loc)">${esc(l)}</button>`).join('')
     : '';
+  document.getElementById('locManageBtn').style.display = state.catalogDB.locations.length ? 'flex' : 'none';
 
   // product rows
   const qn = q.replace(/\s/g, '');
@@ -10946,20 +11203,101 @@ function renderCatalog() {
     });
   document.getElementById('catList').innerHTML = prods.length ? prods.map(p => {
     const cat = catById(p.categoryId);
+    const picked = catSelectedIds.has(p.id);
     return `
-    <div class="cat-row">
-      <div class="cat-info" onclick="openCatProductSheet('${p.id}')">
+    <div class="cat-row ${catSelectMode && picked ? 'picked' : ''}" ${catSelectMode ? `onclick="toggleCatSelect('${p.id}')"` : ''}>
+      <div class="cat-info" ${catSelectMode ? '' : `onclick="openCatProductSheet('${p.id}')"`}>
         <div class="cat-name">${esc(p.name)}</div>
         <div class="cat-meta">${cat ? esc(cat.name) : t('shop_uncategorized')}${p.loc ? ' · ' + esc(p.loc) : ''}${p.sku ? ' · #' + esc(p.sku) : ''}</div>
       </div>
+      ${catSelectMode ? `
+      <span class="cat-price">${money(p.price)}</span>
+      <button class="check" tabindex="-1" aria-hidden="true"><span class="box"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 12.5l5 5 10-11"/></svg></span></button>` : `
       <span class="cat-price">${money(p.price)}</span>
       <button class="cat-fav" onclick="event.stopPropagation();toggleFavorite('${p.id}')" aria-label="${t('aria_favorite')}">${favStarSvg(p.favorite)}</button>
-      <button class="cat-add" onclick="catAddClick('${p.id}')" aria-label="${t('btn_add')}">${ic('plus', 18)}</button>
+      <button class="cat-add" onclick="catAddClick('${p.id}')" aria-label="${t('btn_add')}">${ic('plus', 18)}</button>`}
     </div>`;
   }).join('') : `<div class="cat-empty">${db.products.length ? t('cat_not_found') : t('cat_empty')}</div>`;
+  if (catSelectMode) renderCatBulkBar();
 }
 function setCatFilter(id) { catFilter = id === catFilter ? null : id; renderCatalog(); }
 function setCatLocFilter(loc) { catLocFilter = loc === catLocFilter ? null : loc; renderCatalog(); }
+
+/* ---------- массовое присвоение категории выбранным товарам ---------- */
+function toggleCatSelectMode() {
+  catSelectMode = !catSelectMode;
+  catSelectedIds = new Set();
+  document.getElementById('catSelectModeBtn').classList.toggle('on', catSelectMode);
+  document.getElementById('catAddProductBtn').style.display = catSelectMode ? 'none' : 'flex';
+  document.getElementById('shareCatalogBtn').style.display = catSelectMode ? 'none' : 'flex';
+  document.getElementById('catBulkBar').style.display = catSelectMode ? 'block' : 'none';
+  renderCatalog();
+}
+function toggleCatSelect(id) {
+  if (catSelectedIds.has(id)) catSelectedIds.delete(id); else catSelectedIds.add(id);
+  renderCatalog();
+}
+function renderCatBulkBar() {
+  document.getElementById('catBulkCount').textContent = tf('cat_bulk_count', { n: catSelectedIds.size });
+  const sel = document.getElementById('catBulkCategorySelect');
+  const prevVal = sel.value;
+  sel.innerHTML = `<option value="">${t('field_no_category')}</option>` +
+    state.catalogDB.categories.map(c => `<option value="${c.id}">${esc(c.name)}</option>`).join('');
+  if ([...sel.options].some(o => o.value === prevVal)) sel.value = prevVal;
+}
+function applyCatBulkCategory() {
+  if (!catSelectedIds.size) return;
+  const categoryId = document.getElementById('catBulkCategorySelect').value || null;
+  catSelectedIds.forEach(id => { const p = prodById(id); if (p) p.categoryId = categoryId; });
+  const n = catSelectedIds.size;
+  save(); toggleCatSelectMode(); renderInv();
+  toast(tf('cat_bulk_applied_toast', { n }));
+  vibrate(10);
+}
+
+/* ---------- места и магазины: массовое присвоение магазина местам ---------- */
+function openLocManageSheet() {
+  locManagePicked = new Set();
+  renderLocManageRows();
+  renderLocManageStoreOptions();
+  openSheet('locManageSheet');
+}
+function renderLocManageRows() {
+  const locs = state.catalogDB.locations.slice().sort((a, b) => a.name.localeCompare(b.name, 'ru'));
+  document.getElementById('locManageRows').innerHTML = locs.length ? locs.map(l => {
+    const dir = storeDirById(l.storeId);
+    const picked = locManagePicked.has(l.id);
+    return `
+    <div class="fav-pick-row ${picked ? 'picked' : ''}" onclick="toggleLocManagePick('${l.id}')">
+      <button class="check" tabindex="-1" aria-hidden="true">
+        <span class="box"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 12.5l5 5 10-11"/></svg></span>
+      </button>
+      <div style="flex:1;min-width:0">
+        <div class="inv-name">${esc(l.name)}</div>
+        <div class="fav-pick-price">${dir ? esc(storeDirLabel(dir)) : t('loc_store_none')}</div>
+      </div>
+    </div>`;
+  }).join('') : `<div class="cat-empty">${t('loc_manage_empty')}</div>`;
+}
+function toggleLocManagePick(id) {
+  if (locManagePicked.has(id)) locManagePicked.delete(id); else locManagePicked.add(id);
+  renderLocManageRows();
+}
+function renderLocManageStoreOptions() {
+  document.getElementById('locManageStoreSelect').innerHTML =
+    `<option value="">${t('loc_store_none')}</option>` +
+    state.storeDirectory.map(d => `<option value="${d.id}">${esc(storeDirLabel(d))}</option>`).join('');
+}
+function applyLocManageStore() {
+  if (!locManagePicked.size) return;
+  const storeId = document.getElementById('locManageStoreSelect').value || null;
+  locManagePicked.forEach(id => { const l = state.catalogDB.locations.find(x => x.id === id); if (l) l.storeId = storeId; });
+  const n = locManagePicked.size;
+  save(); locManagePicked = new Set(); renderLocManageRows(); renderCatalog();
+  toast(tf('loc_manage_applied_toast', { n }));
+  vibrate(10);
+}
+
 // Enter в поиске каталога — если ID точно совпал (например, со сканера-терминала на кассе),
 // сразу добавляем товар и очищаем поле для следующего скана
 function catSearchEnter() {
@@ -10990,6 +11328,8 @@ function openCatProductSheet(id) {
   document.getElementById('catProdLoc').value = p && p.loc ? p.loc : '';
   document.getElementById('catProdSku').value = p && p.sku ? p.sku : '';
   renderCatProdLocChips();
+  renderCatProdLocStoreOptions();
+  refreshCatProdLocStore();
   const sel = document.getElementById('catProdCategory');
   sel.innerHTML = `<option value="">${t('field_no_category')}</option>` +
     state.catalogDB.categories.map(c =>
@@ -11018,7 +11358,29 @@ function renderCatProdLocChips() {
 function pickCatProdLoc(loc) {
   document.getElementById('catProdLoc').value = loc;
   renderCatProdLocChips();
+  refreshCatProdLocStore();
   markEmptyFields('catProductSheet');
+}
+// магазин привязан не к товару, а к самому месту (записи в state.catalogDB.locations) —
+// поэтому выпадающий список показывает/меняет магазин текущего введённого значения "Место"
+function renderCatProdLocStoreOptions() {
+  document.getElementById('catProdLocStore').innerHTML =
+    `<option value="">${t('loc_store_none')}</option>` +
+    state.storeDirectory.map(d => `<option value="${d.id}">${esc(storeDirLabel(d))}</option>`).join('');
+}
+function refreshCatProdLocStore() {
+  const name = document.getElementById('catProdLoc').value.trim();
+  const loc = name ? locByName(name) : null;
+  const sel = document.getElementById('catProdLocStore');
+  sel.value = loc && loc.storeId ? loc.storeId : '';
+  sel.disabled = !name;
+}
+function onCatProdLocStoreChange() {
+  const name = document.getElementById('catProdLoc').value.trim();
+  if (!name) return;
+  const loc = findOrCreateLocation(name);
+  loc.storeId = document.getElementById('catProdLocStore').value || null;
+  save();
 }
 function renderItemLocChips() {
   const cur = document.getElementById('itemLocInput').value.trim();
@@ -11120,6 +11482,7 @@ function saveCatProduct() {
   const loc = document.getElementById('catProdLoc').value.trim();
   const sku = document.getElementById('catProdSku').value.trim();
   if (skuExists(sku, catEditProductId)) { onCatProdSkuInput(); return; }
+  findOrCreateLocation(loc);
   if (catEditProductId) {
     Object.assign(prodById(catEditProductId), { name, price, categoryId, loc, sku });
   } else {
