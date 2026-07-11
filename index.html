@@ -9794,7 +9794,7 @@ function openItemSheet(sid, itemId) {
 
   const sel = document.getElementById('itemStoreSelect');
   sel.innerHTML = data().stores.map(s =>
-    `<option value="${s.id}" ${s.id === sid ? 'selected' : ''}>${esc(s.name)}</option>`).join('');
+    `<option value="${s.id}" ${s.id === sid ? 'selected' : ''}>${esc(storeOptionLabel(s))}</option>`).join('');
 
   renderSuggest();
   renderItemLocChips();
@@ -11002,6 +11002,23 @@ function findOrCreateStoreDir(code, fullName) {
   return dir;
 }
 const storeDirLabel = d => d ? (d.fullName ? `${d.code} · ${d.fullName}` : d.code) : '';
+// подпись магазина СПИСКА в выпадающих списках — код магазина плюс его полное название
+// из справочника (если есть), чтобы было понятно, где именно покупать товар
+const storeOptionLabel = s => { const d = storeDirById(s.storeDirId); return d && d.fullName ? `${s.name} · ${d.fullName}` : s.name; };
+// находит в ТЕКУЩЕМ списке магазин, привязанный к тому же справочнику, что и место товара;
+// если такого магазина в этом списке ещё нет — заводит его (код из справочника), чтобы
+// товар сразу попадал туда, где его реально покупают, а не в первый попавшийся магазин
+function ensureListStoreForDir(dirId) {
+  if (!dirId) return null;
+  let st = data().stores.find(s => s.storeDirId === dirId);
+  if (!st) {
+    const dir = storeDirById(dirId);
+    if (!dir) return null;
+    st = { id: uid(), name: dir.code, storeDirId: dirId, collapsed: false, items: [] };
+    data().stores.push(st);
+  }
+  return st;
+}
 const locByName = name => state.catalogDB.locations.find(l => l.name === name);
 function findOrCreateLocation(name) {
   name = (name || '').trim();
@@ -11533,6 +11550,10 @@ function deleteCatProduct() {
 /* ---------- add catalog product to the current list ---------- */
 function openCatAddSheet(pid) {
   const p = prodById(pid); if (!p) return;
+  // если у товара есть место с привязанным магазином — сразу заводим/выбираем такой же
+  // магазин в ТЕКУЩЕМ списке, чтобы не приходилось вручную угадывать, куда его положить
+  const loc = p.loc ? locByName(p.loc) : null;
+  const matchedStore = loc && loc.storeId ? ensureListStoreForDir(loc.storeId) : null;
   if (!data().stores.length) {
     closeSheet('catalogSheet');
     toast(t('cat_add_need_store'));
@@ -11545,7 +11566,7 @@ function openCatAddSheet(pid) {
   document.getElementById('catAddPrice').value = p.price || '';
   document.getElementById('catAddLoc').value = p.loc || '';
   document.getElementById('catAddStore').innerHTML = data().stores.map((s, i) =>
-    `<option value="${s.id}" ${i === 0 ? 'selected' : ''}>${esc(s.name)}</option>`).join('');
+    `<option value="${s.id}" ${(matchedStore ? s.id === matchedStore.id : i === 0) ? 'selected' : ''}>${esc(storeOptionLabel(s))}</option>`).join('');
   openSheet('catAddSheet');
 }
 function stepCatQty(dir) {
@@ -12582,7 +12603,7 @@ function invAction() {
     const total = picks.reduce((t, r) => t + r.buy * invRowCalc(r).price, 0);
     document.getElementById('invStoreInfo').textContent = tf('inv_transfer_info', { n: picks.length, sum: money(total) });
     document.getElementById('invStoreSelect').innerHTML = data().stores.map((s, i) =>
-      `<option value="${s.id}" ${i === 0 ? 'selected' : ''}>${esc(s.name)}</option>`).join('');
+      `<option value="${s.id}" ${i === 0 ? 'selected' : ''}>${esc(storeOptionLabel(s))}</option>`).join('');
     openSheet('invStoreSheet');
   }
 }
