@@ -10507,7 +10507,16 @@ function doShareSend() {
     ]);
     return;
   }
-  const payloadItems = items.map(p => ({ name: p.name, price: +p.price || 0, loc: p.loc || '', sku: p.sku || '' }));
+  // вместе с местом передаём и его магазин (код + полное название) — иначе покупатель
+  // видит голый текст места и не понимает, в каком магазине его искать
+  const payloadItems = items.map(p => {
+    const loc = p.loc ? locByName(p.loc) : null;
+    const dir = loc ? storeDirById(loc.storeId) : null;
+    return {
+      name: p.name, price: +p.price || 0, loc: p.loc || '', sku: p.sku || '',
+      storeCode: dir ? dir.code : '', storeFullName: dir ? dir.fullName : ''
+    };
+  });
   const btn = document.getElementById('shareSendBtn');
   btn.textContent = t('share_sending_btn'); btn.disabled = true;
   syncCall({ login: s.login, pin: s.pin, url: s.url || DEFAULT_SYNC_URL }, 'share_push', { toLogin, title, summary, items: payloadItems })
@@ -10608,6 +10617,16 @@ function acceptShare(id) {
       let added = 0, updated = 0;
       items.forEach(it => {
         const sku = it.sku || '';
+        // место передаём вместе с его магазином (код + полное название) — заводим/находим
+        // такой же магазин в СВОЁМ справочнике и привязываем к нему место, чтобы было видно,
+        // где покупать; если получатель уже сам назначил этому месту другой магазин — не трогаем
+        if (it.loc) {
+          const loc = findOrCreateLocation(it.loc);
+          if (loc && !loc.storeId && it.storeCode) {
+            const dir = findOrCreateStoreDir(it.storeCode, it.storeFullName);
+            if (dir) loc.storeId = dir.id;
+          }
+        }
         // артикул — это и есть ID товара (он же зашит в QR), поэтому повторная
         // передача от того же поставщика с тем же артикулом обновляет цену,
         // а не плодит дубли; новый артикул — новая карточка в «Принятые»
@@ -10972,6 +10991,16 @@ let locManagePicked = new Set();
 const catById = id => state.catalogDB.categories.find(c => c.id === id);
 const prodById = id => state.catalogDB.products.find(p => p.id === id);
 const storeDirById = id => state.storeDirectory.find(d => d.id === id);
+// один и тот же код (например LUB) в справочнике — одна и та же карточка магазина,
+// используется и при создании магазина в списке, и при приёме места от поставщика
+function findOrCreateStoreDir(code, fullName) {
+  code = (code || '').trim();
+  if (!code) return null;
+  let dir = state.storeDirectory.find(d => d.code.toLowerCase() === code.toLowerCase());
+  if (!dir) { dir = { id: uid(), code, fullName: fullName || '' }; state.storeDirectory.push(dir); }
+  else if (fullName && !dir.fullName) dir.fullName = fullName;
+  return dir;
+}
 const storeDirLabel = d => d ? (d.fullName ? `${d.code} · ${d.fullName}` : d.code) : '';
 const locByName = name => state.catalogDB.locations.find(l => l.name === name);
 function findOrCreateLocation(name) {
