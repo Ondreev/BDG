@@ -225,6 +225,18 @@ input,select{font-family:inherit}
 }
 .seg button.on{background:#fff;color:var(--text);box-shadow:0 1px 4px rgba(30,41,59,.14)}
 .chart-body{display:flex;flex-direction:column;align-items:stretch;gap:14px}
+
+.promo-banner{
+  display:block;margin-top:14px;border-radius:20px;overflow:hidden;flex:none;
+  animation:promoBannerGlow 2.4s ease-in-out infinite;transition:transform .15s;
+}
+.promo-banner:active{transform:scale(.98)}
+.promo-banner img{display:block;width:100%;height:auto}
+@keyframes promoBannerGlow{
+  0%,100%{box-shadow:0 4px 16px rgba(220,38,38,.25)}
+  50%{box-shadow:0 8px 30px rgba(220,38,38,.55),0 0 0 4px rgba(220,38,38,.12)}
+}
+
 .donut-wrap{position:relative;width:158px;height:158px;flex:none;margin:0 auto}
 .donut-wrap svg{width:100%;height:100%;display:block}
 .seg-arc{cursor:pointer;transition:opacity .2s}
@@ -526,6 +538,28 @@ a.btn-ghost{color:var(--text)}
 .list-row .mini.danger{color:var(--red)}
 .list-row .mini.success{color:var(--green)}
 
+/* публичное предложение "всем" — крупная промо-карточка вместо обычной строки списка */
+.share-promo{
+  padding:16px;border-radius:18px;margin-bottom:10px;
+  background:linear-gradient(135deg,var(--accent-soft),#fff);border:2px solid var(--accent);
+  animation:promoGlow 2.2s ease-in-out infinite;
+}
+@keyframes promoGlow{
+  0%,100%{box-shadow:0 4px 14px rgba(99,102,241,.18)}
+  50%{box-shadow:0 6px 22px rgba(99,102,241,.4)}
+}
+.share-promo .ttl{font-size:18px;font-weight:900;color:var(--text)}
+.share-promo .sub{font-size:13.5px;color:var(--text);margin-top:4px;line-height:1.4;opacity:.85}
+.share-promo .meta{font-size:12px;color:var(--muted);margin-top:8px}
+.share-promo .actions{display:flex;gap:8px;margin-top:12px}
+.share-promo .actions button{
+  flex:1;padding:11px;border-radius:12px;border:none;font-weight:800;font-size:13.5px;cursor:pointer;
+  transition:transform .12s;display:flex;align-items:center;justify-content:center;gap:6px;
+}
+.share-promo .actions button:active{transform:scale(.97)}
+.share-promo .actions .accept{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff}
+.share-promo .actions .decline{background:#fff;color:var(--muted)}
+
 /* snackbar */
 .snackbar{
   position:fixed;left:50%;bottom:calc(96px + env(safe-area-inset-bottom));transform:translate(-50%,20px);
@@ -817,6 +851,7 @@ input[type=file]{display:none}
 
 /* ---------- desktop ---------- */
 @media(hover:hover){
+  .promo-banner:hover{transform:translateY(-2px)}
   .nav-btn:hover{color:var(--accent)}
   .print-btn:hover{color:var(--accent)}
   .print-top-btn:hover{filter:brightness(1.06)}
@@ -969,6 +1004,10 @@ input[type=file]{display:none}
       <div class="legend" id="chartLegend"></div>
     </div>
   </section>
+
+  <a class="promo-banner" href="https://www.ooba.ru/" target="_blank" rel="noopener noreferrer" aria-label="ooba.ru — оптовый маркетплейс, продавай с комиссией 0%">
+    <img src="public/ooba1.png" alt="ooba.ru — продавай на оптовом маркетплейсе, комиссия 0%">
+  </a>
   </div><!-- /side -->
 
   <div class="main">
@@ -1369,9 +1408,21 @@ input[type=file]{display:none}
     <div class="grab"></div>
     <h2 data-i18n="share_send_title">Кому отправить</h2>
     <p style="color:var(--muted);font-size:13.5px;margin:0 0 12px" id="shareSendCount"></p>
-    <div class="field">
+    <div class="seg seg-wide" style="margin:0 0 12px">
+      <button id="shdOne" class="on" onclick="setShareDest('one')" data-i18n="share_to_one">Один получатель</button>
+      <button id="shdAll" onclick="setShareDest('all')" data-i18n="share_to_all">Всем</button>
+    </div>
+    <div class="field" id="shareSendPhoneField">
       <label data-i18n="share_phone_label">Номер телефона получателя</label>
       <input id="shareSendPhone" type="tel" inputmode="numeric" placeholder="9991234567" autocomplete="off">
+    </div>
+    <div class="field" id="shareSendTitleField" style="display:none">
+      <label data-i18n="share_title_label">Заголовок предложения</label>
+      <input id="shareSendTitle" type="text" data-i18n-ph="share_title_ph" placeholder="Например: Носки" autocomplete="off" maxlength="80">
+    </div>
+    <div class="field" id="shareSendSummaryField" style="display:none">
+      <label data-i18n="share_summary_label">Короткое описание</label>
+      <input id="shareSendSummary" type="text" data-i18n-ph="share_summary_ph" placeholder="Выгодные цены, смотрите скорее!" autocomplete="off" maxlength="200">
     </div>
     <button class="btn btn-primary" id="shareSendBtn" onclick="doShareSend()" data-i18n="share_send_btn">Отправить</button>
   </div>
@@ -1959,6 +2010,9 @@ function sanitizeCatalogDB(s) {
   });
   if (!s.plans.length) s.plans.push({ id: uid(), name: 'Мой план', date: today(), items: [] });
   if (!s.plans.some(p => p.id === s.currentPlanId)) s.currentPlanId = s.plans[0].id;
+  // публичные предложения "всем" сервер не удаляет по одиночному accept/decline —
+  // список уже скрытых у себя предложений синхронизируем вместе с остальными данными
+  s.dismissedShares = Array.isArray(s.dismissedShares) ? s.dismissedShares : [];
 }
 
 const list = () => state.lists.find(l => l.id === state.currentId);
@@ -2522,7 +2576,14 @@ const I18N = {
     cat_accepted_name: 'Принятые',
     ai_sort_accepted: 'В категории «Принятые» скопилось {n} товаров от поставщика — разберём по своим категориям?',
     ai_sort_accepted_btn: 'Открыть каталог',
-    share_accept_result_toast: 'Новых: {added}, обновлено цен: {updated}'
+    share_accept_result_toast: 'Новых: {added}, обновлено цен: {updated}',
+    share_to_one: 'Один получатель',
+    share_to_all: 'Всем',
+    share_title_label: 'Заголовок предложения',
+    share_title_ph: 'Например: Носки',
+    share_summary_label: 'Короткое описание',
+    share_summary_ph: 'Выгодные цены, смотрите скорее!',
+    share_title_required_toast: 'Введите заголовок предложения'
   },
   en: {
     lang_sheet_title: 'Language',
@@ -3042,7 +3103,14 @@ const I18N = {
     cat_accepted_name: 'Accepted',
     ai_sort_accepted: '{n} products from a supplier have piled up in "Accepted" — want to sort them into your own categories?',
     ai_sort_accepted_btn: 'Open catalog',
-    share_accept_result_toast: 'New: {added}, price updates: {updated}'
+    share_accept_result_toast: 'New: {added}, price updates: {updated}',
+    share_to_one: 'One recipient',
+    share_to_all: 'Everyone',
+    share_title_label: 'Offer title',
+    share_title_ph: 'E.g. Socks',
+    share_summary_label: 'Short description',
+    share_summary_ph: 'Great prices, check it out fast!',
+    share_title_required_toast: 'Enter a title for the offer'
   },
   de: {
     lang_sheet_title: 'Sprache',
@@ -3561,7 +3629,14 @@ const I18N = {
     cat_accepted_name: 'Angenommen',
     ai_sort_accepted: 'Im Katalog "Angenommen" haben sich {n} Produkte von einem Lieferanten angesammelt — sollen wir sie in deine Kategorien einsortieren?',
     ai_sort_accepted_btn: 'Katalog öffnen',
-    share_accept_result_toast: 'Neu: {added}, Preisaktualisierungen: {updated}'
+    share_accept_result_toast: 'Neu: {added}, Preisaktualisierungen: {updated}',
+    share_to_one: 'Ein Empfänger',
+    share_to_all: 'Alle',
+    share_title_label: 'Angebotstitel',
+    share_title_ph: 'Z. B.: Socken',
+    share_summary_label: 'Kurzbeschreibung',
+    share_summary_ph: 'Günstige Preise, schnell ansehen!',
+    share_title_required_toast: 'Geben Sie einen Titel für das Angebot ein'
   },
   es: {
     lang_sheet_title: 'Idioma',
@@ -4080,7 +4155,14 @@ const I18N = {
     cat_accepted_name: 'Aceptados',
     ai_sort_accepted: 'Se han acumulado {n} productos de un proveedor en "Aceptados" — ¿los clasificamos en tus categorías?',
     ai_sort_accepted_btn: 'Abrir catálogo',
-    share_accept_result_toast: 'Nuevos: {added}, precios actualizados: {updated}'
+    share_accept_result_toast: 'Nuevos: {added}, precios actualizados: {updated}',
+    share_to_one: 'Un destinatario',
+    share_to_all: 'Todos',
+    share_title_label: 'Título de la oferta',
+    share_title_ph: 'Ej.: Calcetines',
+    share_summary_label: 'Descripción breve',
+    share_summary_ph: '¡Precios increíbles, mira rápido!',
+    share_title_required_toast: 'Introduce un título para la oferta'
   },
   fr: {
     lang_sheet_title: 'Langue',
@@ -4599,7 +4681,14 @@ const I18N = {
     cat_accepted_name: 'Acceptés',
     ai_sort_accepted: '{n} produits d’un fournisseur se sont accumulés dans "Acceptés" — on les trie dans vos catégories ?',
     ai_sort_accepted_btn: 'Ouvrir le catalogue',
-    share_accept_result_toast: 'Nouveaux : {added}, prix mis à jour : {updated}'
+    share_accept_result_toast: 'Nouveaux : {added}, prix mis à jour : {updated}',
+    share_to_one: 'Un destinataire',
+    share_to_all: 'Tout le monde',
+    share_title_label: 'Titre de l\'offre',
+    share_title_ph: 'Ex. : Chaussettes',
+    share_summary_label: 'Brève description',
+    share_summary_ph: 'Prix avantageux, regardez vite !',
+    share_title_required_toast: 'Saisissez un titre pour l\'offre'
   },
   zh: {
     lang_sheet_title: '语言',
@@ -5118,7 +5207,14 @@ const I18N = {
     cat_accepted_name: '已接受',
     ai_sort_accepted: '"已接受"分类中已积累了{n}件来自供应商的商品 — 要整理到您自己的分类中吗？',
     ai_sort_accepted_btn: '打开目录',
-    share_accept_result_toast: '新增：{added}，价格更新：{updated}'
+    share_accept_result_toast: '新增：{added}，价格更新：{updated}',
+    share_to_one: '单个接收者',
+    share_to_all: '所有人',
+    share_title_label: '优惠标题',
+    share_title_ph: '例如：袜子',
+    share_summary_label: '简短说明',
+    share_summary_ph: '超值价格，快来看看！',
+    share_title_required_toast: '请输入优惠标题'
   },
   vi: {
     lang_sheet_title: 'Ngôn ngữ',
@@ -5637,7 +5733,14 @@ const I18N = {
     cat_accepted_name: 'Đã chấp nhận',
     ai_sort_accepted: 'Đã tích lũy {n} sản phẩm từ nhà cung cấp trong "Đã chấp nhận" — sắp xếp vào danh mục của bạn nhé?',
     ai_sort_accepted_btn: 'Mở danh mục',
-    share_accept_result_toast: 'Mới: {added}, cập nhật giá: {updated}'
+    share_accept_result_toast: 'Mới: {added}, cập nhật giá: {updated}',
+    share_to_one: 'Một người nhận',
+    share_to_all: 'Tất cả mọi người',
+    share_title_label: 'Tiêu đề ưu đãi',
+    share_title_ph: 'Ví dụ: Tất',
+    share_summary_label: 'Mô tả ngắn',
+    share_summary_ph: 'Giá tốt, xem ngay!',
+    share_title_required_toast: 'Nhập tiêu đề cho ưu đãi'
   },
   uz: {
     lang_sheet_title: 'Til',
@@ -6156,7 +6259,14 @@ const I18N = {
     cat_accepted_name: 'Qabul qilinganlar',
     ai_sort_accepted: '"Qabul qilinganlar"da yetkazib beruvchidan {n} ta mahsulot to‘planib qoldi — o‘z toifalaringizga taqsimlaymizmi?',
     ai_sort_accepted_btn: 'Katalogni ochish',
-    share_accept_result_toast: 'Yangi: {added}, narx yangilandi: {updated}'
+    share_accept_result_toast: 'Yangi: {added}, narx yangilandi: {updated}',
+    share_to_one: 'Bitta qabul qiluvchi',
+    share_to_all: 'Hammaga',
+    share_title_label: 'Taklif sarlavhasi',
+    share_title_ph: 'Masalan: Paypoq',
+    share_summary_label: 'Qisqacha tavsif',
+    share_summary_ph: 'Qulay narxlar, tezroq ko\'ring!',
+    share_title_required_toast: 'Taklif uchun sarlavha kiriting'
   },
   ky: {
     lang_sheet_title: 'Тил',
@@ -6675,7 +6785,14 @@ const I18N = {
     cat_accepted_name: 'Кабыл алынгандар',
     ai_sort_accepted: '"Кабыл алынгандар" категориясында жеткирүүчүдөн {n} товар топтолду — өз категорияларыңызга бөлүштүрөлүбү?',
     ai_sort_accepted_btn: 'Каталогду ачуу',
-    share_accept_result_toast: 'Жаңы: {added}, баасы жаңыртылды: {updated}'
+    share_accept_result_toast: 'Жаңы: {added}, баасы жаңыртылды: {updated}',
+    share_to_one: 'Бир алуучу',
+    share_to_all: 'Баарына',
+    share_title_label: 'Сунуштун аталышы',
+    share_title_ph: 'Мисалы: Байпак',
+    share_summary_label: 'Кыскача сүрөттөмө',
+    share_summary_ph: 'Пайдалуу баалар, тезирээк караңыз!',
+    share_title_required_toast: 'Сунуш үчүн аталыш киргизиңиз'
   },
   tg: {
     lang_sheet_title: 'Забон',
@@ -7194,7 +7311,14 @@ const I18N = {
     cat_accepted_name: 'Қабулшуда',
     ai_sort_accepted: 'Дар категорияи "Қабулшуда" {n} маҳсулот аз таъминкунанда ҷамъ шуд — ба категорияҳои худ тақсим кунем?',
     ai_sort_accepted_btn: 'Кушодани каталог',
-    share_accept_result_toast: 'Нав: {added}, нархи навшуда: {updated}'
+    share_accept_result_toast: 'Нав: {added}, нархи навшуда: {updated}',
+    share_to_one: 'Як гиранда',
+    share_to_all: 'Ба ҳама',
+    share_title_label: 'Сарлавҳаи пешниҳод',
+    share_title_ph: 'Масалан: Ҷуроб',
+    share_summary_label: 'Тавсифи мухтасар',
+    share_summary_ph: 'Нархҳои арзон, зудтар бинед!',
+    share_title_required_toast: 'Барои пешниҳод сарлавҳа ворид кунед'
   },
   ka: {
     lang_sheet_title: 'ენა',
@@ -7713,7 +7837,14 @@ const I18N = {
     cat_accepted_name: 'მიღებული',
     ai_sort_accepted: '"მიღებული"-ში დაგროვდა {n} პროდუქტი მომწოდებლისგან — გავანაწილოთ თქვენს კატეგორიებში?',
     ai_sort_accepted_btn: 'კატალოგის გახსნა',
-    share_accept_result_toast: 'ახალი: {added}, ფასი განახლდა: {updated}'
+    share_accept_result_toast: 'ახალი: {added}, ფასი განახლდა: {updated}',
+    share_to_one: 'ერთი მიმღები',
+    share_to_all: 'ყველას',
+    share_title_label: 'შეთავაზების სათაური',
+    share_title_ph: 'მაგ.: წინდები',
+    share_summary_label: 'მოკლე აღწერა',
+    share_summary_ph: 'მომგებიანი ფასები, სასწრაფოდ ნახეთ!',
+    share_title_required_toast: 'შეიყვანეთ შეთავაზების სათაური'
   },
   hy: {
     lang_sheet_title: 'Լեզու',
@@ -8232,7 +8363,14 @@ const I18N = {
     cat_accepted_name: 'Ընդունված',
     ai_sort_accepted: '«Ընդունված»-ում կուտակվել է մատակարարից {n} ապրանք — դասավորե՞նք ձեր կատեգորիաներում',
     ai_sort_accepted_btn: 'Բացել կատալոգը',
-    share_accept_result_toast: 'Նոր՝ {added}, գնի թարմացում՝ {updated}'
+    share_accept_result_toast: 'Նոր՝ {added}, գնի թարմացում՝ {updated}',
+    share_to_one: 'Մեկ ստացող',
+    share_to_all: 'Բոլորին',
+    share_title_label: 'Առաջարկի վերնագիրը',
+    share_title_ph: 'Օրինակ՝ Գուլպաներ',
+    share_summary_label: 'Կարճ նկարագրություն',
+    share_summary_ph: 'Շահավետ գներ, նայեք արագ։',
+    share_title_required_toast: 'Մուտքագրեք առաջարկի վերնագիրը'
   },
   ab: {
     lang_sheet_title: 'Абызшәа',
@@ -8751,7 +8889,14 @@ const I18N = {
     cat_accepted_name: 'Ирыдыркит',
     ai_sort_accepted: '"Ирыдыркит" аҟны иҭызуа иахьтәи {n} апродукт еизеит — шәыр акатегориақәа рахь еихшарц?',
     ai_sort_accepted_btn: 'Акаталог аартра',
-    share_accept_result_toast: 'Ҿыц: {added}, ахәба ахкыдтәуп: {updated}'
+    share_accept_result_toast: 'Ҿыц: {added}, ахәба ахкыдтәуп: {updated}',
+    share_to_one: 'Аиас изышьҭагалоу',
+    share_to_all: 'Зегьы',
+    share_title_label: 'Аҭаара алагара',
+    share_title_ph: 'Аҩыза: Ахьаҭаз',
+    share_summary_label: 'Кьаԥхьаӡа ахцәажәара',
+    share_summary_ph: 'Ахә бзиа, ирыҵаагала!',
+    share_title_required_toast: 'Аҭаара алагара ҭагалан'
   }
 };
 function t(key) {
@@ -10015,6 +10160,7 @@ function pollPrintJob() {
 // у получателя аутентификации не спрашиваем — отправитель знает только его номер телефона;
 // получатель сам решает Принять/Отклонить своей парой логин+PIN (см. share_push/list/fetch/remove в .gs)
 let shareMode = 'manual', sharePicked = new Set(), shareCatPicked = null;
+let shareDest = 'one';
 function openShareCatalogSheet() {
   closeSheet('catalogSheet');
   shareMode = 'manual'; sharePicked = new Set(); shareCatPicked = null;
@@ -10081,15 +10227,34 @@ function openShareSendSheet() {
   const items = shareSelectedProducts();
   if (!items.length) { toast(t('share_need_items')); return; }
   document.getElementById('shareSendPhone').value = '';
+  document.getElementById('shareSendTitle').value = '';
+  document.getElementById('shareSendSummary').value = '';
   document.getElementById('shareSendCount').textContent = tf('share_count_text', { n: items.length });
+  setShareDest('one');
   openSheet('shareSendSheet');
+}
+function setShareDest(d) {
+  shareDest = d;
+  document.getElementById('shdOne').classList.toggle('on', d === 'one');
+  document.getElementById('shdAll').classList.toggle('on', d === 'all');
+  document.getElementById('shareSendPhoneField').style.display = d === 'one' ? 'block' : 'none';
+  document.getElementById('shareSendTitleField').style.display = d === 'all' ? 'block' : 'none';
+  document.getElementById('shareSendSummaryField').style.display = d === 'all' ? 'block' : 'none';
 }
 function doShareSend() {
   const items = shareSelectedProducts();
   if (!items.length) { closeSheet('shareSendSheet'); return; }
-  let toLogin = document.getElementById('shareSendPhone').value.replace(/\D/g, '');
-  if (toLogin.length === 11 && (toLogin[0] === '7' || toLogin[0] === '8')) toLogin = toLogin.slice(1);
-  if (toLogin.length < 10 || toLogin.length > 15) { toast(t('sync_login_invalid')); return; }
+  let toLogin, title = '', summary = '';
+  if (shareDest === 'all') {
+    toLogin = 'ALL';
+    title = document.getElementById('shareSendTitle').value.trim();
+    summary = document.getElementById('shareSendSummary').value.trim();
+    if (!title) { toast(t('share_title_required_toast')); return; }
+  } else {
+    toLogin = document.getElementById('shareSendPhone').value.replace(/\D/g, '');
+    if (toLogin.length === 11 && (toLogin[0] === '7' || toLogin[0] === '8')) toLogin = toLogin.slice(1);
+    if (toLogin.length < 10 || toLogin.length > 15) { toast(t('sync_login_invalid')); return; }
+  }
   const s = syncState();
   if (!s.login || !s.pin) {
     closeSheet('shareSendSheet'); closeSheet('shareCatalogSheet');
@@ -10102,7 +10267,7 @@ function doShareSend() {
   const payloadItems = items.map(p => ({ name: p.name, price: +p.price || 0, loc: p.loc || '', sku: p.sku || '' }));
   const btn = document.getElementById('shareSendBtn');
   btn.textContent = t('share_sending_btn'); btn.disabled = true;
-  syncCall({ login: s.login, pin: s.pin, url: s.url || DEFAULT_SYNC_URL }, 'share_push', { toLogin, items: payloadItems })
+  syncCall({ login: s.login, pin: s.pin, url: s.url || DEFAULT_SYNC_URL }, 'share_push', { toLogin, title, summary, items: payloadItems })
     .then(() => {
       closeSheet('shareSendSheet'); closeSheet('shareCatalogSheet');
       toast(tf('share_sent_toast', { n: payloadItems.length }));
@@ -10118,8 +10283,21 @@ function pollShares() {
   const s = syncState();
   if (!s.login || !s.pin) return;
   syncCall({ login: s.login, pin: s.pin, url: s.url || DEFAULT_SYNC_URL }, 'share_list')
-    .then(res => { pendingShares = res.shares || []; renderShareBadge(); })
+    .then(res => {
+      // предложения "всем" сервер не удаляет по одиночному accept/decline — каждый
+      // получатель просто прячет их у себя локально, поэтому фильтруем уже скрытые
+      pendingShares = (res.shares || []).filter(sh => !state.dismissedShares.includes(sh.id));
+      renderShareBadge();
+    })
     .catch(() => {});
+}
+function isBroadcastShare(sh) { return !!sh && sh.toLogin === 'ALL'; }
+function dismissBroadcastShare(id) {
+  if (!state.dismissedShares.includes(id)) state.dismissedShares.push(id);
+  save();
+  pendingShares = pendingShares.filter(x => x.id !== id);
+  renderIncomingShares(); renderShareBadge();
+  if (!pendingShares.length) closeSheet('incomingSharesSheet');
 }
 function renderShareBadge() {
   const wrap = document.getElementById('brandBadge');
@@ -10144,7 +10322,16 @@ function openIncomingSharesSheet() {
   openSheet('incomingSharesSheet');
 }
 function renderIncomingShares() {
-  document.getElementById('incomingSharesRows').innerHTML = pendingShares.length ? pendingShares.map(sh => `
+  document.getElementById('incomingSharesRows').innerHTML = pendingShares.length ? pendingShares.map(sh => isBroadcastShare(sh) ? `
+    <div class="share-promo">
+      <div class="ttl">${esc(sh.title || sh.fromLogin)}</div>
+      ${sh.summary ? `<div class="sub">${esc(sh.summary)}</div>` : ''}
+      <div class="meta">${tf('share_row_meta', { n: sh.itemCount, date: new Date(sh.created).toLocaleDateString(dateLocale()) })}</div>
+      <div class="actions">
+        <button class="decline" onclick="declineShare('${sh.id}')">${ic('trash', 16)}<span>${t('share_decline_aria')}</span></button>
+        <button class="accept" onclick="acceptShare('${sh.id}')">${ic('check2', 16)}<span>${t('share_accept_aria')}</span></button>
+      </div>
+    </div>` : `
     <div class="list-row">
       <div class="info">
         <div class="nm">${esc(sh.fromLogin)}</div>
@@ -10155,6 +10342,8 @@ function renderIncomingShares() {
     </div>`).join('') : `<div class="cat-empty">${t('share_none')}</div>`;
 }
 function declineShare(id) {
+  const share = pendingShares.find(x => x.id === id);
+  if (isBroadcastShare(share)) { dismissBroadcastShare(id); return; }
   const s = syncState();
   syncCall({ login: s.login, pin: s.pin, url: s.url || DEFAULT_SYNC_URL }, 'share_remove', { id })
     .then(() => {
@@ -10194,7 +10383,12 @@ function acceptShare(id) {
         }
       });
       save(); renderCatalog();
-      return syncCall(creds, 'share_remove', { id }).then(() => ({ added, updated }));
+      // предложение "всем" остаётся на сервере для остальных получателей — прячем
+      // его только у себя; адресное предложение удаляем из почтового ящика как раньше
+      const cleanup = isBroadcastShare(share)
+        ? Promise.resolve().then(() => { if (!state.dismissedShares.includes(id)) state.dismissedShares.push(id); save(); })
+        : syncCall(creds, 'share_remove', { id });
+      return cleanup.then(() => ({ added, updated }));
     })
     .then(({ added, updated }) => {
       pendingShares = pendingShares.filter(x => x.id !== id);
