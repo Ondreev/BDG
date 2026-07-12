@@ -1235,9 +1235,15 @@ input[type=file]{display:none}
       <div class="chips" id="itemLocChips"></div>
       <input id="itemLocInput" type="text" placeholder="Например: 2Г, линия 2А" data-i18n-ph="field_location_ph" autocomplete="off" oninput="renderItemLocChips()">
     </div>
-    <div class="field">
-      <label data-i18n="field_note">Примечание</label>
-      <input id="itemNoteInput" type="text" placeholder="Например: 48-56, чёрный" data-i18n-ph="field_note_ph" autocomplete="off">
+    <div class="field-row">
+      <div class="field">
+        <label data-i18n="field_pack">Пачка, шт.</label>
+        <input id="itemPackInput" type="number" inputmode="decimal" min="1" step="any" placeholder="1" oninput="onItemPackInput()">
+      </div>
+      <div class="field">
+        <label data-i18n="field_note">Примечание</label>
+        <input id="itemNoteInput" type="text" placeholder="Например: 48-56, чёрный" data-i18n-ph="field_note_ph" autocomplete="off">
+      </div>
     </div>
     <div class="field">
       <div class="sku-head">
@@ -1595,6 +1601,10 @@ input[type=file]{display:none}
     <div class="field">
       <label data-i18n="field_location">Место (ряд, полка)</label>
       <input id="catAddLoc" type="text" placeholder="Например: 2Г, линия 2А" data-i18n-ph="field_location_ph" autocomplete="off">
+    </div>
+    <div class="field">
+      <label data-i18n="field_note">Примечание</label>
+      <input id="catAddNote" type="text" placeholder="Например: 48-56, чёрный" data-i18n-ph="field_note_ph" autocomplete="off">
     </div>
     <button class="btn btn-primary" onclick="saveCatAdd()" data-i18n="cat_add_to_list_btn">Добавить в список</button>
   </div>
@@ -9963,10 +9973,8 @@ function openItemSheet(sid, itemId) {
   document.getElementById('itemNoteInput').value = it && it.note ? it.note : '';
   const matchedProd = it ? state.catalogDB.products.find(x => x.name.toLowerCase() === it.name.toLowerCase()) : null;
   document.getElementById('itemSkuInput').value = matchedProd && matchedProd.sku ? matchedProd.sku : '';
-  itemSheetPack = matchedProd && matchedProd.pack > 1 ? matchedProd.pack : 1;
-  const itemPackHint = document.getElementById('itemQtyPackHint');
-  itemPackHint.style.display = itemSheetPack > 1 ? 'block' : 'none';
-  if (itemSheetPack > 1) itemPackHint.textContent = tf('field_pack_hint', { n: fmt(itemSheetPack) });
+  document.getElementById('itemPackInput').value = matchedProd && matchedProd.pack > 1 ? matchedProd.pack : '';
+  onItemPackInput();
 
   document.getElementById('itemCatSelect').innerHTML =
     `<option value="">${t('field_no_category')}</option>` +
@@ -9993,6 +10001,14 @@ function stepQty(dir) {
   v = pack ? Math.max(pack, v + dir * pack) : Math.max(dir < 0 ? 0.01 : 1, v + dir);
   // keep fractional values intact when stepping
   inp.value = Math.round(v * 100) / 100;
+}
+// поле "Пачка" в форме товара списка — редактируется прямо тут (как ID/SKU), а хранится
+// в каталоге, а не на самой позиции списка; шаг +/- количества сразу подстраивается под него
+function onItemPackInput() {
+  itemSheetPack = parseFloat(document.getElementById('itemPackInput').value) > 1 ? parseFloat(document.getElementById('itemPackInput').value) : 1;
+  const hint = document.getElementById('itemQtyPackHint');
+  hint.style.display = itemSheetPack > 1 ? 'block' : 'none';
+  if (itemSheetPack > 1) hint.textContent = tf('field_pack_hint', { n: fmt(itemSheetPack) });
 }
 
 function renderSuggest() {
@@ -10022,10 +10038,8 @@ function applySuggest(i) {
   document.getElementById('itemSkuInput').value = c.sku || '';
   document.getElementById('itemNoteInput').value = c.note || '';
   if (c.catId) document.getElementById('itemCatSelect').value = c.catId;
-  itemSheetPack = c.pack > 1 ? c.pack : 1;
-  const itemPackHint = document.getElementById('itemQtyPackHint');
-  itemPackHint.style.display = itemSheetPack > 1 ? 'block' : 'none';
-  if (itemSheetPack > 1) itemPackHint.textContent = tf('field_pack_hint', { n: fmt(itemSheetPack) });
+  document.getElementById('itemPackInput').value = c.pack > 1 ? c.pack : '';
+  onItemPackInput();
   const box = document.getElementById('suggestBox');
   box.innerHTML = '';
   box.classList.remove('show');
@@ -10041,6 +10055,7 @@ function saveItemSheet() {
   const loc = document.getElementById('itemLocInput').value.trim();
   const sku = document.getElementById('itemSkuInput').value.trim();
   const note = document.getElementById('itemNoteInput').value.trim();
+  const pack = parseFloat(document.getElementById('itemPackInput').value) || 1;
   const catId = document.getElementById('itemCatSelect').value || null;
   const targetSid = document.getElementById('itemStoreSelect').value || itemSheetStore;
   if (skuExists(sku, currentItemSkuExcludeId())) { onItemSkuInput(); return; }
@@ -10077,8 +10092,9 @@ function saveItemSheet() {
   if (existing) Object.assign(existing, { name, qty, price });
   else cat.push({ name, qty, price });
   if (cat.length > 300) cat.splice(0, cat.length - 300);
-  // global catalog upsert — the catalog builds itself as you add items
-  upsertCatalogProduct(name, price, catId, loc, sku);
+  // global catalog upsert — the catalog builds itself as you add items;
+  // пачка и примечание — тоже свойства товара каталога, а не самой позиции списка
+  upsertCatalogProduct(name, price, catId, loc, sku, pack, note);
 
   save(); render(); closeSheet('itemSheet'); vibrate(10);
   if (merged) toast(tf('item_qty_now', { name, qty: fmt(merged.qty) }));
@@ -11296,15 +11312,20 @@ function sortLocsByMatch(locs, q) {
   return [...locs].sort((a, b) => locMatchScore(a, q) - locMatchScore(b, q));
 }
 
-function upsertCatalogProduct(name, price, categoryId, loc, sku) {
+function upsertCatalogProduct(name, price, categoryId, loc, sku, pack, note) {
   const p = state.catalogDB.products.find(x => x.name.toLowerCase() === name.toLowerCase());
   if (p) {
     if (price) p.price = price;
     if (categoryId) p.categoryId = categoryId;
     if (loc) p.loc = loc;
     if (sku) p.sku = sku;
+    if (pack > 1) p.pack = pack;
+    if (note) p.note = note;
   } else {
-    state.catalogDB.products.push({ id: uid(), name, price: +price || 0, categoryId: categoryId || null, loc: loc || '', sku: sku || '' });
+    state.catalogDB.products.push({
+      id: uid(), name, price: +price || 0, categoryId: categoryId || null, loc: loc || '', sku: sku || '',
+      pack: pack > 1 ? pack : 1, note: note || ''
+    });
   }
 }
 
@@ -11814,6 +11835,7 @@ function openCatAddSheet(pid) {
   document.getElementById('catAddQty').value = p.pack > 1 ? p.pack : 1;
   document.getElementById('catAddPrice').value = p.price || '';
   document.getElementById('catAddLoc').value = p.loc || '';
+  document.getElementById('catAddNote').value = p.note || '';
   document.getElementById('catAddStore').innerHTML = data().stores.map((s, i) =>
     `<option value="${s.id}" ${(matchedStore ? s.id === matchedStore.id : i === 0) ? 'selected' : ''}>${esc(storeOptionLabel(s))}</option>`).join('');
   const packHint = document.getElementById('catAddPackHint');
@@ -11836,15 +11858,18 @@ function saveCatAdd() {
   const store = findStore(document.getElementById('catAddStore').value);
   if (!store || isNaN(qty) || qty <= 0) return;
   const addLoc = document.getElementById('catAddLoc').value.trim();
+  const addNote = document.getElementById('catAddNote').value.trim();
   // тот же товар по той же цене в этом магазине — не плодим вторую строку, складываем количество
   const merged = store.items.find(i => !i.bought && i.name.toLowerCase() === p.name.toLowerCase() && (+i.price || 0) === price);
   if (merged) {
     merged.qty = (parseFloat(merged.qty) || 0) + qty;
     if (addLoc) merged.loc = addLoc;
+    if (addNote) merged.note = addNote;
   } else {
-    store.items.push({ id: uid(), name: p.name, qty, price, day: null, loc: addLoc, catId: p.categoryId || null, bought: false, note: p.note || '' });
+    store.items.push({ id: uid(), name: p.name, qty, price, day: null, loc: addLoc, catId: p.categoryId || null, bought: false, note: addNote });
   }
   if (addLoc && addLoc !== (p.loc || '')) { p.loc = addLoc; }
+  if (addNote !== (p.note || '')) { p.note = addNote; }
   save(); render(); closeSheet('catAddSheet'); vibrate(10);
   toast(merged ? tf('item_qty_now', { name: p.name, qty: fmt(merged.qty) }) : tf('item_in_list', { name: p.name }));
   maybeSuggestFavorite(p.categoryId);
