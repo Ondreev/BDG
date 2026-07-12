@@ -50,21 +50,23 @@ input,select{font-family:inherit}
 .app{max-width:520px;margin:0 auto;padding:0 16px calc(170px + env(safe-area-inset-bottom))}
 
 /* ---------- top bar ---------- */
-.topbar{
+.topbar-sticky{
   position:sticky;top:0;z-index:50;
-  display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px;
-  padding:calc(10px + env(safe-area-inset-top)) 4px 10px;
   background:rgba(245,247,251,.85);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
 }
-/* ---------- mobile budget strip (stays visible under the topbar while scrolling) ---------- */
+.topbar{
+  display:flex;align-items:center;justify-content:space-between;gap:8px;
+  padding:calc(10px + env(safe-area-inset-top)) 4px 10px;
+}
+/* ---------- mobile budget strip (sits right under the topbar, stays visible while scrolling) ---------- */
 .mobile-budget-bar{
-  display:none;flex:0 0 100%;align-items:center;gap:10px;margin-top:8px;padding:0 2px;
+  display:none;align-items:center;gap:8px;padding:0 4px 8px;
 }
 .mobile-budget-bar.on{display:flex}
-.mbb-val{flex:none;font-size:15px;font-weight:800;color:var(--text);white-space:nowrap;font-variant-numeric:tabular-nums}
+.mbb-val{flex:none;font-size:16px;font-weight:800;color:var(--text);white-space:nowrap;font-variant-numeric:tabular-nums}
 .mbb-val.neg{color:var(--red)}
-.mbb-cap{flex:none;font-size:11px;font-weight:700;color:var(--muted);letter-spacing:.04em;text-transform:uppercase}
-.mbb-scale{flex:1;max-width:130px;height:15px;border-radius:99px;background:var(--line);overflow:hidden}
+.mbb-cap{flex:none;font-size:10.5px;font-weight:700;color:var(--muted);letter-spacing:.04em;text-transform:uppercase}
+.mbb-scale{flex:1;height:18px;border-radius:99px;background:var(--line);overflow:hidden}
 .mbb-fill{
   display:block;position:relative;height:100%;width:0%;border-radius:99px;overflow:hidden;
   background:linear-gradient(90deg,#38BDF8,#0EA5E9);
@@ -948,6 +950,7 @@ input[type=file]{display:none}
 <body>
 
 <div class="app">
+  <div class="topbar-sticky">
   <header class="topbar">
     <div class="brand">
       <button class="brand-badge" id="brandBadge" onclick="openIncomingSharesSheet()" aria-hidden="true" tabindex="-1">₽<span class="brand-badge-count" id="brandBadgeCount"></span></button>
@@ -977,12 +980,13 @@ input[type=file]{display:none}
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#475569" stroke-width="2.6" stroke-linecap="round"><circle cx="12" cy="5" r="1.1" fill="#475569"/><circle cx="12" cy="12" r="1.1" fill="#475569"/><circle cx="12" cy="19" r="1.1" fill="#475569"/></svg>
       </button>
     </div>
-    <div class="mobile-budget-bar on" id="mobileBudgetBar">
-      <span class="mbb-cap" data-i18n="shop_remaining">Остаток</span>
-      <span class="mbb-val" id="mbbVal">0 ₽</span>
-      <span class="mbb-scale"><span class="mbb-fill" id="mbbFill"></span></span>
-    </div>
   </header>
+  <div class="mobile-budget-bar on" id="mobileBudgetBar">
+    <span class="mbb-cap" data-i18n="shop_remaining">Остаток</span>
+    <span class="mbb-val" id="mbbVal">0 ₽</span>
+    <span class="mbb-scale"><span class="mbb-fill" id="mbbFill"></span></span>
+  </div>
+  </div>
 
   <div class="view on" id="view-shop">
   <div class="layout">
