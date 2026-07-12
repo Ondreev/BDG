@@ -288,6 +288,7 @@ input,select{font-family:inherit}
 .cat-info{flex:1;min-width:0;cursor:pointer;padding:3px 0}
 .cat-name{font-size:15px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .cat-meta{font-size:12px;color:var(--muted);margin-top:2px}
+.cat-note{font-size:11.5px;color:var(--muted);margin-top:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .cat-price{font-size:14.5px;font-weight:800;white-space:nowrap;flex:none}
 .cat-add{
   width:42px;height:42px;flex:none;border:none;border-radius:13px;background:var(--accent-soft);
@@ -365,6 +366,7 @@ input,select{font-family:inherit}
 .item-body{flex:1;min-width:0;padding:10px 4px;cursor:pointer}
 .item-name{font-size:15.5px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;transition:color .2s}
 .item-meta{font-size:12.5px;color:var(--muted);margin-top:2px;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.item-note{font-size:12px;color:var(--muted);margin-top:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .day-badge{
   font-size:11px;font-weight:800;color:var(--amber);background:var(--amber-soft);
   padding:2px 7px;border-radius:99px;
@@ -485,6 +487,7 @@ label.sku-check{display:flex;align-items:center;gap:6px;font-size:11.5px;font-we
 }
 .stepper button:active{background:#DDE0FD}
 .stepper input{text-align:center;padding:14px 6px !important}
+.pack-hint{font-size:11.5px;color:var(--muted);margin-top:5px}
 
 .suggest{max-height:0;overflow:hidden;margin:0;border-radius:16px;transition:max-height .25s ease}
 .suggest.show{max-height:230px;overflow-y:auto;margin:-4px 0 14px;box-shadow:var(--shadow);background:var(--card)}
@@ -1213,6 +1216,7 @@ input[type=file]{display:none}
           <input id="itemQtyInput" type="number" inputmode="decimal" min="0" step="any" value="1">
           <button type="button" onclick="stepQty(1)">+</button>
         </div>
+        <div class="pack-hint" id="itemQtyPackHint" style="display:none"></div>
       </div>
     </div>
     <div class="field-row">
@@ -1230,6 +1234,10 @@ input[type=file]{display:none}
       <label data-i18n="field_location">Место (ряд, полка)</label>
       <div class="chips" id="itemLocChips"></div>
       <input id="itemLocInput" type="text" placeholder="Например: 2Г, линия 2А" data-i18n-ph="field_location_ph" autocomplete="off" oninput="renderItemLocChips()">
+    </div>
+    <div class="field">
+      <label data-i18n="field_note">Примечание</label>
+      <input id="itemNoteInput" type="text" placeholder="Например: 48-56, чёрный" data-i18n-ph="field_note_ph" autocomplete="off">
     </div>
     <div class="field">
       <div class="sku-head">
@@ -1532,6 +1540,16 @@ input[type=file]{display:none}
         <select id="catProdLocStore" onchange="onCatProdLocStoreChange()" style="flex:1;min-width:0"></select>
       </div>
     </div>
+    <div class="field-row">
+      <div class="field">
+        <label data-i18n="field_pack">Пачка, шт.</label>
+        <input id="catProdPack" type="number" inputmode="decimal" min="1" step="any" placeholder="1">
+      </div>
+      <div class="field">
+        <label data-i18n="field_note">Примечание</label>
+        <input id="catProdNote" type="text" placeholder="Например: 48-56, чёрный" data-i18n-ph="field_note_ph" autocomplete="off">
+      </div>
+    </div>
     <div class="field">
       <div class="sku-head">
         <label data-i18n="field_id_label">ID / номер товара в кассе</label>
@@ -1561,6 +1579,7 @@ input[type=file]{display:none}
           <input id="catAddQty" type="number" inputmode="decimal" min="0" step="any" value="1">
           <button type="button" onclick="stepCatQty(1)">+</button>
         </div>
+        <div class="pack-hint" id="catAddPackHint" style="display:none"></div>
       </div>
     </div>
     <div class="field-row">
@@ -2047,7 +2066,13 @@ function sanitizeCatalogDB(s) {
   s.catalogDB.categories = Array.isArray(s.catalogDB.categories) ? s.catalogDB.categories : [];
   s.catalogDB.products = Array.isArray(s.catalogDB.products) ? s.catalogDB.products : [];
   s.catalogDB.categories.forEach(c => { c.id = c.id || uid(); c.name = c.name || 'Категория'; });
-  s.catalogDB.products.forEach(p => { p.id = p.id || uid(); p.price = +p.price || 0; p.categoryId = p.categoryId || null; p.sku = p.sku || ''; p.favorite = !!p.favorite; });
+  s.catalogDB.products.forEach(p => {
+    p.id = p.id || uid(); p.price = +p.price || 0; p.categoryId = p.categoryId || null; p.sku = p.sku || ''; p.favorite = !!p.favorite;
+    // пачка — минимальное кратное количество (например 10 шт в упаковке), шаг +/- в списке
+    // округляется до кратного; 1 значит «пачки нет», кратность не применяется
+    p.pack = +p.pack > 1 ? +p.pack : 1;
+    p.note = p.note || '';
+  });
 
   // единый справочник магазинов (код + полное название) — общий для магазинов в списках закупок
   // и для мест каталога, чтобы, например, LUB в любом списке и LUB в местах товара были одним
@@ -2266,6 +2291,10 @@ const I18N = {
     field_no_category: 'Без категории',
     field_location: 'Место (ряд, полка)',
     field_location_ph: 'Например: 2Г, линия 2А',
+    field_pack: 'Пачка, шт.',
+    field_pack_hint: 'Пачка: {n} шт.',
+    field_note: 'Примечание',
+    field_note_ph: 'Например: 48-56, чёрный',
     field_id_label: 'ID / номер товара в кассе',
     field_id_use: 'Использовать',
     field_id_ph: 'Например: 10234',
@@ -2811,6 +2840,10 @@ const I18N = {
     field_no_category: 'No category',
     field_location: 'Location (aisle, shelf)',
     field_location_ph: 'E.g.: Aisle 2, shelf A',
+    field_pack: 'Pack size, pcs.',
+    field_pack_hint: 'Pack: {n} pcs.',
+    field_note: 'Note',
+    field_note_ph: 'E.g.: sizes 48-56, black',
     field_id_label: 'ID / checkout item number',
     field_id_use: 'Use',
     field_id_ph: 'E.g.: 10234',
@@ -3356,6 +3389,10 @@ const I18N = {
     field_no_category: 'Keine Kategorie',
     field_location: 'Standort (Gang, Regal)',
     field_location_ph: 'Z. B.: Gang 2, Regal A',
+    field_pack: 'Packungsgröße, Stk.',
+    field_pack_hint: 'Packung: {n} Stk.',
+    field_note: 'Notiz',
+    field_note_ph: 'Z. B.: Größen 48-56, schwarz',
     field_id_label: 'ID / Kassennummer',
     field_id_use: 'Verwenden',
     field_id_ph: 'Z. B.: 10234',
@@ -3900,6 +3937,10 @@ const I18N = {
     field_no_category: 'Sin categoría',
     field_location: 'Ubicación (pasillo, estante)',
     field_location_ph: 'Ej.: Pasillo 2, estante A',
+    field_pack: 'Tamaño del paquete, uds.',
+    field_pack_hint: 'Paquete: {n} uds.',
+    field_note: 'Nota',
+    field_note_ph: 'Ej.: tallas 48-56, negro',
     field_id_label: 'ID / número de artículo en caja',
     field_id_use: 'Usar',
     field_id_ph: 'Ej.: 10234',
@@ -4444,6 +4485,10 @@ const I18N = {
     field_no_category: 'Sans catégorie',
     field_location: 'Emplacement (allée, rayon)',
     field_location_ph: 'Ex. : Allée 2, rayon A',
+    field_pack: 'Taille du paquet, pcs',
+    field_pack_hint: 'Paquet : {n} pcs',
+    field_note: 'Remarque',
+    field_note_ph: 'Ex. : tailles 48-56, noir',
     field_id_label: 'ID / numéro d’article en caisse',
     field_id_use: 'Utiliser',
     field_id_ph: 'Ex. : 10234',
@@ -4988,6 +5033,10 @@ const I18N = {
     field_no_category: '无分类',
     field_location: '位置（通道、货架）',
     field_location_ph: '例如：2号通道，A货架',
+    field_pack: '包装数量（件）',
+    field_pack_hint: '每包：{n} 件',
+    field_note: '备注',
+    field_note_ph: '例如：尺码48-56，黑色',
     field_id_label: 'ID / 收银商品编号',
     field_id_use: '使用',
     field_id_ph: '例如：10234',
@@ -5532,6 +5581,10 @@ const I18N = {
     field_no_category: 'Không phân loại',
     field_location: 'Vị trí (dãy, kệ)',
     field_location_ph: 'VD: Dãy 2, kệ A',
+    field_pack: 'Số lượng mỗi kiện',
+    field_pack_hint: 'Kiện: {n} cái',
+    field_note: 'Ghi chú',
+    field_note_ph: 'VD: cỡ 48-56, màu đen',
     field_id_label: 'ID / mã sản phẩm khi thanh toán',
     field_id_use: 'Dùng',
     field_id_ph: 'VD: 10234',
@@ -6076,6 +6129,10 @@ const I18N = {
     field_no_category: 'Kategoriyasiz',
     field_location: 'Joylashuv (qator, tokcha)',
     field_location_ph: 'Masalan: 2-qator, A tokcha',
+    field_pack: 'Qadoq hajmi, dona',
+    field_pack_hint: 'Qadoq: {n} dona',
+    field_note: 'Izoh',
+    field_note_ph: 'Masalan: 48-56 oʻlcham, qora',
     field_id_label: 'ID / kassa raqami',
     field_id_use: 'Ishlatish',
     field_id_ph: 'Masalan: 10234',
@@ -6620,6 +6677,10 @@ const I18N = {
     field_no_category: 'Категориясыз',
     field_location: 'Жайгашкан жери (катар, текче)',
     field_location_ph: 'Мисалы: 2-катар, A текче',
+    field_pack: 'Таңгак көлөмү, даана',
+    field_pack_hint: 'Таңгак: {n} даана',
+    field_note: 'Эскертүү',
+    field_note_ph: 'Мисалы: 48-56 өлчөм, кара',
     field_id_label: 'ID / кассадагы товар номери',
     field_id_use: 'Колдонуу',
     field_id_ph: 'Мисалы: 10234',
@@ -7164,6 +7225,10 @@ const I18N = {
     field_no_category: 'Бе категория',
     field_location: 'Ҷойгиршавӣ (қатор, раф)',
     field_location_ph: 'Масалан: Қатори 2, рафи A',
+    field_pack: 'Андозаи бастабандӣ, дона',
+    field_pack_hint: 'Баста: {n} дона',
+    field_note: 'Қайд',
+    field_note_ph: 'Масалан: андозаи 48-56, сиёҳ',
     field_id_label: 'ID / рақами маҳсулот дар касса',
     field_id_use: 'Истифода',
     field_id_ph: 'Масалан: 10234',
@@ -7708,6 +7773,10 @@ const I18N = {
     field_no_category: 'კატეგორიის გარეშე',
     field_location: 'მდებარეობა (რიგი, თარო)',
     field_location_ph: 'მაგ.: რიგი 2, თარო A',
+    field_pack: 'შეკვრის ზომა, ცალი',
+    field_pack_hint: 'შეკვრა: {n} ცალი',
+    field_note: 'შენიშვნა',
+    field_note_ph: 'მაგ.: ზომები 48-56, შავი',
     field_id_label: 'ID / კასის ნომერი',
     field_id_use: 'გამოყენება',
     field_id_ph: 'მაგ.: 10234',
@@ -8252,6 +8321,10 @@ const I18N = {
     field_no_category: 'Առանց կատեգորիայի',
     field_location: 'Տեղակայում (շարք, դարակ)',
     field_location_ph: 'Օր.՝ Շարք 2, դարակ A',
+    field_pack: 'Փաթեթի չափը, հատ',
+    field_pack_hint: 'Փաթեթ՝ {n} հատ',
+    field_note: 'Նշում',
+    field_note_ph: 'Օր.՝ 48-56 չափսեր, սև',
     field_id_label: 'ID / դրամարկղի ապրանքի համար',
     field_id_use: 'Օգտագործել',
     field_id_ph: 'Օր.՝ 10234',
@@ -8796,6 +8869,10 @@ const I18N = {
     field_no_category: 'Акатегориа ада',
     field_location: 'Атопа (арыд, ажәп)',
     field_location_ph: 'Абра: Арыд 2, ажәп A',
+    field_pack: 'Апакет аҽаза, ц.',
+    field_pack_hint: 'Апакет: {n} ц.',
+    field_note: 'Азгәыҭ',
+    field_note_ph: 'Абра: аҽаза 48-56, дуӷба',
     field_id_label: 'ID / акасса апродукт номер',
     field_id_use: 'Ахархәара',
     field_id_ph: 'Абра: 10234',
@@ -9743,6 +9820,7 @@ function itemRowHTML(sid, it) {
     </button>
     <div class="item-body" onclick="openItemSheet('${sid}','${it.id}')">
       <div class="item-name">${esc(it.name)}</div>
+      ${it.note ? `<div class="item-note">${esc(it.note)}</div>` : ''}
       <div class="item-meta"><span>${fmt(it.qty)} × ${fmt(it.price)} ${currSym()}</span>${it.loc ? `<span class="loc-badge ${groupMode === 'loc' ? 'active' : ''}" onclick="event.stopPropagation();toggleGroupMode()">${esc(it.loc)}</span>` : ''}${badge}</div>
     </div>
     <span class="item-total ${sum < 0 ? 'neg' : ''}">${money(sum)}</span>
@@ -9865,7 +9943,7 @@ function toggleCollapse(sid) {
 }
 
 /* ---------- items ---------- */
-let itemSheetStore = null, itemSheetEditId = null;
+let itemSheetStore = null, itemSheetEditId = null, itemSheetPack = 1;
 
 function quickAddItem() { openItemSheet(data().stores[0].id); }
 
@@ -9882,8 +9960,13 @@ function openItemSheet(sid, itemId) {
   document.getElementById('itemQtyInput').value = it ? it.qty : 1;
   document.getElementById('itemPriceInput').value = it ? (it.price || '') : '';
   document.getElementById('itemLocInput').value = it && it.loc ? it.loc : '';
+  document.getElementById('itemNoteInput').value = it && it.note ? it.note : '';
   const matchedProd = it ? state.catalogDB.products.find(x => x.name.toLowerCase() === it.name.toLowerCase()) : null;
   document.getElementById('itemSkuInput').value = matchedProd && matchedProd.sku ? matchedProd.sku : '';
+  itemSheetPack = matchedProd && matchedProd.pack > 1 ? matchedProd.pack : 1;
+  const itemPackHint = document.getElementById('itemQtyPackHint');
+  itemPackHint.style.display = itemSheetPack > 1 ? 'block' : 'none';
+  if (itemSheetPack > 1) itemPackHint.textContent = tf('field_pack_hint', { n: fmt(itemSheetPack) });
 
   document.getElementById('itemCatSelect').innerHTML =
     `<option value="">${t('field_no_category')}</option>` +
@@ -9905,8 +9988,9 @@ function openItemSheet(sid, itemId) {
 
 function stepQty(dir) {
   const inp = document.getElementById('itemQtyInput');
+  const pack = itemSheetPack > 1 ? itemSheetPack : null;
   let v = parseFloat(inp.value) || 0;
-  v = Math.max(dir < 0 ? 0.01 : 1, v + dir);
+  v = pack ? Math.max(pack, v + dir * pack) : Math.max(dir < 0 ? 0.01 : 1, v + dir);
   // keep fractional values intact when stepping
   inp.value = Math.round(v * 100) / 100;
 }
@@ -9918,7 +10002,7 @@ function renderSuggest() {
   // catalog products first, then per-list history; dedupe by name
   const map = new Map();
   state.catalogDB.products.forEach(p => map.set(p.name.toLowerCase(),
-    { name: p.name, price: p.price, qty: 1, catId: p.categoryId, loc: p.loc || '', sku: p.sku || '' }));
+    { name: p.name, price: p.price, qty: 1, catId: p.categoryId, loc: p.loc || '', sku: p.sku || '', pack: p.pack || 1, note: p.note || '' }));
   data().catalog.forEach(c => { const k = (c.name || '').toLowerCase(); if (!map.has(k)) map.set(k, c); });
   const sugg = [...map.values()]
     .filter(c => c.name.toLowerCase() !== v.toLowerCase() && smartMatch(c.name, v))
@@ -9933,10 +10017,15 @@ function applySuggest(i) {
   if (!c) return;
   document.getElementById('itemNameInput').value = c.name;
   document.getElementById('itemPriceInput').value = c.price || '';
-  document.getElementById('itemQtyInput').value = c.qty || 1;
+  document.getElementById('itemQtyInput').value = c.pack > 1 ? c.pack : (c.qty || 1);
   if (c.loc) document.getElementById('itemLocInput').value = c.loc;
   document.getElementById('itemSkuInput').value = c.sku || '';
+  document.getElementById('itemNoteInput').value = c.note || '';
   if (c.catId) document.getElementById('itemCatSelect').value = c.catId;
+  itemSheetPack = c.pack > 1 ? c.pack : 1;
+  const itemPackHint = document.getElementById('itemQtyPackHint');
+  itemPackHint.style.display = itemSheetPack > 1 ? 'block' : 'none';
+  if (itemSheetPack > 1) itemPackHint.textContent = tf('field_pack_hint', { n: fmt(itemSheetPack) });
   const box = document.getElementById('suggestBox');
   box.innerHTML = '';
   box.classList.remove('show');
@@ -9951,6 +10040,7 @@ function saveItemSheet() {
   const price = parseFloat(document.getElementById('itemPriceInput').value) || 0;
   const loc = document.getElementById('itemLocInput').value.trim();
   const sku = document.getElementById('itemSkuInput').value.trim();
+  const note = document.getElementById('itemNoteInput').value.trim();
   const catId = document.getElementById('itemCatSelect').value || null;
   const targetSid = document.getElementById('itemStoreSelect').value || itemSheetStore;
   if (skuExists(sku, currentItemSkuExcludeId())) { onItemSkuInput(); return; }
@@ -9963,7 +10053,7 @@ function saveItemSheet() {
     const fromStore = findStore(itemSheetStore);
     const idx = fromStore.items.findIndex(i => i.id === itemSheetEditId);
     const it = fromStore.items[idx];
-    Object.assign(it, { name, qty, price, loc, catId }); // день месяца убран из формы — существующее значение не трогаем
+    Object.assign(it, { name, qty, price, loc, catId, note }); // день месяца убран из формы — существующее значение не трогаем
     if (targetSid !== itemSheetStore) {
       fromStore.items.splice(idx, 1);
       findStore(targetSid).items.push(it);
@@ -9976,8 +10066,9 @@ function saveItemSheet() {
       merged.qty = (parseFloat(merged.qty) || 0) + qty;
       if (loc) merged.loc = loc;
       if (catId) merged.catId = catId;
+      if (note) merged.note = note;
     } else {
-      store.items.push({ id: uid(), name, qty, price, day: null, loc, catId, bought: false });
+      store.items.push({ id: uid(), name, qty, price, day: null, loc, catId, bought: false, note });
     }
   }
   // history upsert (per-list autocomplete)
@@ -10617,7 +10708,8 @@ function doShareSend() {
     const dir = loc ? storeDirById(loc.storeId) : null;
     return {
       name: p.name, price: +p.price || 0, loc: p.loc || '', sku: p.sku || '',
-      storeCode: dir ? dir.code : '', storeFullName: dir ? dir.fullName : ''
+      storeCode: dir ? dir.code : '', storeFullName: dir ? dir.fullName : '',
+      pack: p.pack > 1 ? p.pack : 1, note: p.note || ''
     };
   });
   const btn = document.getElementById('shareSendBtn');
@@ -10738,7 +10830,8 @@ function renderShareReviewRows() {
       </button>
       <div style="flex:1;min-width:0;cursor:pointer" onclick="toggleShareReviewPick(${i})">
         <div class="inv-name">${esc(it.name || '')}</div>
-        <div class="fav-pick-price">${money(+it.price || 0)}${it.loc ? ' · ' + esc(it.loc) : ''}</div>
+        <div class="fav-pick-price">${money(+it.price || 0)}${it.loc ? ' · ' + esc(it.loc) : ''}${it.pack > 1 ? ' · ' + tf('field_pack_hint', { n: fmt(it.pack) }) : ''}</div>
+        ${it.note ? `<div class="item-note">${esc(it.note)}</div>` : ''}
       </div>
     </div>`).join('');
   updateShareReviewCount();
@@ -10785,11 +10878,14 @@ function finalizeShareAccept(id, share, creds, items) {
       existing.price = +it.price || 0;
       existing.name = it.name || existing.name;
       existing.loc = it.loc || existing.loc;
+      existing.pack = it.pack > 1 ? it.pack : 1;
+      existing.note = it.note || '';
       updated++;
     } else {
       state.catalogDB.products.push({
         id: uid(), name: it.name || '', price: +it.price || 0, categoryId: catId,
-        loc: it.loc || '', sku, favorite: false, shareFrom: fromLogin
+        loc: it.loc || '', sku, favorite: false, shareFrom: fromLogin,
+        pack: it.pack > 1 ? it.pack : 1, note: it.note || ''
       });
       added++;
     }
@@ -11402,7 +11498,8 @@ function renderCatalog() {
     <div class="cat-row ${catSelectMode && picked ? 'picked' : ''}" ${catSelectMode ? `onclick="toggleCatSelect('${p.id}')"` : ''}>
       <div class="cat-info" ${catSelectMode ? '' : `onclick="openCatProductSheet('${p.id}')"`}>
         <div class="cat-name">${esc(p.name)}</div>
-        <div class="cat-meta">${cat ? esc(cat.name) : t('shop_uncategorized')}${p.loc ? ' · ' + esc(p.loc) : ''}${p.sku ? ' · #' + esc(p.sku) : ''}</div>
+        <div class="cat-meta">${cat ? esc(cat.name) : t('shop_uncategorized')}${p.loc ? ' · ' + esc(p.loc) : ''}${p.sku ? ' · #' + esc(p.sku) : ''}${p.pack > 1 ? ' · ' + tf('field_pack_hint', { n: fmt(p.pack) }) : ''}</div>
+        ${p.note ? `<div class="cat-note">${esc(p.note)}</div>` : ''}
       </div>
       ${catSelectMode ? `
       <span class="cat-price">${money(p.price)}</span>
@@ -11521,6 +11618,8 @@ function openCatProductSheet(id) {
   document.getElementById('catProdPrice').value = p ? (p.price || '') : '';
   document.getElementById('catProdLoc').value = p && p.loc ? p.loc : '';
   document.getElementById('catProdSku').value = p && p.sku ? p.sku : '';
+  document.getElementById('catProdPack').value = p && p.pack > 1 ? p.pack : '';
+  document.getElementById('catProdNote').value = p && p.note ? p.note : '';
   renderCatProdLocChips();
   renderCatProdLocStoreOptions();
   refreshCatProdLocStore();
@@ -11675,12 +11774,14 @@ function saveCatProduct() {
   }
   const loc = document.getElementById('catProdLoc').value.trim();
   const sku = document.getElementById('catProdSku').value.trim();
+  const pack = parseFloat(document.getElementById('catProdPack').value) || 1;
+  const note = document.getElementById('catProdNote').value.trim();
   if (skuExists(sku, catEditProductId)) { onCatProdSkuInput(); return; }
   findOrCreateLocation(loc);
   if (catEditProductId) {
-    Object.assign(prodById(catEditProductId), { name, price, categoryId, loc, sku });
+    Object.assign(prodById(catEditProductId), { name, price, categoryId, loc, sku, pack, note });
   } else {
-    state.catalogDB.products.push({ id: uid(), name, price, categoryId, loc, sku });
+    state.catalogDB.products.push({ id: uid(), name, price, categoryId, loc, sku, pack, note });
   }
   save(); renderCatalog(); renderInv(); closeSheet('catProductSheet'); vibrate(10);
 }
@@ -11710,17 +11811,22 @@ function openCatAddSheet(pid) {
   }
   catAddProductId = pid;
   document.getElementById('catAddTitle').textContent = p.name;
-  document.getElementById('catAddQty').value = 1;
+  document.getElementById('catAddQty').value = p.pack > 1 ? p.pack : 1;
   document.getElementById('catAddPrice').value = p.price || '';
   document.getElementById('catAddLoc').value = p.loc || '';
   document.getElementById('catAddStore').innerHTML = data().stores.map((s, i) =>
     `<option value="${s.id}" ${(matchedStore ? s.id === matchedStore.id : i === 0) ? 'selected' : ''}>${esc(storeOptionLabel(s))}</option>`).join('');
+  const packHint = document.getElementById('catAddPackHint');
+  packHint.style.display = p.pack > 1 ? 'block' : 'none';
+  if (p.pack > 1) packHint.textContent = tf('field_pack_hint', { n: fmt(p.pack) });
   openSheet('catAddSheet');
 }
 function stepCatQty(dir) {
   const inp = document.getElementById('catAddQty');
+  const p = prodById(catAddProductId);
+  const pack = p && p.pack > 1 ? p.pack : null;
   let v = parseFloat(inp.value) || 0;
-  v = Math.max(dir < 0 ? 0.01 : 1, v + dir);
+  v = pack ? Math.max(pack, v + dir * pack) : Math.max(dir < 0 ? 0.01 : 1, v + dir);
   inp.value = Math.round(v * 100) / 100;
 }
 function saveCatAdd() {
@@ -11736,7 +11842,7 @@ function saveCatAdd() {
     merged.qty = (parseFloat(merged.qty) || 0) + qty;
     if (addLoc) merged.loc = addLoc;
   } else {
-    store.items.push({ id: uid(), name: p.name, qty, price, day: null, loc: addLoc, catId: p.categoryId || null, bought: false });
+    store.items.push({ id: uid(), name: p.name, qty, price, day: null, loc: addLoc, catId: p.categoryId || null, bought: false, note: p.note || '' });
   }
   if (addLoc && addLoc !== (p.loc || '')) { p.loc = addLoc; }
   save(); render(); closeSheet('catAddSheet'); vibrate(10);
