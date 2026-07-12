@@ -52,9 +52,34 @@ input,select{font-family:inherit}
 /* ---------- top bar ---------- */
 .topbar{
   position:sticky;top:0;z-index:50;
-  display:flex;align-items:center;justify-content:space-between;gap:8px;
+  display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px;
   padding:calc(10px + env(safe-area-inset-top)) 4px 10px;
   background:rgba(245,247,251,.85);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+}
+/* ---------- mobile budget strip (stays visible under the topbar while scrolling) ---------- */
+.mobile-budget-bar{
+  display:none;flex:0 0 100%;align-items:center;gap:10px;margin-top:8px;padding:0 2px;
+}
+.mobile-budget-bar.on{display:flex}
+.mbb-val{flex:none;font-size:15px;font-weight:800;color:var(--text);white-space:nowrap;font-variant-numeric:tabular-nums}
+.mbb-val.neg{color:var(--red)}
+.mbb-cap{flex:none;font-size:11px;font-weight:700;color:var(--muted);letter-spacing:.04em;text-transform:uppercase}
+.mbb-scale{flex:1;max-width:130px;height:15px;border-radius:99px;background:var(--line);overflow:hidden}
+.mbb-fill{
+  display:block;position:relative;height:100%;width:0%;border-radius:99px;overflow:hidden;
+  background:linear-gradient(90deg,#38BDF8,#0EA5E9);
+  transition:width .5s cubic-bezier(.22,1,.36,1),background .3s;
+}
+.mbb-fill::after{
+  content:'';position:absolute;inset:0;background-size:200% 100%;
+  background-image:linear-gradient(110deg,transparent 30%,rgba(255,255,255,.55) 50%,transparent 70%);
+  animation:barShine 2.6s ease-in-out infinite;
+}
+.mbb-fill.warn{background:linear-gradient(90deg,#FBBF24,#F59E0B)}
+.mbb-fill.danger{background:linear-gradient(90deg,#FB7185,var(--red))}
+.mbb-fill.over{background:linear-gradient(90deg,#9F1239,#4C0519)}
+@media(min-width:920px){
+  .mobile-budget-bar{display:none !important}
 }
 .brand{display:flex;align-items:center;gap:10px;min-width:0}
 .brand-badge{
@@ -951,6 +976,11 @@ input[type=file]{display:none}
       <button class="icon-btn" id="menuBtn" onclick="openSheet('menuSheet')" aria-label="Меню" data-i18n-aria="menu_title">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#475569" stroke-width="2.6" stroke-linecap="round"><circle cx="12" cy="5" r="1.1" fill="#475569"/><circle cx="12" cy="12" r="1.1" fill="#475569"/><circle cx="12" cy="19" r="1.1" fill="#475569"/></svg>
       </button>
+    </div>
+    <div class="mobile-budget-bar on" id="mobileBudgetBar">
+      <span class="mbb-cap" data-i18n="shop_remaining">Остаток</span>
+      <span class="mbb-val" id="mbbVal">0 ₽</span>
+      <span class="mbb-scale"><span class="mbb-fill" id="mbbFill"></span></span>
     </div>
   </header>
 
@@ -9575,6 +9605,21 @@ function renderSummary() {
 
   document.getElementById('doneNote').style.display =
     (total > 0 && bought === total) ? 'block' : 'none';
+
+  const mbbVal = document.getElementById('mbbVal');
+  const mbbFill = document.getElementById('mbbFill');
+  mbbVal.textContent = money(remaining);
+  mbbVal.classList.toggle('neg', remaining < 0);
+  mbbFill.classList.remove('warn', 'danger', 'over');
+  if (remaining < 0) {
+    mbbFill.style.width = '100%';
+    mbbFill.classList.add('over');
+  } else {
+    const remPct = budget > 0 ? remaining / budget * 100 : 100;
+    mbbFill.style.width = Math.max(4, Math.min(100, remPct)) + '%';
+    if (budget > 0 && remPct < 15) mbbFill.classList.add('danger');
+    else if (budget > 0 && remPct < 50) mbbFill.classList.add('warn');
+  }
 }
 
 /* ---------- upcoming payments (next 7 days) ---------- */
@@ -9849,6 +9894,7 @@ function switchView(v) {
     document.getElementById('nav-' + x).classList.toggle('on', x === v);
   });
   document.getElementById('printTopBtn').classList.toggle('view-shop', v === 'shop');
+  document.getElementById('mobileBudgetBar').classList.toggle('on', v === 'shop');
   if (v === 'shop') renderPayments();
   if (v === 'plan') renderPlan();
   if (v === 'debts') renderDebts();
