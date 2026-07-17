@@ -632,9 +632,15 @@ a.btn-ghost{color:var(--text)}
 .lc-actions button.danger{color:var(--red)}
 .lc-actions a.lc-wa{color:var(--accent)}
 .list-chip-add{
-  flex:none;width:52px;border-radius:16px;background:var(--bg);border:2px dashed var(--line);
-  display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--accent);
+  flex:none;width:110px;min-height:92px;border-radius:2px 12px 12px 2px;
+  padding:10px;cursor:pointer;position:relative;transform:rotate(-2deg);
+  background:var(--bg);border:2px dashed var(--line);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;
+  color:var(--accent);transition:transform .15s cubic-bezier(.22,1,.36,1),background .15s;
 }
+.list-chip-add:active{transform:rotate(0deg) scale(.95);background:var(--panel)}
+.lca-plus{font-size:30px;font-weight:800;line-height:1}
+.lca-label{font-size:11px;font-weight:700;text-align:center;line-height:1.25}
 @keyframes listSwitchFade{
   0%{opacity:.4;transform:translateY(5px)}
   100%{opacity:1;transform:translateY(0)}
@@ -10614,7 +10620,7 @@ function renderListsStrip() {
     return d !== 0 ? d : b.i - a.i;
   }).map(x => x.l);
   strip.innerHTML =
-    (incomingMode ? '' : `<div class="list-chip-add" onclick="openNewListSheet()" aria-label="${t('lists_create_btn')}">${ic('plus', 20)}</div>`) +
+    (incomingMode ? '' : `<div class="list-chip-add" onclick="openNewListSheet()" aria-label="${t('lists_create_btn')}"><span class="lca-plus">+</span><span class="lca-label">${t('lists_create_btn')}</span></div>`) +
     display.map(l => listChipHtml(l, pool.length)).join('');
 }
 // пока карточку тащат мышкой (десктоп), клик по ней не должен переключать список —
