@@ -354,22 +354,24 @@ input,select{font-family:inherit}
 }
 .store-head{
   display:flex;align-items:center;gap:10px;padding:14px 8px 14px 18px;cursor:pointer;user-select:none;
+  background:#FFE066;
 }
 .store-title{flex:1;min-width:0;display:flex;align-items:center;gap:8px}
-.store-title .name{font-size:16.5px;font-weight:800;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.store-title .name{font-size:16.5px;font-weight:800;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#3D3110}
 .store-title .count{
-  flex:none;font-size:11.5px;font-weight:800;color:var(--accent);background:var(--accent-soft);
+  flex:none;font-size:11.5px;font-weight:800;color:var(--accent);background:rgba(255,255,255,.65);
   padding:3px 8px;border-radius:99px;
 }
 .store-title .count.full{color:#047857;background:var(--green-soft)}
-.store-title .fullname{flex:1;min-width:0;font-size:12px;font-weight:700;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.store-sub{font-size:14.5px;font-weight:800;color:var(--muted);white-space:nowrap}
+.store-title .fullname{flex:1;min-width:0;font-size:12px;font-weight:700;color:#6B5A1E;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.store-sub{font-size:14.5px;font-weight:800;color:#5C4B15;white-space:nowrap}
 .store-more{
   width:42px;height:42px;border:none;background:none;border-radius:12px;cursor:pointer;flex:none;
-  display:flex;align-items:center;justify-content:center;color:var(--muted);
+  display:flex;align-items:center;justify-content:center;color:#5C4B15;
 }
-.store-more:active{background:var(--bg)}
+.store-more:active{background:rgba(0,0,0,.06)}
 .chev{transition:transform .25s;color:#CBD5E1;flex:none;margin-right:10px}
+.store-head .chev{color:#8A7326}
 .store-card.collapsed .chev{transform:rotate(-90deg)}
 .items{border-top:1px solid var(--line)}
 .store-card.collapsed .items{display:none}
@@ -427,6 +429,12 @@ input,select{font-family:inherit}
   color:var(--accent);font-size:14.5px;font-weight:800;border-top:1px dashed var(--line);
 }
 .add-item-row:active{background:var(--accent-soft)}
+.send-order-row{
+  display:flex;align-items:center;justify-content:center;gap:8px;width:100%;
+  padding:14px;border:none;cursor:pointer;font-size:14.5px;font-weight:800;
+  background:#FFE066;color:#3D3110;border-top:1px solid rgba(0,0,0,.07);
+}
+.send-order-row:active{background:#FFD43B}
 .empty-items{padding:18px;text-align:center;color:var(--muted);font-size:13.5px}
 
 .ghost{
@@ -1013,6 +1021,9 @@ input[type=file]{display:none}
   .layout{display:grid;grid-template-columns:410px minmax(0,1fr);gap:26px;align-items:start}
   .side{position:sticky;top:96px}
   .main #stores .store-card:first-child{margin-top:6px}
+  .store-title .name{font-size:18px}
+  .store-sub{font-size:15.5px}
+  .send-order-row{font-size:15.5px;padding:16px}
   .empty-state{padding-top:80px}
   .sheet{
     left:50%;right:auto;bottom:auto;top:50%;width:480px;max-width:92vw;
@@ -10208,6 +10219,10 @@ function renderStores() {
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
           ${t('store_add_item_btn')}
         </button>
+        <button class="send-order-row" onclick="openOrderSendSheet('${s.id}')">
+          ${ic('share', 16)}
+          ${t('order_send_btn')}
+        </button>
       </div>
     </section>`;
   }).join('');
@@ -10386,7 +10401,7 @@ function openStoreMenu(sid) {
     <button class="action-item" onclick="closeSheet('storeMenuSheet');openStoreSheet('${sid}')"><span class="ic">${ic('pencil')}</span><span>${t('store_menu_rename')}</span></button>
     <button class="action-item" onclick="checkAll('${sid}',true)"><span class="ic">${ic('check2')}</span><span>${t('store_menu_check_all')}</span></button>
     <button class="action-item" onclick="checkAll('${sid}',false)"><span class="ic">${ic('undo')}</span><span>${t('store_menu_uncheck_all')}</span></button>
-    <button class="action-item" onclick="closeSheet('storeMenuSheet');openOrderSendSheet('${sid}')"><span class="ic">${ic('share')}</span><span>${t('store_menu_send_order')}</span></button>
+    <button class="action-item" onclick="closeSheet('storeMenuSheet');openOrderSendSheet('${sid}')"><span class="ic">${ic('share')}</span><span>${t('order_send_btn')}</span></button>
     <button class="action-item danger" onclick="deleteStore('${sid}')"><span class="ic">${ic('trash')}</span><span>${t('store_menu_delete')}</span></button>`;
   openSheet('storeMenuSheet');
 }
