@@ -573,6 +573,13 @@ a.btn-ghost{color:var(--text)}
 }
 .list-row .mini.danger{color:var(--red)}
 .list-row .mini.success{color:var(--green)}
+.lists-heading{font-size:11.5px;font-weight:800;color:var(--muted);letter-spacing:.06em;text-transform:uppercase;margin:2px 4px 8px}
+.lists-heading:not(:first-child){margin-top:16px}
+.list-row .wa{
+  display:inline-flex;align-items:center;gap:4px;color:var(--accent);font-weight:700;
+  text-decoration:none;margin-top:2px;
+}
+.list-row .wa svg{flex:none}
 
 /* публичное предложение "всем" — крупная промо-карточка вместо обычной строки списка */
 .share-promo{
@@ -658,10 +665,16 @@ input[type=file]{display:none}
   box-shadow:0 -4px 20px rgba(30,41,59,.12);
 }
 .nav-btn{
-  border:none;background:none;cursor:pointer;border-radius:14px;
+  border:none;background:none;cursor:pointer;border-radius:14px;position:relative;
   display:flex;flex-direction:column;align-items:center;gap:2px;
   padding:8px 8px;color:var(--muted);transition:all .18s;min-width:0;flex:1;
 }
+.nav-badge{
+  display:none;position:absolute;top:2px;right:10px;min-width:16px;height:16px;padding:0 4px;
+  border-radius:99px;background:var(--red);color:#fff;font-size:9.5px;font-weight:900;
+  align-items:center;justify-content:center;box-shadow:0 0 0 2px #fff;
+}
+.nav-badge.on{display:flex}
 .nav-btn.on{background:var(--accent-soft);color:var(--accent)}
 .nav-btn span{font-size:9.5px;font-weight:800;letter-spacing:.01em;white-space:nowrap}
 @media(min-width:420px){
@@ -1169,6 +1182,7 @@ input[type=file]{display:none}
 <div id="bottomNavAnchor"></div>
 <nav class="bottom-nav" id="bottomNav">
   <button class="nav-btn on" id="nav-shop" onclick="switchView('shop')">
+    <span class="nav-badge" id="navOrdersBadge" onclick="event.stopPropagation();openIncomingOrdersSheet()"></span>
     <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="20" r="1.4"/><circle cx="17" cy="20" r="1.4"/><path d="M3 4h2l2.3 11h10.4l2-8H6.2"/></svg>
     <span data-i18n="nav_shop">Закупки</span>
   </button>
@@ -1543,6 +1557,32 @@ input[type=file]{display:none}
     </div>
     <div id="shareReviewRows" style="max-height:48vh;overflow-y:auto"></div>
     <button class="btn btn-primary" style="margin-top:12px" onclick="confirmShareReview()" data-i18n="share_review_confirm_btn">Добавить выбранные</button>
+  </div>
+</div>
+
+<div class="sheet-wrap" id="orderSendSheet"><div class="backdrop" onclick="closeSheet('orderSendSheet')"></div>
+  <div class="sheet">
+    <div class="grab"></div>
+    <h2 data-i18n="order_send_title">Отправить заказ</h2>
+    <p style="color:var(--muted);font-size:13.5px;margin:0 0 12px" id="orderSendCount"></p>
+    <div class="field">
+      <label data-i18n="order_phone_label">Номер телефона поставщика</label>
+      <input id="orderSendPhone" type="tel" inputmode="numeric" placeholder="9991234567" autocomplete="off">
+    </div>
+    <div class="field">
+      <label data-i18n="order_contact_label">Ваш номер (с кодом страны — чтобы поставщик мог написать в WhatsApp)</label>
+      <input id="orderSendContact" type="tel" inputmode="tel" data-i18n-ph="order_contact_ph" placeholder="+79991234567" autocomplete="off">
+    </div>
+    <button class="btn btn-primary" id="orderSendBtn" onclick="doOrderSend()" data-i18n="order_send_btn">Отправить заказ</button>
+  </div>
+</div>
+
+<div class="sheet-wrap" id="incomingOrdersSheet"><div class="backdrop" onclick="closeSheet('incomingOrdersSheet')"></div>
+  <div class="sheet">
+    <div class="grab"></div>
+    <h2 data-i18n="incoming_orders_title">Входящие заказы</h2>
+    <p style="color:var(--muted);font-size:13.5px;margin:0 0 12px" data-i18n="incoming_orders_sub">Примите — заказ появится в ваших списках, как обычный список</p>
+    <div id="incomingOrdersRows"></div>
   </div>
 </div>
 
@@ -2098,7 +2138,13 @@ function load() {
     l.data.stores = l.data.stores || [];
     l.data.catalog = l.data.catalog || [];
     l.data.stores.forEach(st => { st.id = st.id || uid(); st.items = st.items || []; });
+    // список, полученный от покупателя как заказ — редактируется/печатается как обычный
+    // список, но группируется отдельно во «Входящих» и знает, от кого пришёл
+    l.incoming = !!l.incoming;
+    l.fromLogin = l.fromLogin || '';
+    l.fromPhone = l.fromPhone || '';
   });
+  s.myContactPhone = typeof s.myContactPhone === 'string' ? s.myContactPhone : '';
   if (!s.lists.some(l => l.id === s.currentId)) s.currentId = s.lists[0].id;
   sanitizeCatalogDB(s);
   state = s;
@@ -2313,6 +2359,7 @@ const I18N = {
     store_delete_title: 'Удалить магазин?',
     store_delete_text: '«{name}» и все его товары ({n} шт.) будут удалены.',
     store_deleted_snack: 'Магазин «{name}» удалён',
+    store_menu_send_order: 'Отправить заказ поставщику',
 
     fab_add_item: 'Добавить товар',
     fab_pick_catalog: 'Выбрать из каталога',
@@ -2765,7 +2812,25 @@ const I18N = {
     share_title_ph: 'Например: Носки',
     share_summary_label: 'Короткое описание',
     share_summary_ph: 'Выгодные цены, смотрите скорее!',
-    share_title_required_toast: 'Введите заголовок предложения'
+    share_title_required_toast: 'Введите заголовок предложения',
+
+    order_send_title: 'Отправить заказ',
+    order_phone_label: 'Номер телефона поставщика',
+    order_contact_label: 'Ваш номер (с кодом страны — чтобы поставщик мог написать в WhatsApp)',
+    order_contact_ph: '+79991234567',
+    order_send_btn: 'Отправить заказ',
+    order_sending_btn: 'Отправка…',
+    order_sent_toast: 'Заказ отправлен поставщику',
+    order_contact_required_toast: 'Укажите свой номер с кодом страны для связи',
+    incoming_orders_title: 'Входящие заказы',
+    incoming_orders_sub: 'Примите — заказ появится в ваших списках, как обычный список',
+    order_none: 'Пока нет входящих заказов',
+    order_default_store_name: 'Заказ',
+    order_accepted_snack: 'Заказ от {phone} добавлен во «Входящие»',
+    nav_orders_badge_aria: 'Входящих заказов: {n}',
+    lists_incoming_heading: 'Входящие',
+    lists_outgoing_heading: 'Исходящие',
+    wa_chat_aria: 'Написать в WhatsApp'
   },
   en: {
     lang_sheet_title: 'Language',
@@ -2862,6 +2927,7 @@ const I18N = {
     store_delete_title: 'Delete store?',
     store_delete_text: '«{name}» and all its items ({n}) will be deleted.',
     store_deleted_snack: 'Store «{name}» deleted',
+    store_menu_send_order: 'Send order to supplier',
 
     fab_add_item: 'Add item',
     fab_pick_catalog: 'Pick from catalog',
@@ -3314,7 +3380,25 @@ const I18N = {
     share_title_ph: 'E.g. Socks',
     share_summary_label: 'Short description',
     share_summary_ph: 'Great prices, check it out fast!',
-    share_title_required_toast: 'Enter a title for the offer'
+    share_title_required_toast: 'Enter a title for the offer',
+
+    order_send_title: 'Send order',
+    order_phone_label: 'Supplier phone number',
+    order_contact_label: 'Your number (with country code — so the supplier can message you on WhatsApp)',
+    order_contact_ph: '+79991234567',
+    order_send_btn: 'Send order',
+    order_sending_btn: 'Sending…',
+    order_sent_toast: 'Order sent to supplier',
+    order_contact_required_toast: 'Enter your number with country code',
+    incoming_orders_title: 'Incoming orders',
+    incoming_orders_sub: 'Accept — the order will appear in your lists like a regular list',
+    order_none: 'No incoming orders yet',
+    order_default_store_name: 'Order',
+    order_accepted_snack: 'Order from {phone} added to Incoming',
+    nav_orders_badge_aria: 'Incoming orders: {n}',
+    lists_incoming_heading: 'Incoming',
+    lists_outgoing_heading: 'Outgoing',
+    wa_chat_aria: 'Message on WhatsApp'
   },
   de: {
     lang_sheet_title: 'Sprache',
@@ -3411,6 +3495,7 @@ const I18N = {
     store_delete_title: 'Laden löschen?',
     store_delete_text: '"{name}" und alle seine Artikel ({n}) werden gelöscht.',
     store_deleted_snack: 'Laden "{name}" gelöscht',
+    store_menu_send_order: 'Bestellung an Lieferanten senden',
 
     fab_add_item: 'Artikel hinzufügen',
     fab_pick_catalog: 'Aus Katalog wählen',
@@ -3862,7 +3947,24 @@ const I18N = {
     share_title_ph: 'Z. B.: Socken',
     share_summary_label: 'Kurzbeschreibung',
     share_summary_ph: 'Günstige Preise, schnell ansehen!',
-    share_title_required_toast: 'Geben Sie einen Titel für das Angebot ein'
+    share_title_required_toast: 'Geben Sie einen Titel für das Angebot ein',
+    order_send_title: 'Bestellung senden',
+    order_phone_label: 'Telefonnummer des Lieferanten',
+    order_contact_label: 'Ihre Nummer (mit Ländervorwahl — damit der Lieferant Ihnen auf WhatsApp schreiben kann)',
+    order_contact_ph: '+79991234567',
+    order_send_btn: 'Bestellung senden',
+    order_sending_btn: 'Wird gesendet…',
+    order_sent_toast: 'Bestellung an Lieferanten gesendet',
+    order_contact_required_toast: 'Geben Sie Ihre Nummer mit Ländervorwahl an',
+    incoming_orders_title: 'Eingehende Bestellungen',
+    incoming_orders_sub: 'Annehmen — die Bestellung erscheint in Ihren Listen wie eine normale Liste',
+    order_none: 'Noch keine eingehenden Bestellungen',
+    order_default_store_name: 'Bestellung',
+    order_accepted_snack: 'Bestellung von {phone} zu „Eingehend“ hinzugefügt',
+    nav_orders_badge_aria: 'Eingehende Bestellungen: {n}',
+    lists_incoming_heading: 'Eingehend',
+    lists_outgoing_heading: 'Ausgehend',
+    wa_chat_aria: 'Auf WhatsApp schreiben'
   },
   es: {
     lang_sheet_title: 'Idioma',
@@ -3959,6 +4061,7 @@ const I18N = {
     store_delete_title: '¿Eliminar tienda?',
     store_delete_text: '"{name}" y todos sus artículos ({n}) se eliminarán.',
     store_deleted_snack: 'Tienda "{name}" eliminada',
+    store_menu_send_order: 'Enviar pedido al proveedor',
 
     fab_add_item: 'Añadir artículo',
     fab_pick_catalog: 'Elegir del catálogo',
@@ -4410,7 +4513,24 @@ const I18N = {
     share_title_ph: 'Ej.: Calcetines',
     share_summary_label: 'Descripción breve',
     share_summary_ph: '¡Precios increíbles, mira rápido!',
-    share_title_required_toast: 'Introduce un título para la oferta'
+    share_title_required_toast: 'Introduce un título para la oferta',
+    order_send_title: 'Enviar pedido',
+    order_phone_label: 'Número de teléfono del proveedor',
+    order_contact_label: 'Su número (con código de país — para que el proveedor pueda escribirle por WhatsApp)',
+    order_contact_ph: '+79991234567',
+    order_send_btn: 'Enviar pedido',
+    order_sending_btn: 'Enviando…',
+    order_sent_toast: 'Pedido enviado al proveedor',
+    order_contact_required_toast: 'Indique su número con el código de país',
+    incoming_orders_title: 'Pedidos entrantes',
+    incoming_orders_sub: 'Acepte — el pedido aparecerá en sus listas como una lista normal',
+    order_none: 'Aún no hay pedidos entrantes',
+    order_default_store_name: 'Pedido',
+    order_accepted_snack: 'Pedido de {phone} añadido a «Entrantes»',
+    nav_orders_badge_aria: 'Pedidos entrantes: {n}',
+    lists_incoming_heading: 'Entrantes',
+    lists_outgoing_heading: 'Salientes',
+    wa_chat_aria: 'Escribir por WhatsApp'
   },
   fr: {
     lang_sheet_title: 'Langue',
@@ -4507,6 +4627,7 @@ const I18N = {
     store_delete_title: 'Supprimer le magasin ?',
     store_delete_text: '"{name}" et tous ses articles ({n}) seront supprimés.',
     store_deleted_snack: 'Magasin "{name}" supprimé',
+    store_menu_send_order: 'Envoyer la commande au fournisseur',
 
     fab_add_item: 'Ajouter un article',
     fab_pick_catalog: 'Choisir dans le catalogue',
@@ -4958,7 +5079,24 @@ const I18N = {
     share_title_ph: 'Ex. : Chaussettes',
     share_summary_label: 'Brève description',
     share_summary_ph: 'Prix avantageux, regardez vite !',
-    share_title_required_toast: 'Saisissez un titre pour l\'offre'
+    share_title_required_toast: 'Saisissez un titre pour l\'offre',
+    order_send_title: 'Envoyer la commande',
+    order_phone_label: 'Numéro de téléphone du fournisseur',
+    order_contact_label: 'Votre numéro (avec l\'indicatif du pays — pour que le fournisseur puisse vous écrire sur WhatsApp)',
+    order_contact_ph: '+79991234567',
+    order_send_btn: 'Envoyer la commande',
+    order_sending_btn: 'Envoi…',
+    order_sent_toast: 'Commande envoyée au fournisseur',
+    order_contact_required_toast: 'Indiquez votre numéro avec l\'indicatif du pays',
+    incoming_orders_title: 'Commandes entrantes',
+    incoming_orders_sub: 'Acceptez — la commande apparaîtra dans vos listes comme une liste normale',
+    order_none: 'Aucune commande entrante pour le moment',
+    order_default_store_name: 'Commande',
+    order_accepted_snack: 'Commande de {phone} ajoutée aux « Entrantes »',
+    nav_orders_badge_aria: 'Commandes entrantes : {n}',
+    lists_incoming_heading: 'Entrantes',
+    lists_outgoing_heading: 'Sortantes',
+    wa_chat_aria: ' Écrire sur WhatsApp'
   },
   zh: {
     lang_sheet_title: '语言',
@@ -5055,6 +5193,7 @@ const I18N = {
     store_delete_title: '删除商店？',
     store_delete_text: '"{name}"及其所有商品（{n}件）将被删除。',
     store_deleted_snack: '商店"{name}"已删除',
+    store_menu_send_order: '向供应商发送订单',
 
     fab_add_item: '添加商品',
     fab_pick_catalog: '从目录选择',
@@ -5506,7 +5645,24 @@ const I18N = {
     share_title_ph: '例如：袜子',
     share_summary_label: '简短说明',
     share_summary_ph: '超值价格，快来看看！',
-    share_title_required_toast: '请输入优惠标题'
+    share_title_required_toast: '请输入优惠标题',
+    order_send_title: '发送订单',
+    order_phone_label: '供应商电话号码',
+    order_contact_label: '您的号码（含国家代码 — 以便供应商可以在WhatsApp上联系您）',
+    order_contact_ph: '+79991234567',
+    order_send_btn: '发送订单',
+    order_sending_btn: '发送中…',
+    order_sent_toast: '订单已发送给供应商',
+    order_contact_required_toast: '请填写您的号码（含国家代码）',
+    incoming_orders_title: '收到的订单',
+    incoming_orders_sub: '接受后，订单将作为普通列表出现在您的列表中',
+    order_none: '暂无收到的订单',
+    order_default_store_name: '订单',
+    order_accepted_snack: '来自{phone}的订单已添加到“收到的”',
+    nav_orders_badge_aria: '收到的订单：{n}',
+    lists_incoming_heading: '收到的',
+    lists_outgoing_heading: '发出的',
+    wa_chat_aria: '在WhatsApp上联系'
   },
   vi: {
     lang_sheet_title: 'Ngôn ngữ',
@@ -5603,6 +5759,7 @@ const I18N = {
     store_delete_title: 'Xóa cửa hàng?',
     store_delete_text: '"{name}" và tất cả sản phẩm ({n}) sẽ bị xóa.',
     store_deleted_snack: 'Đã xóa cửa hàng "{name}"',
+    store_menu_send_order: 'Gửi đơn hàng cho nhà cung cấp',
 
     fab_add_item: 'Thêm sản phẩm',
     fab_pick_catalog: 'Chọn từ danh mục',
@@ -6054,7 +6211,24 @@ const I18N = {
     share_title_ph: 'Ví dụ: Tất',
     share_summary_label: 'Mô tả ngắn',
     share_summary_ph: 'Giá tốt, xem ngay!',
-    share_title_required_toast: 'Nhập tiêu đề cho ưu đãi'
+    share_title_required_toast: 'Nhập tiêu đề cho ưu đãi',
+    order_send_title: 'Gửi đơn hàng',
+    order_phone_label: 'Số điện thoại nhà cung cấp',
+    order_contact_label: 'Số của bạn (kèm mã quốc gia — để nhà cung cấp có thể nhắn tin cho bạn qua WhatsApp)',
+    order_contact_ph: '+79991234567',
+    order_send_btn: 'Gửi đơn hàng',
+    order_sending_btn: 'Đang gửi…',
+    order_sent_toast: 'Đã gửi đơn hàng cho nhà cung cấp',
+    order_contact_required_toast: 'Nhập số của bạn kèm mã quốc gia',
+    incoming_orders_title: 'Đơn hàng đến',
+    incoming_orders_sub: 'Chấp nhận — đơn hàng sẽ xuất hiện trong danh sách của bạn như một danh sách bình thường',
+    order_none: 'Chưa có đơn hàng đến',
+    order_default_store_name: 'Đơn hàng',
+    order_accepted_snack: 'Đơn hàng từ {phone} đã thêm vào "Đến"',
+    nav_orders_badge_aria: 'Đơn hàng đến: {n}',
+    lists_incoming_heading: 'Đến',
+    lists_outgoing_heading: 'Đi',
+    wa_chat_aria: 'Nhắn tin qua WhatsApp'
   },
   uz: {
     lang_sheet_title: 'Til',
@@ -6151,6 +6325,7 @@ const I18N = {
     store_delete_title: 'Do‘konni o‘chirasizmi?',
     store_delete_text: '"{name}" va uning barcha mahsulotlari ({n} ta) o‘chiriladi.',
     store_deleted_snack: '"{name}" do‘koni o‘chirildi',
+    store_menu_send_order: 'Yetkazib beruvchiga buyurtma yuborish',
 
     fab_add_item: 'Mahsulot qo‘shish',
     fab_pick_catalog: 'Katalogdan tanlash',
@@ -6602,7 +6777,24 @@ const I18N = {
     share_title_ph: 'Masalan: Paypoq',
     share_summary_label: 'Qisqacha tavsif',
     share_summary_ph: 'Qulay narxlar, tezroq ko\'ring!',
-    share_title_required_toast: 'Taklif uchun sarlavha kiriting'
+    share_title_required_toast: 'Taklif uchun sarlavha kiriting',
+    order_send_title: 'Buyurtma yuborish',
+    order_phone_label: 'Yetkazib beruvchining telefon raqami',
+    order_contact_label: 'Sizning raqamingiz (mamlakat kodi bilan — yetkazib beruvchi sizga WhatsApp orqali yozishi uchun)',
+    order_contact_ph: '+79991234567',
+    order_send_btn: 'Buyurtma yuborish',
+    order_sending_btn: 'Yuborilmoqda…',
+    order_sent_toast: 'Buyurtma yetkazib beruvchiga yuborildi',
+    order_contact_required_toast: 'Mamlakat kodi bilan raqamingizni kiriting',
+    incoming_orders_title: 'Kelgan buyurtmalar',
+    incoming_orders_sub: 'Qabul qiling — buyurtma ro‘yxatlaringizda oddiy ro‘yxat sifatida paydo bo‘ladi',
+    order_none: 'Hozircha kelgan buyurtmalar yo‘q',
+    order_default_store_name: 'Buyurtma',
+    order_accepted_snack: '{phone} dan buyurtma «Kelganlar»ga qo‘shildi',
+    nav_orders_badge_aria: 'Kelgan buyurtmalar: {n}',
+    lists_incoming_heading: 'Kelganlar',
+    lists_outgoing_heading: 'Ketganlar',
+    wa_chat_aria: 'WhatsApp orqali yozish'
   },
   ky: {
     lang_sheet_title: 'Тил',
@@ -6699,6 +6891,7 @@ const I18N = {
     store_delete_title: 'Дүкөндү өчүрөсүзбү?',
     store_delete_text: '"{name}" жана анын бардык товарлары ({n}) өчүрүлөт.',
     store_deleted_snack: '"{name}" дүкөнү өчүрүлдү',
+    store_menu_send_order: 'Жабдыкчыга буйрутма жөнөтүү',
 
     fab_add_item: 'Товар кошуу',
     fab_pick_catalog: 'Каталогдон тандоо',
@@ -7150,7 +7343,24 @@ const I18N = {
     share_title_ph: 'Мисалы: Байпак',
     share_summary_label: 'Кыскача сүрөттөмө',
     share_summary_ph: 'Пайдалуу баалар, тезирээк караңыз!',
-    share_title_required_toast: 'Сунуш үчүн аталыш киргизиңиз'
+    share_title_required_toast: 'Сунуш үчүн аталыш киргизиңиз',
+    order_send_title: 'Буйрутма жөнөтүү',
+    order_phone_label: 'Жабдыкчынын телефон номери',
+    order_contact_label: 'Сиздин номериңиз (өлкө коду менен — жабдыкчы WhatsApp аркылуу жаза алышы үчүн)',
+    order_contact_ph: '+79991234567',
+    order_send_btn: 'Буйрутма жөнөтүү',
+    order_sending_btn: 'Жөнөтүлүүдө…',
+    order_sent_toast: 'Буйрутма жабдыкчыга жөнөтүлдү',
+    order_contact_required_toast: 'Өлкө коду менен номериңизди көрсөтүңүз',
+    incoming_orders_title: 'Кирүүчү буйрутмалар',
+    incoming_orders_sub: 'Кабыл алыңыз — буйрутма сиздин тизмелериңизде кадимки тизме катары пайда болот',
+    order_none: 'Азырынча кирүүчү буйрутмалар жок',
+    order_default_store_name: 'Буйрутма',
+    order_accepted_snack: '{phone} дан буйрутма «Кирүүчүлөргө» кошулду',
+    nav_orders_badge_aria: 'Кирүүчү буйрутмалар: {n}',
+    lists_incoming_heading: 'Кирүүчү',
+    lists_outgoing_heading: 'Чыгуучу',
+    wa_chat_aria: 'WhatsApp аркылуу жазуу'
   },
   tg: {
     lang_sheet_title: 'Забон',
@@ -7247,6 +7457,7 @@ const I18N = {
     store_delete_title: 'Мағозаро нест мекунед?',
     store_delete_text: '"{name}" ва ҳамаи маҳсулоти он ({n}) нест карда мешаванд.',
     store_deleted_snack: 'Мағозаи "{name}" нест карда шуд',
+    store_menu_send_order: 'Фиристодани фармоиш ба таъминкунанда',
 
     fab_add_item: 'Илова кардани маҳсулот',
     fab_pick_catalog: 'Интихоб аз каталог',
@@ -7698,7 +7909,24 @@ const I18N = {
     share_title_ph: 'Масалан: Ҷуроб',
     share_summary_label: 'Тавсифи мухтасар',
     share_summary_ph: 'Нархҳои арзон, зудтар бинед!',
-    share_title_required_toast: 'Барои пешниҳод сарлавҳа ворид кунед'
+    share_title_required_toast: 'Барои пешниҳод сарлавҳа ворид кунед',
+    order_send_title: 'Фармоиш фиристодан',
+    order_phone_label: 'Рақами телефони таъминкунанда',
+    order_contact_label: 'Рақами шумо (бо рамзи кишвар — то таъминкунанда тавонад дар WhatsApp ба шумо нависад)',
+    order_contact_ph: '+79991234567',
+    order_send_btn: 'Фармоиш фиристодан',
+    order_sending_btn: 'Фиристода истодааст…',
+    order_sent_toast: 'Фармоиш ба таъминкунанда фиристода шуд',
+    order_contact_required_toast: 'Рақами худро бо рамзи кишвар нишон диҳед',
+    incoming_orders_title: 'Фармоишҳои воридотӣ',
+    incoming_orders_sub: 'Қабул кунед — фармоиш дар рӯйхатҳои шумо ҳамчун рӯйхати одӣ пайдо мешавад',
+    order_none: 'Ҳанӯз фармоиши воридотӣ нест',
+    order_default_store_name: 'Фармоиш',
+    order_accepted_snack: 'Фармоиш аз {phone} ба «Воридотӣ» илова шуд',
+    nav_orders_badge_aria: 'Фармоишҳои воридотӣ: {n}',
+    lists_incoming_heading: 'Воридотӣ',
+    lists_outgoing_heading: 'Содиротӣ',
+    wa_chat_aria: 'Дар WhatsApp навиштан'
   },
   ka: {
     lang_sheet_title: 'ენა',
@@ -7795,6 +8023,7 @@ const I18N = {
     store_delete_title: 'წავშალოთ მაღაზია?',
     store_delete_text: '"{name}" და მისი ყველა პროდუქტი ({n}) წაიშლება.',
     store_deleted_snack: 'მაღაზია "{name}" წაიშალა',
+    store_menu_send_order: 'შეკვეთის გაგზავნა მომწოდებელთან',
 
     fab_add_item: 'პროდუქტის დამატება',
     fab_pick_catalog: 'კატალოგიდან არჩევა',
@@ -8246,7 +8475,24 @@ const I18N = {
     share_title_ph: 'მაგ.: წინდები',
     share_summary_label: 'მოკლე აღწერა',
     share_summary_ph: 'მომგებიანი ფასები, სასწრაფოდ ნახეთ!',
-    share_title_required_toast: 'შეიყვანეთ შეთავაზების სათაური'
+    share_title_required_toast: 'შეიყვანეთ შეთავაზების სათაური',
+    order_send_title: 'შეკვეთის გაგზავნა',
+    order_phone_label: 'მომწოდებლის ტელეფონის ნომერი',
+    order_contact_label: 'თქვენი ნომერი (ქვეყნის კოდით — რომ მომწოდებელმა შეძლოს WhatsApp-ში მოწერა)',
+    order_contact_ph: '+79991234567',
+    order_send_btn: 'შეკვეთის გაგზავნა',
+    order_sending_btn: 'იგზავნება…',
+    order_sent_toast: 'შეკვეთა გაეგზავნა მომწოდებელს',
+    order_contact_required_toast: 'მიუთითეთ თქვენი ნომერი ქვეყნის კოდით',
+    incoming_orders_title: 'შემომავალი შეკვეთები',
+    incoming_orders_sub: 'მიიღეთ — შეკვეთა გამოჩნდება თქვენს სიებში, როგორც ჩვეულებრივი სია',
+    order_none: 'ჯერჯერობით შემომავალი შეკვეთები არ არის',
+    order_default_store_name: 'შეკვეთა',
+    order_accepted_snack: '{phone}-დან შეკვეთა დაემატა „შემომავალებს“',
+    nav_orders_badge_aria: 'შემომავალი შეკვეთები: {n}',
+    lists_incoming_heading: 'შემომავალი',
+    lists_outgoing_heading: 'გამავალი',
+    wa_chat_aria: 'WhatsApp-ში მოწერა'
   },
   hy: {
     lang_sheet_title: 'Լեզու',
@@ -8343,6 +8589,7 @@ const I18N = {
     store_delete_title: 'Ջնջե՞լ խանութը',
     store_delete_text: '«{name}»-ը և նրա բոլոր ապրանքները ({n}) կջնջվեն։',
     store_deleted_snack: '«{name}» խանութը ջնջվեց',
+    store_menu_send_order: 'Պատվեր ուղարկել մատակարարին',
 
     fab_add_item: 'Ավելացնել ապրանք',
     fab_pick_catalog: 'Ընտրել կատալոգից',
@@ -8794,7 +9041,24 @@ const I18N = {
     share_title_ph: 'Օրինակ՝ Գուլպաներ',
     share_summary_label: 'Կարճ նկարագրություն',
     share_summary_ph: 'Շահավետ գներ, նայեք արագ։',
-    share_title_required_toast: 'Մուտքագրեք առաջարկի վերնագիրը'
+    share_title_required_toast: 'Մուտքագրեք առաջարկի վերնագիրը',
+    order_send_title: 'Ուղարկել պատվերը',
+    order_phone_label: 'Մատակարարի հեռախոսահամարը',
+    order_contact_label: 'Ձեր համարը (երկրի կոդով — որպեսզի մատակարարը կարողանա գրել ձեզ WhatsApp-ում)',
+    order_contact_ph: '+79991234567',
+    order_send_btn: 'Ուղարկել պատվերը',
+    order_sending_btn: 'Ուղարկվում է…',
+    order_sent_toast: 'Պատվերն ուղարկվեց մատակարարին',
+    order_contact_required_toast: 'Նշեք ձեր համարը երկրի կոդով',
+    incoming_orders_title: 'Մուտքային պատվերներ',
+    incoming_orders_sub: 'Ընդունեք — պատվերը կհայտնվի ձեր ցուցակներում որպես սովորական ցուցակ',
+    order_none: 'Առայժմ մուտքային պատվերներ չկան',
+    order_default_store_name: 'Պատվեր',
+    order_accepted_snack: '{phone}-ից պատվերն ավելացվեց «Մուտքային»-ին',
+    nav_orders_badge_aria: 'Մուտքային պատվերներ։ {n}',
+    lists_incoming_heading: 'Մուտքային',
+    lists_outgoing_heading: 'Ելքային',
+    wa_chat_aria: 'Գրել WhatsApp-ում'
   },
   ab: {
     lang_sheet_title: 'Абызшәа',
@@ -8891,6 +9155,7 @@ const I18N = {
     store_delete_title: 'Амаркет ахкроума?',
     store_delete_text: '"{name}" насгьы иҟоу апродуктқәа зегьы ({n}) ахкроит.',
     store_deleted_snack: 'Амаркет "{name}" ахкыз',
+    store_menu_send_order: 'Заказ атаӡара шаз',
 
     fab_add_item: 'Апродукт алышәх',
     fab_pick_catalog: 'Акаталог алхра',
@@ -9342,7 +9607,25 @@ const I18N = {
     share_title_ph: 'Аҩыза: Ахьаҭаз',
     share_summary_label: 'Кьаԥхьаӡа ахцәажәара',
     share_summary_ph: 'Ахә бзиа, ирыҵаагала!',
-    share_title_required_toast: 'Аҭаара алагара ҭагалан'
+    share_title_required_toast: 'Аҭаара алагара ҭагалан',
+
+    order_send_title: 'Заказ шаз',
+    order_phone_label: 'Атаӡаратә телефон номер',
+    order_contact_label: 'Шәара шәномер (ашәҟыла акод шаз — атаӡаратә ишәыз WhatsApp аҟны)',
+    order_contact_ph: '+79991234567',
+    order_send_btn: 'Заказ шаз',
+    order_sending_btn: 'Ишьҭуеит…',
+    order_sent_toast: 'Заказ атаӡаратә ишьҭуп',
+    order_contact_required_toast: 'Шәномер ашәҟыла акод шаз шәгәаҭаны',
+    incoming_orders_title: 'Аиасу азаказқәа',
+    incoming_orders_sub: 'Шәыдырҳало — заказ ашьҭыхынтә аихагылара аҿы иаагоит',
+    order_none: 'Аиасу азаказқәа гьежьаӡам',
+    order_default_store_name: 'Заказ',
+    order_accepted_snack: '{phone} иахьтз азаказ «Аиасу» аҟны иацҵаӡуп',
+    nav_orders_badge_aria: 'Аиасу азаказқәа: {n}',
+    lists_incoming_heading: 'Аиасу',
+    lists_outgoing_heading: 'Аҭыҵуа',
+    wa_chat_aria: 'WhatsApp аҟны шаз'
   }
 };
 function t(key) {
@@ -9975,6 +10258,7 @@ function openStoreMenu(sid) {
     <button class="action-item" onclick="closeSheet('storeMenuSheet');openStoreSheet('${sid}')"><span class="ic">${ic('pencil')}</span><span>${t('store_menu_rename')}</span></button>
     <button class="action-item" onclick="checkAll('${sid}',true)"><span class="ic">${ic('check2')}</span><span>${t('store_menu_check_all')}</span></button>
     <button class="action-item" onclick="checkAll('${sid}',false)"><span class="ic">${ic('undo')}</span><span>${t('store_menu_uncheck_all')}</span></button>
+    <button class="action-item" onclick="closeSheet('storeMenuSheet');openOrderSendSheet('${sid}')"><span class="ic">${ic('share')}</span><span>${t('store_menu_send_order')}</span></button>
     <button class="action-item danger" onclick="deleteStore('${sid}')"><span class="ic">${ic('trash')}</span><span>${t('store_menu_delete')}</span></button>`;
   openSheet('storeMenuSheet');
 }
@@ -10170,23 +10454,32 @@ function toggleItem(sid, id) {
 }
 
 /* ---------- lists ---------- */
-function openListsSheet() {
-  const box = document.getElementById('listsBox');
-  box.innerHTML = state.lists.map(l => {
-    const items = l.data.stores.reduce((t, s) => t + s.items.length, 0);
-    const sum = l.data.stores.reduce((t, s) => t + s.items.reduce((x, i) => x + (+i.qty || 0) * (+i.price || 0), 0), 0);
-    const cur = l.id === state.currentId;
-    return `
+function listsRowHtml(l) {
+  const items = l.data.stores.reduce((t, s) => t + s.items.length, 0);
+  const sum = l.data.stores.reduce((t, s) => t + s.items.reduce((x, i) => x + (+i.qty || 0) * (+i.price || 0), 0), 0);
+  const cur = l.id === state.currentId;
+  return `
     <div class="list-row ${cur ? 'current' : ''}" onclick="selectListById('${l.id}')">
       <div class="info">
         <div class="nm">${esc(l.name)}</div>
         <div class="mt">${tf('list_items_count', { n: items })} · ${money(sum)} · ${l.date || ''}</div>
+        ${l.incoming ? waLinkHtml(l.fromPhone || l.fromLogin) : ''}
       </div>
       <button class="mini" onclick="event.stopPropagation();openRenameList('${l.id}')" aria-label="${t('store_menu_rename')}">${ic('pencil', 16)}</button>
       <button class="mini" onclick="event.stopPropagation();duplicateListById('${l.id}')" aria-label="${t('aria_duplicate')}">${ic('copy', 16)}</button>
       ${state.lists.length > 1 ? `<button class="mini danger" onclick="event.stopPropagation();deleteListById('${l.id}')" aria-label="${t('btn_delete')}">${ic('trash', 16)}</button>` : ''}
     </div>`;
-  }).join('');
+}
+function openListsSheet() {
+  const box = document.getElementById('listsBox');
+  // входящие заказы от покупателей группируем отдельно от собственных списков закупок,
+  // чтобы их не перепутать — и показываем первыми, это обычно самое срочное
+  const incoming = state.lists.filter(l => l.incoming);
+  const outgoing = state.lists.filter(l => !l.incoming);
+  box.innerHTML =
+    (incoming.length ? `<div class="lists-heading">${t('lists_incoming_heading')}</div>` + incoming.map(listsRowHtml).join('') : '') +
+    (incoming.length ? `<div class="lists-heading">${t('lists_outgoing_heading')}</div>` : '') +
+    outgoing.map(listsRowHtml).join('');
   openSheet('listsSheet');
 }
 function selectListById(id) {
@@ -10978,6 +11271,138 @@ function ensureAcceptedCategory() {
     state.catalogDB.categories.push(c);
   }
   return c.id;
+}
+
+/* ================= заказы поставщику: целый магазин со своими количествами уходит
+   как заказ, а не карточки каталога — на приёмной стороне превращается в обычный
+   список (тот же движок редактирования/печати), просто отмеченный «входящий» ================= */
+function waHref(phone) { return 'https://wa.me/' + String(phone || '').replace(/\D/g, ''); }
+function waLinkHtml(phone) {
+  if (!phone) return '';
+  return `<a class="wa" href="${waHref(phone)}" target="_blank" rel="noopener" onclick="event.stopPropagation()" aria-label="${t('wa_chat_aria')}">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="2.5" width="10" height="19" rx="2.8"/><path d="M10.8 18.5h2.4"/></svg>${esc(phone)}
+  </a>`;
+}
+let orderSendStoreId = null;
+function openOrderSendSheet(sid) {
+  const s = findStore(sid); if (!s) return;
+  orderSendStoreId = sid;
+  document.getElementById('orderSendCount').textContent = tf('list_items_count', { n: s.items.length });
+  document.getElementById('orderSendPhone').value = '';
+  document.getElementById('orderSendContact').value = state.myContactPhone || '';
+  openSheet('orderSendSheet');
+}
+function doOrderSend() {
+  const s = findStore(orderSendStoreId);
+  if (!s || !s.items.length) { closeSheet('orderSendSheet'); return; }
+  let toLogin = document.getElementById('orderSendPhone').value.replace(/\D/g, '');
+  if (toLogin.length === 11 && (toLogin[0] === '7' || toLogin[0] === '8')) toLogin = toLogin.slice(1);
+  if (toLogin.length < 10 || toLogin.length > 15) { toast(t('sync_login_invalid')); return; }
+  const contact = document.getElementById('orderSendContact').value.trim();
+  if (!contact) { toast(t('order_contact_required_toast')); return; }
+  const sy = syncState();
+  if (!sy.login || !sy.pin) {
+    closeSheet('orderSendSheet');
+    aiSay(t('ai_no_creds'), [
+      { label: t('ai_enter_pin_btn'), pri: true, fn: () => { openSyncSheet(); } },
+      { label: t('ai_later_btn'), fn: () => {} }
+    ]);
+    return;
+  }
+  // контактный номер с кодом страны запоминаем на устройстве — не нужно вводить заново
+  // при каждой отправке; для входа в приложение (логин/PIN) он не используется
+  state.myContactPhone = contact; save();
+  const payloadItems = s.items.map(it => ({
+    name: it.name, qty: +it.qty || 0, price: +it.price || 0, loc: it.loc || '', note: it.note || ''
+  }));
+  const btn = document.getElementById('orderSendBtn');
+  btn.textContent = t('order_sending_btn'); btn.disabled = true;
+  syncCall({ login: sy.login, pin: sy.pin, url: sy.url || DEFAULT_SYNC_URL }, 'order_push',
+    { toLogin, storeName: s.name, fromPhone: contact, items: payloadItems })
+    .then(() => {
+      closeSheet('orderSendSheet');
+      toast(t('order_sent_toast'));
+      vibrate(10);
+    })
+    .catch(err => toast(errToMsg(err)))
+    .finally(() => { btn.textContent = t('order_send_btn'); btn.disabled = false; });
+}
+
+/* ---------- Поставщик: входящие заказы от покупателей ---------- */
+let pendingOrders = [];
+function pollOrders() {
+  const s = syncState();
+  if (!s.login || !s.pin) return;
+  syncCall({ login: s.login, pin: s.pin, url: s.url || DEFAULT_SYNC_URL }, 'order_list')
+    .then(res => { pendingOrders = res.orders || []; renderOrdersBadge(); })
+    .catch(() => {});
+}
+function renderOrdersBadge() {
+  const badge = document.getElementById('navOrdersBadge');
+  const n = pendingOrders.length;
+  badge.classList.toggle('on', n > 0);
+  badge.textContent = n > 99 ? '99+' : (n || '');
+  badge.setAttribute('aria-label', tf('nav_orders_badge_aria', { n }));
+}
+function openIncomingOrdersSheet() {
+  if (!pendingOrders.length) return;
+  renderIncomingOrders();
+  openSheet('incomingOrdersSheet');
+}
+function renderIncomingOrders() {
+  document.getElementById('incomingOrdersRows').innerHTML = pendingOrders.length ? pendingOrders.map(o => `
+    <div class="list-row" onclick="acceptOrder('${o.id}')">
+      <div class="info">
+        <div class="nm">${esc(o.storeName || o.fromLogin)}</div>
+        <div class="mt">${tf('share_row_meta', { n: o.itemCount, date: new Date(o.created).toLocaleDateString(dateLocale()) })}</div>
+        ${waLinkHtml(o.fromPhone || o.fromLogin)}
+      </div>
+      <button class="mini" onclick="event.stopPropagation();declineOrder('${o.id}')" aria-label="${t('share_decline_aria')}">${ic('trash', 16)}</button>
+      <button class="mini success" onclick="event.stopPropagation();acceptOrder('${o.id}')" aria-label="${t('share_accept_aria')}">${ic('check2', 16)}</button>
+    </div>`).join('') : `<div class="cat-empty">${t('order_none')}</div>`;
+}
+function declineOrder(id) {
+  const s = syncState();
+  syncCall({ login: s.login, pin: s.pin, url: s.url || DEFAULT_SYNC_URL }, 'order_remove', { id })
+    .then(() => {
+      pendingOrders = pendingOrders.filter(x => x.id !== id);
+      renderIncomingOrders(); renderOrdersBadge();
+      if (!pendingOrders.length) closeSheet('incomingOrdersSheet');
+    })
+    .catch(err => toast(errToMsg(err)));
+}
+function acceptOrder(id) {
+  const s = syncState();
+  const creds = { login: s.login, pin: s.pin, url: s.url || DEFAULT_SYNC_URL };
+  const order = pendingOrders.find(x => x.id === id);
+  if (!order) return;
+  syncCall(creds, 'order_fetch', { id })
+    .then(res => {
+      const items = (res.payload && res.payload.items) || [];
+      const newList = {
+        id: uid(), name: order.fromPhone || order.fromLogin, date: today(),
+        data: { budget: 0, stores: [{
+          id: uid(), name: order.storeName || t('order_default_store_name'), collapsed: false,
+          items: items.map(it => ({
+            id: uid(), name: it.name || '', qty: +it.qty || 0, price: +it.price || 0,
+            day: null, loc: it.loc || '', catId: null, bought: false, note: it.note || ''
+          }))
+        }], catalog: [] },
+        incoming: true, fromLogin: order.fromLogin, fromPhone: order.fromPhone || ''
+      };
+      state.lists.push(newList);
+      state.currentId = newList.id;
+      save(); render();
+      return syncCall(creds, 'order_remove', { id });
+    })
+    .then(() => {
+      pendingOrders = pendingOrders.filter(x => x.id !== id);
+      renderOrdersBadge();
+      closeSheet('incomingOrdersSheet');
+      toast(tf('order_accepted_snack', { phone: order.fromPhone || order.fromLogin }));
+      vibrate(10);
+    })
+    .catch(err => toast(errToMsg(err)));
 }
 // периодически напоминаем разобрать «Принятые» — так же тихо, как напоминание сохранить в облако
 let acceptedReminderSnoozeUntil = 0;
@@ -13289,6 +13714,8 @@ setTimeout(checkRemoteUpdates, 3000);
 // входящие карточки товаров от поставщиков — проверяем сразу и затем периодически
 setTimeout(pollShares, 2000);
 setInterval(pollShares, 45000);
+setTimeout(pollOrders, 2300);
+setInterval(pollOrders, 45000);
 setInterval(checkAcceptedReminder, 5 * 60000);
 </script>
 </body>
