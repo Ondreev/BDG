@@ -633,7 +633,7 @@ a.btn-ghost{color:var(--text)}
 .lc-actions a.lc-wa{color:var(--accent)}
 .list-chip-add{
   flex:none;width:110px;min-height:92px;border-radius:2px 12px 12px 2px;
-  padding:10px;cursor:pointer;position:relative;transform:rotate(-2deg);
+  padding:10px;cursor:pointer;position:relative;scroll-snap-align:start;transform:rotate(-2deg);
   background:var(--bg);border:2px dashed var(--line);
   display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;
   color:var(--accent);transition:transform .15s cubic-bezier(.22,1,.36,1),background .15s;
@@ -741,6 +741,10 @@ input[type=file]{display:none}
   align-items:center;justify-content:center;box-shadow:0 0 0 2px #fff;
 }
 .nav-badge.on{display:flex}
+/* карточка «Важное» перегружает мобильный экран закупок — там счётчики
+   срочных дел переезжают бейджами на вкладки План/Долги, а сама карточка
+   остаётся видна только на десктопе, где места достаточно */
+@media(max-width:919.98px){#payCard{display:none !important}}
 .nav-btn.on{background:var(--accent-soft);color:var(--accent)}
 .nav-btn span{font-size:9.5px;font-weight:800;letter-spacing:.01em;white-space:nowrap}
 @media(min-width:420px){
@@ -1253,10 +1257,12 @@ input[type=file]{display:none}
     <span data-i18n="nav_shop">Закупки</span>
   </button>
   <button class="nav-btn" id="nav-plan" onclick="switchView('plan')">
+    <span class="nav-badge" id="navPlanBadge"></span>
     <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11.5l2 2 4-4.5"/><rect x="3.5" y="3.5" width="17" height="17" rx="3.5"/></svg>
     <span data-i18n="nav_plan">План</span>
   </button>
   <button class="nav-btn" id="nav-debts" onclick="switchView('debts')">
+    <span class="nav-badge" id="navDebtsBadge"></span>
     <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="13.5" rx="2.8"/><path d="M3 10.5h18M16.2 15.2h1.6"/></svg>
     <span data-i18n="nav_debts">Долги</span>
   </button>
@@ -1285,8 +1291,7 @@ input[type=file]{display:none}
   <div class="sheet">
     <div class="grab"></div>
     <div class="action-list">
-      <button class="action-item" onclick="closeSheet('fabSheet');quickAddItem()"><span class="ic" data-icon="cart"></span><span data-i18n="fab_add_item">Добавить товар</span></button>
-      <button class="action-item" onclick="closeSheet('fabSheet');openCatalogSheet()"><span class="ic" data-icon="tag"></span><span data-i18n="fab_pick_catalog">Выбрать из каталога</span></button>
+      <button class="action-item" onclick="closeSheet('fabSheet');openCatalogSheet()"><span class="ic" data-icon="cart"></span><span data-i18n="fab_add_item">Добавить товар</span></button>
       <button class="action-item" onclick="closeSheet('fabSheet');openStoreSheet()"><span class="ic" data-icon="store"></span><span data-i18n="fab_add_store">Добавить магазин</span></button>
     </div>
   </div>
@@ -10047,6 +10052,10 @@ function renderPayments() {
     const dl = debtDaysLeft(it.date);
     if (dl <= 7) rows.push({ kind: 'plan', planId: p.id, id: it.id, name: it.text, sum: 0, dl });
   }));
+  // счётчики срочных дел на бейджах вкладок План/Долги — замена карточке
+  // «Важное», которая на мобильном экране больше не показывается
+  setNavBadge('navPlanBadge', rows.filter(r => r.kind === 'plan').length);
+  setNavBadge('navDebtsBadge', rows.filter(r => r.kind === 'debt').length);
   if (!rows.length) { card.style.display = 'none'; return; }
   rows.sort((a, b) => a.dl - b.dl);
   card.style.display = 'block';
@@ -10408,8 +10417,6 @@ function toggleCollapse(sid) {
 /* ---------- items ---------- */
 let itemSheetStore = null, itemSheetEditId = null, itemSheetPack = 1;
 
-function quickAddItem() { openItemSheet(data().stores[0].id); }
-
 function openItemSheet(sid, itemId) {
   itemSheetStore = sid;
   itemSheetEditId = itemId || null;
@@ -10587,10 +10594,9 @@ function listChipHtml(l, poolLen) {
   const cur = l.id === state.currentId;
   const items = l.data.stores.reduce((t, s) => t + s.items.length, 0);
   const sum = l.data.stores.reduce((t, s) => t + s.items.reduce((x, i) => x + (+i.qty || 0) * (+i.price || 0), 0), 0);
-  // у входящего список назван по номеру отправителя — это служебное поле, не тащим
-  // его в заголовок карточки; вместо этого понятное «от кого» — название магазина,
-  // которое сам отправитель указал при отправке заказа, плюс кнопка WhatsApp рядом
-  const name = l.incoming ? ((l.data.stores[0] && l.data.stores[0].name) || t('order_default_store_name')) : l.name;
+  // на стикере входящего заказа — номер отправителя (название магазина видно внутри
+  // самого списка, в карточке оно только дублировало бы уже открытую информацию)
+  const name = l.incoming ? phoneNoPrefix(l.fromPhone || l.fromLogin) : l.name;
   // каждый стикер держит свой цвет и наклон стабильно (по id), а не случайно на каждый рендер —
   // иначе карточки "дёргались" бы при любом обновлении списка
   const bg = STICKY_COLORS[stickyHash(l.id, 31) % STICKY_COLORS.length];
@@ -11446,6 +11452,12 @@ function ensureAcceptedCategory() {
    как заказ, а не карточки каталога — на приёмной стороне превращается в обычный
    список (тот же движок редактирования/печати), просто отмеченный «входящий» ================= */
 function waHref(phone) { return 'https://wa.me/' + String(phone || '').replace(/\D/g, ''); }
+// для показа в интерфейсе — без кода страны (та же нормализация, что и при вводе логина: 11 цифр с 7/8 в начале → 10 цифр)
+function phoneNoPrefix(phone) {
+  let d = String(phone || '').replace(/\D/g, '');
+  if (d.length === 11 && (d[0] === '7' || d[0] === '8')) d = d.slice(1);
+  return d;
+}
 function waLinkHtml(phone) {
   if (!phone) return '';
   return `<a class="wa" href="${waHref(phone)}" target="_blank" rel="noopener" onclick="event.stopPropagation()" aria-label="${t('wa_chat_aria')}">
@@ -11519,12 +11531,14 @@ function checkOrdersReminder() {
     { label: t('ai_later_btn'), fn: () => { ordersReminderSnoozeUntil = Date.now() + 30 * 60000; } }
   ]);
 }
-function renderOrdersBadge() {
-  const badge = document.getElementById('navOrdersBadge');
-  const n = pendingOrders.length;
+function setNavBadge(id, n) {
+  const badge = document.getElementById(id);
   badge.classList.toggle('on', n > 0);
   badge.textContent = n > 99 ? '99+' : (n || '');
-  badge.setAttribute('aria-label', tf('nav_orders_badge_aria', { n }));
+}
+function renderOrdersBadge() {
+  setNavBadge('navOrdersBadge', pendingOrders.length);
+  document.getElementById('navOrdersBadge').setAttribute('aria-label', tf('nav_orders_badge_aria', { n: pendingOrders.length }));
 }
 function openIncomingOrdersSheet() {
   if (!pendingOrders.length) return;
