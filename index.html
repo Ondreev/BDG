@@ -1181,8 +1181,8 @@ input[type=file]{display:none}
 
 <div id="bottomNavAnchor"></div>
 <nav class="bottom-nav" id="bottomNav">
-  <button class="nav-btn on" id="nav-shop" onclick="switchView('shop')">
-    <span class="nav-badge" id="navOrdersBadge" onclick="event.stopPropagation();openIncomingOrdersSheet()"></span>
+  <button class="nav-btn on" id="nav-shop" onclick="onNavShopClick()">
+    <span class="nav-badge" id="navOrdersBadge"></span>
     <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="20" r="1.4"/><circle cx="17" cy="20" r="1.4"/><path d="M3 4h2l2.3 11h10.4l2-8H6.2"/></svg>
     <span data-i18n="nav_shop">Закупки</span>
   </button>
@@ -10188,6 +10188,12 @@ function switchView(v) {
   if (v === 'sched') renderSched();
   if (v === 'inv') renderInv();
   window.scrollTo({ top: 0 });
+}
+// таб «Закупки» — если есть непринятые заказы, сразу показываем их: значок-бейдж
+// слишком мелкая цель для тычка пальцем, весь таб надёжнее и то же самое ожидание у юзера
+function onNavShopClick() {
+  switchView('shop');
+  if (pendingOrders.length) openIncomingOrdersSheet();
 }
 function onFab() {
   if (currentView === 'plan') { openPlanTaskSheet(); return; }
