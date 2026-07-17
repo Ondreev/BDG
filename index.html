@@ -84,6 +84,7 @@ input,select{font-family:inherit}
   .mobile-budget-bar{display:none !important}
 }
 .brand{display:flex;align-items:center;gap:10px;min-width:0}
+.brand-name{font-size:20px;font-weight:900;letter-spacing:-.01em;color:var(--text)}
 .brand-badge{
   width:38px;height:38px;border-radius:12px;flex:none;border:none;padding:0;position:relative;cursor:default;
   background:linear-gradient(135deg,var(--accent),var(--accent2));
@@ -590,6 +591,40 @@ a.btn-ghost{color:var(--text)}
 }
 .list-row .wa svg{flex:none}
 
+/* ---------- lists strip — горизонтальная карусель списков вместо переключателя в шапке ---------- */
+.lists-strip{
+  display:flex;gap:10px;overflow-x:auto;padding:2px 2px 10px;margin:0 0 2px;
+  cursor:grab;scroll-snap-type:x proximity;-webkit-overflow-scrolling:touch;
+  scrollbar-width:none;-ms-overflow-style:none;
+}
+.lists-strip::-webkit-scrollbar{display:none}
+.lists-strip.dragging{cursor:grabbing;scroll-snap-type:none}
+.list-chip{
+  flex:none;width:116px;background:var(--card);border-radius:16px;box-shadow:var(--shadow);
+  padding:10px 12px;cursor:pointer;border:2px solid transparent;scroll-snap-align:start;
+  display:flex;flex-direction:column;gap:2px;transition:border-color .15s,width .18s,background .15s;
+}
+.list-chip:active{transform:scale(.97)}
+.list-chip.current{width:172px;border-color:var(--accent);background:var(--accent-soft)}
+.lc-name{font-size:13.5px;font-weight:800;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lc-meta{font-size:11px;color:var(--muted);font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:1px}
+.lc-actions{display:flex;gap:6px;margin-top:7px}
+.lc-actions button,.lc-actions a{
+  width:26px;height:26px;flex:none;border:none;border-radius:9px;background:#fff;box-shadow:var(--shadow);
+  display:flex;align-items:center;justify-content:center;color:#475569;cursor:pointer;
+}
+.lc-actions button.danger{color:var(--red)}
+.lc-actions a.lc-wa{color:var(--accent)}
+.list-chip-add{
+  flex:none;width:52px;border-radius:16px;background:var(--bg);border:2px dashed var(--line);
+  display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--accent);
+}
+@keyframes listSwitchFade{
+  0%{opacity:.4;transform:translateY(5px)}
+  100%{opacity:1;transform:translateY(0)}
+}
+.layout.switching{animation:listSwitchFade .32s cubic-bezier(.22,1,.36,1)}
+
 /* публичное предложение "всем" — крупная промо-карточка вместо обычной строки списка */
 .share-promo{
   padding:16px;border-radius:18px;margin-bottom:10px;
@@ -976,12 +1011,7 @@ input[type=file]{display:none}
   <header class="topbar">
     <div class="brand">
       <button class="brand-badge" id="brandBadge" onclick="openIncomingSharesSheet()" aria-hidden="true" tabindex="-1">₽<span class="brand-badge-count" id="brandBadgeCount"></span></button>
-      <button class="list-switch" onclick="openListsSheet()">
-        <span class="app-name" data-i18n="app_brand_label">BDG · закупки</span>
-        <span class="list-name"><span id="listName">Мой список</span>
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#94A3B8" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
-        </span>
-      </button>
+      <span class="brand-name">BDG</span>
     </div>
     <div id="topNavSlot"></div>
     <div style="display:flex;gap:8px">
@@ -1080,6 +1110,7 @@ input[type=file]{display:none}
   </div><!-- /side -->
 
   <div class="main">
+  <div class="lists-strip" id="listsStrip"></div>
   <div id="stores"></div>
 
   <button class="btn btn-primary" id="mobilePrintBtn" style="margin-top:14px;display:none" onclick="openPrintListSheet()">
@@ -1328,18 +1359,6 @@ input[type=file]{display:none}
     <div class="grab"></div>
     <h2 id="storeMenuTitle">Магазин</h2>
     <div class="action-list" id="storeMenuActions"></div>
-  </div>
-</div>
-
-<div class="sheet-wrap" id="listsSheet"><div class="backdrop" onclick="closeSheet('listsSheet')"></div>
-  <div class="sheet">
-    <div class="grab"></div>
-    <h2 data-i18n="lists_sheet_title">Мои списки</h2>
-    <div id="listsBox"></div>
-    <button class="btn btn-primary" onclick="closeSheet('listsSheet');openNewListSheet()">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.8" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
-      <span data-i18n="lists_create_btn">Создать список</span>
-    </button>
   </div>
 </div>
 
@@ -9890,16 +9909,24 @@ function ic(name, size) {
 // режим (исходящие/входящие) — не отдельное состояние, а просто отражение того,
 // является ли текущий список входящим заказом; так тумблер никогда не рассинхронится
 // с тем, что реально на экране, откуда бы currentId ни поменялся
-let lastOutgoingListId = null, lastIncomingListId = null;
+let lastOutgoingListId = null, lastIncomingListId = null, lastRenderedListId = null;
 function render() {
   const cur = list();
   if (cur) { if (cur.incoming) lastIncomingListId = cur.id; else lastOutgoingListId = cur.id; }
+  // лёгкий эффект при переключении списка — но только когда список правда сменился,
+  // а не при любой правке товара внутри него (иначе анимация дёргалась бы на каждый чих)
+  const switched = cur && cur.id !== lastRenderedListId;
+  lastRenderedListId = cur ? cur.id : null;
   renderSummary();
   renderPayments();
   renderChart();
   renderStores();
   renderShopModeSeg();
-  document.getElementById('listName').textContent = list().name;
+  renderListsStrip();
+  if (switched) {
+    const lay = document.querySelector('.layout');
+    if (lay) { lay.classList.remove('switching'); void lay.offsetWidth; lay.classList.add('switching'); }
+  }
 }
 function renderShopModeSeg() {
   const incoming = !!(list() && list().incoming);
@@ -10524,39 +10551,71 @@ function toggleItem(sid, id) {
 }
 
 /* ---------- lists ---------- */
-function listsRowHtml(l, poolLen) {
+// карточки-миниатюры вместо переключателя в шапке — карусель показывает только тот пул
+// (исходящие/входящие), что сейчас выбран тумблером над списком закупок, оба пула
+// больше не смешиваются, чтобы не путать, откуда какой список; активная карточка
+// пошире и раскрывает те же кнопки управления, что раньше были в шторке «Мои списки»
+function listChipHtml(l, poolLen) {
+  const cur = l.id === state.currentId;
   const items = l.data.stores.reduce((t, s) => t + s.items.length, 0);
   const sum = l.data.stores.reduce((t, s) => t + s.items.reduce((x, i) => x + (+i.qty || 0) * (+i.price || 0), 0), 0);
-  const cur = l.id === state.currentId;
+  // у входящего список назван по номеру отправителя — это служебное поле, не тащим
+  // его в заголовок карточки; вместо этого понятное «от кого» — название магазина,
+  // которое сам отправитель указал при отправке заказа, плюс кнопка WhatsApp рядом
+  const name = l.incoming ? ((l.data.stores[0] && l.data.stores[0].name) || t('order_default_store_name')) : l.name;
   return `
-    <div class="list-row ${cur ? 'current' : ''}" onclick="selectListById('${l.id}')">
-      <div class="info">
-        <div class="nm">${esc(l.name)}</div>
-        <div class="mt">${tf('list_items_count', { n: items })} · ${money(sum)} · ${l.date || ''}</div>
-        ${l.incoming ? waLinkHtml(l.fromPhone || l.fromLogin) : ''}
-      </div>
-      <button class="mini" onclick="event.stopPropagation();openRenameList('${l.id}')" aria-label="${t('store_menu_rename')}">${ic('pencil', 16)}</button>
-      <button class="mini" onclick="event.stopPropagation();duplicateListById('${l.id}')" aria-label="${t('aria_duplicate')}">${ic('copy', 16)}</button>
-      ${(l.incoming || poolLen > 1) ? `<button class="mini danger" onclick="event.stopPropagation();deleteListById('${l.id}')" aria-label="${t('btn_delete')}">${ic('trash', 16)}</button>` : ''}
+    <div class="list-chip ${cur ? 'current' : ''}" onclick="chipSelect('${l.id}')">
+      <div class="lc-name">${esc(name)}</div>
+      <div class="lc-meta">${tf('list_items_count', { n: items })} · ${money(sum)}</div>
+      ${cur ? `<div class="lc-actions">
+        <button onclick="event.stopPropagation();openRenameList('${l.id}')" aria-label="${t('store_menu_rename')}">${ic('pencil', 14)}</button>
+        ${l.incoming
+          ? `<a class="lc-wa" href="${waHref(l.fromPhone || l.fromLogin)}" target="_blank" rel="noopener" onclick="event.stopPropagation()" aria-label="${t('wa_chat_aria')}">${ic('phone', 14)}</a>`
+          : `<button onclick="event.stopPropagation();duplicateListById('${l.id}')" aria-label="${t('aria_duplicate')}">${ic('copy', 14)}</button>`}
+        ${(l.incoming || poolLen > 1) ? `<button class="danger" onclick="event.stopPropagation();deleteListById('${l.id}')" aria-label="${t('btn_delete')}">${ic('trash', 14)}</button>` : ''}
+      </div>` : ''}
     </div>`;
 }
-// шторка «Мои списки» показывает только тот пул (исходящие/входящие), что сейчас выбран
-// тумблером над списком закупок — переключать режим прямо тут больше не нужно, оба
-// списка больше не смешиваются, чтобы не путать, откуда какой список
-function openListsSheet() {
-  const box = document.getElementById('listsBox');
+function renderListsStrip() {
+  const strip = document.getElementById('listsStrip');
+  if (!strip) return;
   const incomingMode = !!(list() && list().incoming);
   const pool = state.lists.filter(l => !!l.incoming === incomingMode);
-  box.innerHTML = pool.length ? pool.map(l => listsRowHtml(l, pool.length)).join('') : `<div class="cat-empty">${t('order_none')}</div>`;
-  openSheet('listsSheet');
+  strip.innerHTML = pool.map(l => listChipHtml(l, pool.length)).join('') +
+    (incomingMode ? '' : `<div class="list-chip-add" onclick="openNewListSheet()" aria-label="${t('lists_create_btn')}">${ic('plus', 20)}</div>`);
+}
+// пока карточку тащат мышкой (десктоп), клик по ней не должен переключать список —
+// иначе перетаскивание карусели постоянно "щёлкало" бы по карточкам под курсором
+let listsStripDragged = false;
+function chipSelect(id) {
+  if (listsStripDragged) { listsStripDragged = false; return; }
+  selectListById(id);
+}
+function enableStripDrag(el) {
+  if (!el) return;
+  let isDown = false, startX = 0, startScroll = 0, moved = 0;
+  el.addEventListener('mousedown', e => {
+    isDown = true; moved = 0; el.classList.add('dragging');
+    startX = e.pageX; startScroll = el.scrollLeft;
+  });
+  window.addEventListener('mouseup', () => {
+    if (!isDown) return;
+    isDown = false; el.classList.remove('dragging');
+    if (moved > 6) listsStripDragged = true;
+  });
+  window.addEventListener('mousemove', e => {
+    if (!isDown) return;
+    const dx = e.pageX - startX;
+    moved = Math.max(moved, Math.abs(dx));
+    el.scrollLeft = startScroll - dx;
+  });
 }
 function selectListById(id) {
   state.currentId = id;
-  save(); render(); closeSheet('listsSheet');
+  save(); render();
 }
 function deleteListById(id) {
   const l = state.lists.find(x => x.id === id);
-  closeSheet('listsSheet');
   confirmAction(t('list_delete_title'), tf('list_delete_text', { name: l.name }), () => {
     const idx = state.lists.findIndex(x => x.id === id);
     const removed = state.lists.splice(idx, 1)[0];
@@ -10586,7 +10645,7 @@ function duplicateListById(id) {
   const idx = state.lists.findIndex(l => l.id === id);
   state.lists.splice(idx + 1, 0, copy);
   state.currentId = copy.id;
-  save(); render(); closeSheet('listsSheet');
+  save(); render();
   toast(t('list_dup_toast'));
 }
 
@@ -10601,7 +10660,6 @@ function openNewListSheet() {
 }
 function openRenameList(id) {
   listNameEditId = id;
-  closeSheet('listsSheet');
   document.getElementById('listNameTitle').textContent = t('list_name_rename_title');
   document.getElementById('listNameSaveBtn').textContent = t('btn_save');
   document.getElementById('listNameInput').value = state.lists.find(l => l.id === id).name;
@@ -13814,6 +13872,7 @@ desktopNavMQ.addEventListener('change', placeBottomNav);
 load();
 applyI18n();
 render();
+enableStripDrag(document.getElementById('listsStrip'));
 if (printReceiverOn()) startPrintReceiver(); // приём переживает перезагрузку страницы на этом устройстве
 renderCurrTopBadge();
 loadCurrencyRates(false); // подтягиваем курс доллара в шапку сразу, без открытия шторки
