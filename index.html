@@ -573,8 +573,6 @@ a.btn-ghost{color:var(--text)}
 }
 .list-row .mini.danger{color:var(--red)}
 .list-row .mini.success{color:var(--green)}
-.lists-heading{font-size:11.5px;font-weight:800;color:var(--muted);letter-spacing:.06em;text-transform:uppercase;margin:2px 4px 8px}
-.lists-heading:not(:first-child){margin-top:16px}
 .list-row .wa{
   display:inline-flex;align-items:center;gap:4px;color:var(--accent);font-weight:700;
   text-decoration:none;margin-top:2px;
@@ -1002,6 +1000,10 @@ input[type=file]{display:none}
   </div>
 
   <div class="view on" id="view-shop">
+  <div class="seg seg-wide" id="shopModeSeg">
+    <button id="segOutgoing" class="on" onclick="setShopMode('outgoing')" data-i18n="lists_outgoing_heading">Исходящие</button>
+    <button id="segIncoming" onclick="setShopMode('incoming')" data-i18n="lists_incoming_heading">Входящие</button>
+  </div>
   <div class="layout">
   <div class="side">
   <section class="budget-card">
@@ -9848,12 +9850,37 @@ function ic(name, size) {
 }
 
 /* ================= render ================= */
+// режим (исходящие/входящие) — не отдельное состояние, а просто отражение того,
+// является ли текущий список входящим заказом; так тумблер никогда не рассинхронится
+// с тем, что реально на экране, откуда бы currentId ни поменялся
+let lastOutgoingListId = null, lastIncomingListId = null;
 function render() {
+  const cur = list();
+  if (cur) { if (cur.incoming) lastIncomingListId = cur.id; else lastOutgoingListId = cur.id; }
   renderSummary();
   renderPayments();
   renderChart();
   renderStores();
+  renderShopModeSeg();
   document.getElementById('listName').textContent = list().name;
+}
+function renderShopModeSeg() {
+  const incoming = !!(list() && list().incoming);
+  document.getElementById('segOutgoing').classList.toggle('on', !incoming);
+  document.getElementById('segIncoming').classList.toggle('on', incoming);
+}
+function setShopMode(mode) {
+  const wantIncoming = mode === 'incoming';
+  if (!!(list() && list().incoming) === wantIncoming) return;
+  let target;
+  if (wantIncoming) {
+    target = state.lists.find(l => l.id === lastIncomingListId && l.incoming) || [...state.lists].reverse().find(l => l.incoming);
+    if (!target) { toast(t('order_none')); return; }
+  } else {
+    target = state.lists.find(l => l.id === lastOutgoingListId && !l.incoming) || state.lists.find(l => !l.incoming);
+  }
+  state.currentId = target.id;
+  save(); render();
 }
 
 function renderSummary() {
@@ -10460,7 +10487,7 @@ function toggleItem(sid, id) {
 }
 
 /* ---------- lists ---------- */
-function listsRowHtml(l) {
+function listsRowHtml(l, poolLen) {
   const items = l.data.stores.reduce((t, s) => t + s.items.length, 0);
   const sum = l.data.stores.reduce((t, s) => t + s.items.reduce((x, i) => x + (+i.qty || 0) * (+i.price || 0), 0), 0);
   const cur = l.id === state.currentId;
@@ -10473,19 +10500,17 @@ function listsRowHtml(l) {
       </div>
       <button class="mini" onclick="event.stopPropagation();openRenameList('${l.id}')" aria-label="${t('store_menu_rename')}">${ic('pencil', 16)}</button>
       <button class="mini" onclick="event.stopPropagation();duplicateListById('${l.id}')" aria-label="${t('aria_duplicate')}">${ic('copy', 16)}</button>
-      ${state.lists.length > 1 ? `<button class="mini danger" onclick="event.stopPropagation();deleteListById('${l.id}')" aria-label="${t('btn_delete')}">${ic('trash', 16)}</button>` : ''}
+      ${(l.incoming || poolLen > 1) ? `<button class="mini danger" onclick="event.stopPropagation();deleteListById('${l.id}')" aria-label="${t('btn_delete')}">${ic('trash', 16)}</button>` : ''}
     </div>`;
 }
+// шторка «Мои списки» показывает только тот пул (исходящие/входящие), что сейчас выбран
+// тумблером над списком закупок — переключать режим прямо тут больше не нужно, оба
+// списка больше не смешиваются, чтобы не путать, откуда какой список
 function openListsSheet() {
   const box = document.getElementById('listsBox');
-  // входящие заказы от покупателей группируем отдельно от собственных списков закупок,
-  // чтобы их не перепутать — и показываем первыми, это обычно самое срочное
-  const incoming = state.lists.filter(l => l.incoming);
-  const outgoing = state.lists.filter(l => !l.incoming);
-  box.innerHTML =
-    (incoming.length ? `<div class="lists-heading">${t('lists_incoming_heading')}</div>` + incoming.map(listsRowHtml).join('') : '') +
-    (incoming.length ? `<div class="lists-heading">${t('lists_outgoing_heading')}</div>` : '') +
-    outgoing.map(listsRowHtml).join('');
+  const incomingMode = !!(list() && list().incoming);
+  const pool = state.lists.filter(l => !!l.incoming === incomingMode);
+  box.innerHTML = pool.length ? pool.map(l => listsRowHtml(l, pool.length)).join('') : `<div class="cat-empty">${t('order_none')}</div>`;
   openSheet('listsSheet');
 }
 function selectListById(id) {
@@ -10498,7 +10523,11 @@ function deleteListById(id) {
   confirmAction(t('list_delete_title'), tf('list_delete_text', { name: l.name }), () => {
     const idx = state.lists.findIndex(x => x.id === id);
     const removed = state.lists.splice(idx, 1)[0];
-    if (state.currentId === id) state.currentId = state.lists[0].id;
+    if (state.currentId === id) {
+      // после удаления остаёмся в том же режиме (исходящие/входящие), если там ещё есть списки
+      const sameMode = state.lists.find(x => !!x.incoming === !!removed.incoming);
+      state.currentId = (sameMode || state.lists[0]).id;
+    }
     save(); render();
     snackbar(tf('list_deleted_snack', { name: removed.name }), () => {
       state.lists.splice(Math.min(idx, state.lists.length), 0, removed);
