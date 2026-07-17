@@ -573,6 +573,17 @@ a.btn-ghost{color:var(--text)}
 }
 .list-row .mini.danger{color:var(--red)}
 .list-row .mini.success{color:var(--green)}
+.ord-row-actions{display:flex;gap:8px;flex:none;align-items:center}
+.ord-spinner{
+  width:20px;height:20px;flex:none;border-radius:50%;
+  border:2.5px solid var(--line);border-top-color:var(--accent);
+  animation:iconSpin .6s linear infinite;
+}
+.ord-success{
+  width:26px;height:26px;flex:none;border-radius:50%;background:var(--green);color:#fff;
+  display:flex;align-items:center;justify-content:center;
+  animation:notePopIn .3s cubic-bezier(.34,1.56,.64,1) both;
+}
 .list-row .wa{
   display:inline-flex;align-items:center;gap:4px;color:var(--accent);font-weight:700;
   text-decoration:none;margin-top:2px;
@@ -11425,31 +11436,54 @@ function openIncomingOrdersSheet() {
 }
 function renderIncomingOrders() {
   document.getElementById('incomingOrdersRows').innerHTML = pendingOrders.length ? pendingOrders.map(o => `
-    <div class="list-row" onclick="acceptOrder('${o.id}')">
+    <div class="list-row" id="ordRow-${o.id}" onclick="acceptOrder('${o.id}')">
       <div class="info">
         <div class="nm">${esc(o.storeName || o.fromLogin)}</div>
         <div class="mt">${tf('share_row_meta', { n: o.itemCount, date: new Date(o.created).toLocaleDateString(dateLocale()) })}</div>
         ${waLinkHtml(o.fromPhone || o.fromLogin)}
       </div>
-      <button class="mini" onclick="event.stopPropagation();declineOrder('${o.id}')" aria-label="${t('share_decline_aria')}">${ic('trash', 16)}</button>
-      <button class="mini success" onclick="event.stopPropagation();acceptOrder('${o.id}')" aria-label="${t('share_accept_aria')}">${ic('check2', 16)}</button>
+      <div class="ord-row-actions" id="ordActions-${o.id}">
+        <button class="mini" onclick="event.stopPropagation();declineOrder('${o.id}')" aria-label="${t('share_decline_aria')}">${ic('trash', 16)}</button>
+        <button class="mini success" onclick="event.stopPropagation();acceptOrder('${o.id}')" aria-label="${t('share_accept_aria')}">${ic('check2', 16)}</button>
+      </div>
     </div>`).join('') : `<div class="cat-empty">${t('order_none')}</div>`;
 }
+// сеть (Google Apps Script) иногда отвечает не сразу — без индикатора строка выглядит
+// зависшей и может напугать; кружок вращения понятен без слов на любом языке,
+// зелёная галочка после успеха — без текста, чтобы не плодить новые переводы
+function ordRowLoading(id) {
+  const el = document.getElementById('ordActions-' + id);
+  if (el) el.innerHTML = '<div class="ord-spinner"></div>';
+}
+function ordRowSuccess(id) {
+  const el = document.getElementById('ordActions-' + id);
+  if (el) el.innerHTML = `<div class="ord-success">${ic('check2', 14)}</div>`;
+}
+// пока строка крутит спиннер, повторный тап (например, от нетерпеливого пользователя,
+// который решил, что зависло) не должен запускать вторую параллельную операцию
+let ordersInFlight = new Set();
 function declineOrder(id) {
+  if (ordersInFlight.has(id)) return;
+  ordersInFlight.add(id);
   const s = syncState();
+  ordRowLoading(id);
   syncCall({ login: s.login, pin: s.pin, url: s.url || DEFAULT_SYNC_URL }, 'order_remove', { id })
     .then(() => {
+      ordersInFlight.delete(id);
       pendingOrders = pendingOrders.filter(x => x.id !== id);
       renderIncomingOrders(); renderOrdersBadge();
       if (!pendingOrders.length) closeSheet('incomingOrdersSheet');
     })
-    .catch(err => toast(errToMsg(err)));
+    .catch(err => { ordersInFlight.delete(id); renderIncomingOrders(); toast(errToMsg(err)); });
 }
 function acceptOrder(id) {
+  if (ordersInFlight.has(id)) return;
   const s = syncState();
   const creds = { login: s.login, pin: s.pin, url: s.url || DEFAULT_SYNC_URL };
   const order = pendingOrders.find(x => x.id === id);
   if (!order) return;
+  ordersInFlight.add(id);
+  ordRowLoading(id);
   syncCall(creds, 'order_fetch', { id })
     .then(res => {
       const items = (res.payload && res.payload.items) || [];
@@ -11467,16 +11501,20 @@ function acceptOrder(id) {
       state.lists.push(newList);
       state.currentId = newList.id;
       save(); render();
-      return syncCall(creds, 'order_remove', { id });
-    })
-    .then(() => {
+      // данные уже у нас — показываем успех сразу, а уборку почтового ящика на
+      // сервере не ждём (не блокируем UI второй сетевой командой)
+      ordRowSuccess(id);
+      ordersInFlight.delete(id);
       pendingOrders = pendingOrders.filter(x => x.id !== id);
       renderOrdersBadge();
-      closeSheet('incomingOrdersSheet');
-      toast(tf('order_accepted_snack', { phone: order.fromPhone || order.fromLogin }));
       vibrate(10);
+      syncCall(creds, 'order_remove', { id }).catch(() => {});
+      setTimeout(() => {
+        closeSheet('incomingOrdersSheet');
+        toast(tf('order_accepted_snack', { phone: order.fromPhone || order.fromLogin }));
+      }, 550);
     })
-    .catch(err => toast(errToMsg(err)));
+    .catch(err => { ordersInFlight.delete(id); renderIncomingOrders(); toast(errToMsg(err)); });
 }
 // периодически напоминаем разобрать «Принятые» — так же тихо, как напоминание сохранить в облако
 let acceptedReminderSnoozeUntil = 0;
