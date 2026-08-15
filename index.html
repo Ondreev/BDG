@@ -11191,7 +11191,25 @@ function renderSyncStatusSafe() {
 function scheduleAutoSync() {
   if (!window.__bdgReady) return;
   clearTimeout(autoSyncTimer);
-  autoSyncTimer = setTimeout(aiAskSave, 17000);
+  autoSyncTimer = setTimeout(autoSyncNow, 17000);
+}
+// раньше здесь спрашивали через ассистента «сохранить в облако?» — если человек не заметил
+// подсказку и ушёл (закрыл ноутбук, отвлёкся на середине правки), изменения так и оставались
+// только на этом устройстве, и на телефоне их было не видно. Теперь бэкенд получает правки
+// сам, без подтверждения; штамп «Сохранено» — единственный видимый след, и его не нужно
+// на что-то нажимать
+function autoSyncNow() {
+  const s = syncState();
+  if (!s.login || !s.pin) return; // облако не подключено — синхронизировать некуда
+  if (window.__tourActive) return;
+  if (document.querySelector('.sheet-wrap.open') || document.getElementById('aiPanel').classList.contains('show')) {
+    clearTimeout(autoSyncTimer);
+    autoSyncTimer = setTimeout(autoSyncNow, 8000);
+    return;
+  }
+  performUpload({ login: s.login, pin: s.pin, url: s.url || DEFAULT_SYNC_URL })
+    .then(() => stampShow())
+    .catch(() => {}); // тихая попытка в фоне — при следующей правке или следующем цикле попробуем снова
 }
 
 /* ================= печать с телефона на компьютер (через то же облако) ================= */
@@ -11984,41 +12002,6 @@ function aiHide() { document.getElementById('aiPanel').classList.remove('show');
 function aiCloseBtn() {
   if (Date.now() - aiShownAt < 400) return;
   aiHide(); aiSnoozeUntil = Date.now() + 10 * 60000;
-}
-
-function aiAskSave() {
-  if (Date.now() < aiSnoozeUntil) return;
-  if (window.__tourActive) return;
-  if (document.querySelector('.sheet-wrap.open') || document.getElementById('aiPanel').classList.contains('show')) { // не мешаем, пока открыта шторка или уже показана другая подсказка
-    clearTimeout(autoSyncTimer);
-    autoSyncTimer = setTimeout(aiAskSave, 8000);
-    return;
-  }
-  aiSay(pickT('ai_asks'), [
-    { label: t('ai_save_btn'), pri: true, fn: aiDoSave },
-    { label: t('ai_later_btn'), fn: () => { aiSnoozeUntil = Date.now() + 10 * 60000; } }
-  ]);
-}
-function aiDoSave() {
-  const s = syncState();
-  if (!s.login || !s.pin || !(s.url || DEFAULT_SYNC_URL)) {
-    aiSay(t('ai_no_creds'), [
-      { label: t('ai_enter_pin_btn'), pri: true, fn: () => { openSyncSheet(); } },
-      { label: t('ai_later_btn'), fn: () => { aiSnoozeUntil = Date.now() + 10 * 60000; } }
-    ]);
-    return;
-  }
-  aiSay(t('ai_saving'), []);
-  performUpload({ login: s.login, pin: s.pin, url: s.url || DEFAULT_SYNC_URL })
-    .then(() => {
-      aiHide();
-      stampShow();
-      setTimeout(() => aiSay(pickT('ai_ok'), [], 4200), 1500);
-    })
-    .catch(err => aiSay(t('ai_upload_fail') + errToMsg(err), [
-      { label: t('ai_retry_btn'), pri: true, fn: aiDoSave },
-      { label: t('ai_later_btn'), fn: () => { aiSnoozeUntil = Date.now() + 10 * 60000; } }
-    ]));
 }
 
 /* штамп «СОХРАНЕНО» */
