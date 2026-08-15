@@ -856,16 +856,23 @@ input[type=file]{display:none}
 .rcpt-margin .pct{display:block;font-size:10.5px;color:var(--muted);font-weight:700}
 .rcpt-margin.neg{color:var(--red)}
 .rcpt-margin.neg .pct{color:var(--red)}
-/* объединённая группа (одинаковый артикул) визуально выделена целиком: лёгкий фон
-   на строках-участниках плюс акцентная левая полоса, подытог снизу — темнее и с рамкой сверху */
-.rcpt-grouped{background:#FAFAFF}
-.rcpt-grouped .rcpt-name{box-shadow:inset 3px 0 0 var(--accent2)}
-.rcpt-sub td{background:var(--accent-soft);font-weight:800;border-top:1.5px solid var(--accent2)}
-/* .rcpt-name задаёт max-width:130px под узкую колонку «Товар» — в строке подытога та же
-   верстка получает colspan=2 и должна занимать всю объединённую ширину, иначе счётчик
-   «наезжает» на середину строки вместо правого края */
-.rcpt-sub-label{display:flex;align-items:center;justify-content:space-between;gap:8px;max-width:none !important}
-.rcpt-sub-count{font-weight:900;color:var(--accent2)}
+/* объединённая группа (одинаковый артикул) — колонка-«скоба» слева, идущая от первой
+   строки группы до подытога, плюс мягкий фон-подсветка на всех строках кластера;
+   ВАЖНО: display:flex нельзя вешать прямо на <td> — браузер перестаёт учитывать colspan
+   и вся строка подытога съезжает на столбец влево, поэтому flex — только на вложенном div */
+.rcpt-grouped td{background:#F6F4FF}
+.rcpt-grouped td:first-child{box-shadow:inset 4px 0 0 var(--accent2)}
+.rcpt-sub-td{text-align:left !important;padding:0 !important}
+.rcpt-sub td{background:#ECE9FE;border-top:2px solid var(--accent2);border-bottom:2px solid var(--accent2)}
+.rcpt-sub td:first-child{box-shadow:inset 4px 0 0 var(--accent2)}
+.rcpt-sub-inner{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 10px 9px 14px}
+.rcpt-sub-code{font-weight:900;color:#4C3FBF;letter-spacing:.01em}
+.rcpt-sub-count{
+  display:inline-flex;align-items:center;justify-content:center;flex:none;
+  min-width:22px;height:22px;padding:0 6px;border-radius:99px;
+  background:var(--accent2);color:#fff;font-size:11.5px;font-weight:900;
+}
+.rcpt-summary{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:13px;font-weight:700;margin:12px 4px 14px;color:var(--muted)}
 .rcpt-summary{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:13px;font-weight:700;margin:12px 4px 14px;color:var(--muted)}
 .rcpt-summary b{color:var(--text);font-weight:900}
 
@@ -13508,8 +13515,10 @@ function receiptRowHtml(r, grouped) {
 // объединять разные размеры/варианты с разными ценами), количество и маржа — суммарные
 function receiptSubtotalRowHtml(gi, code, ids) {
   const g = receiptGroupTotals(ids);
+  // display:flex ставим на вложенный div, а не на сам <td> — иначе браузер перестаёт
+  // учитывать colspan и вся строка съезжает на столбец влево
   return `<tr class="rcpt-sub" data-sub="${gi}">
-    <td class="rcpt-name rcpt-sub-label" colspan="2">Total «${esc(code)}»<span class="rcpt-sub-count">${ids.length}</span></td>
+    <td class="rcpt-sub-td" colspan="2"><div class="rcpt-sub-inner"><span class="rcpt-sub-code">Total «${esc(code)}»</span><span class="rcpt-sub-count">${ids.length}</span></div></td>
     <td id="rcptSubQty-${gi}">${fmt(g.qty)}</td>
     <td id="rcptSubCost-${gi}">${money(g.avgCost)}</td>
     <td id="rcptSubSale-${gi}">${money(g.avgSale)}</td>
@@ -13613,12 +13622,16 @@ function printReceiptDoc() {
     if (receiptSortByCode) { while (j < rows.length && (receiptCode[rows[j].it.id] || '').trim() === code0) j++; }
     const group = rows.slice(i, j);
     const isGrouped = receiptSortByCode && code0 && group.length > 1;
+    // толстая левая полоса «скобкой» через все строки группы и подытог — так видно,
+    // какие позиции уже просуммированы, даже при печати в чёрно-белом режиме
+    const bar = isGrouped ? 'border-left:3.5px solid #4C3FBF;' : '';
+    const firstTd = i2 => `${PTD}${i2 === 0 ? bar : ''}`;
     group.forEach(r => {
       const id = r.it.id;
       const qty = receiptQty[id] || 0, cost = receiptCost[id] || 0, sale = receiptSale[id] || 0;
       const margin = (sale - cost) * qty;
-      body += `<tr${isGrouped ? ' style="background:#FAFAFF"' : ''}>
-        <td style="${PTD}"><b>${esc(r.it.name)}</b>${r.it.loc ? `<span style="color:#64748B;font-size:11px"> · ${esc(r.it.loc)}</span>` : ''}</td>
+      body += `<tr${isGrouped ? ' style="background:#F7F6FF"' : ''}>
+        <td style="${firstTd(0)}"><b>${esc(r.it.name)}</b>${r.it.loc ? `<span style="color:#64748B;font-size:11px"> · ${esc(r.it.loc)}</span>` : ''}</td>
         <td style="${PTD}">${esc(receiptCode[id] || '')}</td>
         <td style="${PTD};text-align:center">${fmt(qty)}</td>
         <td style="${PTD};text-align:right">${money(cost)}</td>
@@ -13628,8 +13641,8 @@ function printReceiptDoc() {
     });
     if (isGrouped) {
       const g = receiptGroupTotals(group.map(r => r.it.id));
-      body += `<tr style="background:#EEF0FE">
-        <td style="${PTD}" colspan="2"><div style="display:flex;justify-content:space-between"><b>Total «${esc(code0)}»</b><b>${group.length}</b></div></td>
+      body += `<tr style="background:#EAE7FD">
+        <td style="${PTD}${bar}" colspan="2"><div style="display:flex;justify-content:space-between;align-items:center"><b style="color:#4C3FBF">Total «${esc(code0)}»</b><span style="display:inline-flex;min-width:20px;height:20px;padding:0 5px;border-radius:99px;background:#4C3FBF;color:#fff;font-size:11px;font-weight:900;align-items:center;justify-content:center">${group.length}</span></div></td>
         <td style="${PTD};text-align:center"><b>${fmt(g.qty)}</b></td>
         <td style="${PTD};text-align:right"><b>${money(g.avgCost)}</b></td>
         <td style="${PTD};text-align:right"><b>${money(g.avgSale)}</b></td>
