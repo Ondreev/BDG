@@ -13615,23 +13615,39 @@ function persistReceiptData(rows) {
 function printReceiptDoc() {
   const rows = receiptOrderedRows().filter(r => (receiptQty[r.it.id] || 0) > 0);
   if (!rows.length) { toast('Нет товаров с количеством больше нуля'); return false; }
-  let i = 0, body = '';
+
+  // сначала режем на кластеры (одинаковый артикул подряд — кластер с подытогом,
+  // иначе одиночная позиция)
+  const clusters = [];
+  let i = 0;
   while (i < rows.length) {
     const code0 = (receiptCode[rows[i].it.id] || '').trim();
     let j = i + 1;
     if (receiptSortByCode) { while (j < rows.length && (receiptCode[rows[j].it.id] || '').trim() === code0) j++; }
-    const group = rows.slice(i, j);
-    const isGrouped = receiptSortByCode && code0 && group.length > 1;
-    // толстая левая полоса «скобкой» через все строки группы и подытог — так видно,
-    // какие позиции уже просуммированы, даже при печати в чёрно-белом режиме
-    const bar = isGrouped ? 'border-left:3.5px solid #4C3FBF;' : '';
-    const firstTd = i2 => `${PTD}${i2 === 0 ? bar : ''}`;
-    group.forEach(r => {
+    clusters.push({ code: code0, rows: rows.slice(i, j), grouped: receiptSortByCode && code0 && j - i > 1 });
+    i = j;
+  }
+  // на бумаге цвет/рамка не всегда доходят (чёрно-белая печать, экономия чернил) — поэтому
+  // границу «эти позиции уже просуммированы» делаем структурной: все сгруппированные кластеры
+  // печатаются единым блоком сверху, россыпь без пары — отдельным блоком ниже с подписью
+  const hasGrouped = clusters.some(c => c.grouped);
+  const ordered = receiptSortByCode && hasGrouped
+    ? [...clusters.filter(c => c.grouped), ...clusters.filter(c => !c.grouped)]
+    : clusters;
+
+  let body = '', dividerShown = false;
+  ordered.forEach(cluster => {
+    if (hasGrouped && !cluster.grouped && !dividerShown) {
+      body += `<tr><td colspan="6" style="padding:12px 4px 6px;border:none;font-size:11px;font-weight:800;color:#94A3B8;text-transform:uppercase;letter-spacing:.05em">Прочие позиции</td></tr>`;
+      dividerShown = true;
+    }
+    const bar = cluster.grouped ? 'border-left:3.5px solid #4C3FBF;' : '';
+    cluster.rows.forEach(r => {
       const id = r.it.id;
       const qty = receiptQty[id] || 0, cost = receiptCost[id] || 0, sale = receiptSale[id] || 0;
       const margin = (sale - cost) * qty;
-      body += `<tr${isGrouped ? ' style="background:#F7F6FF"' : ''}>
-        <td style="${firstTd(0)}"><b>${esc(r.it.name)}</b>${r.it.loc ? `<span style="color:#64748B;font-size:11px"> · ${esc(r.it.loc)}</span>` : ''}</td>
+      body += `<tr${cluster.grouped ? ' style="background:#F7F6FF"' : ''}>
+        <td style="${PTD}${bar}"><b>${esc(r.it.name)}</b>${r.it.loc ? `<span style="color:#64748B;font-size:11px"> · ${esc(r.it.loc)}</span>` : ''}</td>
         <td style="${PTD}">${esc(receiptCode[id] || '')}</td>
         <td style="${PTD};text-align:center">${fmt(qty)}</td>
         <td style="${PTD};text-align:right">${money(cost)}</td>
@@ -13639,18 +13655,17 @@ function printReceiptDoc() {
         <td style="${PTD};text-align:right;font-weight:800">${sale ? money(margin) : '—'}</td>
       </tr>`;
     });
-    if (isGrouped) {
-      const g = receiptGroupTotals(group.map(r => r.it.id));
+    if (cluster.grouped) {
+      const g = receiptGroupTotals(cluster.rows.map(r => r.it.id));
       body += `<tr style="background:#EAE7FD">
-        <td style="${PTD}${bar}" colspan="2"><div style="display:flex;justify-content:space-between;align-items:center"><b style="color:#4C3FBF">Total «${esc(code0)}»</b><span style="display:inline-flex;min-width:20px;height:20px;padding:0 5px;border-radius:99px;background:#4C3FBF;color:#fff;font-size:11px;font-weight:900;align-items:center;justify-content:center">${group.length}</span></div></td>
+        <td style="${PTD}${bar}" colspan="2"><div style="display:flex;justify-content:space-between;align-items:center"><b style="color:#4C3FBF">Total «${esc(cluster.code)}»</b><span style="display:inline-flex;min-width:20px;height:20px;padding:0 5px;border-radius:99px;background:#4C3FBF;color:#fff;font-size:11px;font-weight:900;align-items:center;justify-content:center">${cluster.rows.length}</span></div></td>
         <td style="${PTD};text-align:center"><b>${fmt(g.qty)}</b></td>
         <td style="${PTD};text-align:right"><b>${money(g.avgCost)}</b></td>
         <td style="${PTD};text-align:right"><b>${money(g.avgSale)}</b></td>
         <td style="${PTD};text-align:right;font-weight:900">${g.sale ? money(g.margin) : '—'}</td>
       </tr>`;
     }
-    i = j;
-  }
+  });
   const t = receiptGroupTotals(rows.map(r => r.it.id));
   printDoc('portrait', 'Приход', list().name, `
     <table style="border-collapse:collapse;width:100%">
