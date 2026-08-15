@@ -861,7 +861,10 @@ input[type=file]{display:none}
 .rcpt-grouped{background:#FAFAFF}
 .rcpt-grouped .rcpt-name{box-shadow:inset 3px 0 0 var(--accent2)}
 .rcpt-sub td{background:var(--accent-soft);font-weight:800;border-top:1.5px solid var(--accent2)}
-.rcpt-sub-label{display:flex;align-items:center;justify-content:space-between;gap:8px}
+/* .rcpt-name задаёт max-width:130px под узкую колонку «Товар» — в строке подытога та же
+   верстка получает colspan=2 и должна занимать всю объединённую ширину, иначе счётчик
+   «наезжает» на середину строки вместо правого края */
+.rcpt-sub-label{display:flex;align-items:center;justify-content:space-between;gap:8px;max-width:none !important}
 .rcpt-sub-count{font-weight:900;color:var(--accent2)}
 .rcpt-summary{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:13px;font-weight:700;margin:12px 4px 14px;color:var(--muted)}
 .rcpt-summary b{color:var(--text);font-weight:900}
