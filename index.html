@@ -599,6 +599,28 @@ a.btn-ghost{color:var(--text)}
 }
 .list-row .wa svg{flex:none}
 
+/* ---------- фоновая сверка с облаком при открытии приложения ---------- */
+.sync-boot{
+  position:fixed;top:calc(66px + env(safe-area-inset-top));left:50%;
+  transform:translateX(-50%) translateY(-8px);z-index:500;
+  display:flex;align-items:center;gap:10px;padding:6px 16px 6px 6px;
+  background:#fff;border-radius:99px;box-shadow:0 8px 24px rgba(30,41,59,.18);
+  opacity:0;pointer-events:none;transition:opacity .25s,transform .25s;
+}
+.sync-boot.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.sb-box{width:32px;height:32px;position:relative;flex:none}
+.sb-frame{position:absolute;inset:0}
+.sb-snake{stroke-dasharray:22 78;stroke-dashoffset:0;animation:sbSnake 1s linear infinite}
+@keyframes sbSnake{to{stroke-dashoffset:-100}}
+.sb-check{
+  position:absolute;inset:0;border-radius:50%;background:var(--green);color:#fff;
+  display:none;align-items:center;justify-content:center;
+  animation:notePopIn .3s cubic-bezier(.34,1.56,.64,1) both;
+}
+.sync-boot.success .sb-frame{display:none}
+.sync-boot.success .sb-check{display:flex}
+.sb-text{font-size:13px;font-weight:700;color:var(--text);white-space:nowrap}
+
 /* ---------- lists strip — горизонтальная карусель списков вместо переключателя в шапке,
    карточки в виде самоклеящихся стикеров: разные цвета, лёгкий наклон, загнутый уголок ---------- */
 .lists-strip{
@@ -1316,6 +1338,19 @@ input[type=file]{display:none}
 </button>
 
 <div class="snackbar" id="snackbar"><span class="msg" id="snackMsg"></span><button id="snackBtn" data-i18n="btn_undo">Отменить</button></div>
+
+<!-- при открытии приложения тихо сверяемся с облаком: рамка с бегущей «змейкой» пока идёт
+     проверка, затем зелёная галочка — чтобы не нужно было вручную жать «Загрузить»/«Отправить» -->
+<div class="sync-boot" id="syncBoot">
+  <div class="sb-box">
+    <svg class="sb-frame" viewBox="0 0 32 32" width="32" height="32">
+      <rect x="2.5" y="2.5" width="27" height="27" rx="8" fill="none" stroke="var(--line)" stroke-width="2.6"/>
+      <rect class="sb-snake" x="2.5" y="2.5" width="27" height="27" rx="8" pathLength="100" fill="none" stroke="var(--accent)" stroke-width="2.6" stroke-linecap="round"/>
+    </svg>
+    <div class="sb-check" id="sbCheck"></div>
+  </div>
+  <span class="sb-text" id="syncBootText"></span>
+</div>
 
 <!-- ======= sheets ======= -->
 <div class="sheet-wrap" id="fabSheet"><div class="backdrop" onclick="closeSheet('fabSheet')"></div>
@@ -2422,6 +2457,8 @@ const I18N = {
     ai_remote_update_yes: 'Загрузить',
     ai_remote_update_no: 'Оставить как есть',
     remote_update_applied: 'Данные обновлены с другого устройства',
+    sync_boot_checking: 'Обновляем данные…',
+    sync_boot_done: 'Данные синхронизированы',
     ai_tour_farewell: 'Если что — я рядом. Работай спокойно, я подстрахую 🤝',
     ai_tour_offer: 'Я вижу, ты растерялся. Но не бойся, всё очень просто! Хочешь, помогу?',
     ai_tour_offer_yes: 'Давай, помоги',
@@ -2992,6 +3029,8 @@ const I18N = {
     ai_remote_update_yes: 'Load',
     ai_remote_update_no: 'Keep as is',
     remote_update_applied: 'Data updated from another device',
+    sync_boot_checking: 'Updating data…',
+    sync_boot_done: 'Data synced',
     ai_tour_farewell: 'I’m around if you need anything. Work easy, I’ve got your back 🤝',
     ai_tour_offer: 'Looks like you could use a hand. Don’t worry, it’s all pretty simple! Want help?',
     ai_tour_offer_yes: 'Sure, help me out',
@@ -3562,6 +3601,8 @@ const I18N = {
     ai_remote_update_yes: 'Laden',
     ai_remote_update_no: 'So belassen',
     remote_update_applied: 'Daten von einem anderen Gerät aktualisiert',
+    sync_boot_checking: 'Daten werden aktualisiert…',
+    sync_boot_done: 'Daten synchronisiert',
     ai_tour_farewell: 'Ich bin da, falls du was brauchst. Mach dir keinen Stress, ich hab deinen Rücken 🤝',
     ai_tour_offer: 'Sieht aus, als könntest du Hilfe gebrauchen. Keine Sorge, das ist alles ganz einfach! Soll ich helfen?',
     ai_tour_offer_yes: 'Ja, hilf mir',
@@ -4130,6 +4171,8 @@ const I18N = {
     ai_remote_update_yes: 'Cargar',
     ai_remote_update_no: 'Dejar como está',
     remote_update_applied: 'Datos actualizados desde otro dispositivo',
+    sync_boot_checking: 'Actualizando datos…',
+    sync_boot_done: 'Datos sincronizados',
     ai_tour_farewell: 'Aquí estoy si necesitas algo. Trabaja tranquilo, te cubro las espaldas 🤝',
     ai_tour_offer: 'Parece que te vendría bien una mano. ¡No te preocupes, es todo muy sencillo! ¿Quieres ayuda?',
     ai_tour_offer_yes: 'Sí, ayúdame',
@@ -4698,6 +4741,8 @@ const I18N = {
     ai_remote_update_yes: 'Charger',
     ai_remote_update_no: 'Laisser tel quel',
     remote_update_applied: 'Données mises à jour depuis un autre appareil',
+    sync_boot_checking: 'Mise à jour des données…',
+    sync_boot_done: 'Données synchronisées',
     ai_tour_farewell: 'Je suis là si tu as besoin de quelque chose. Travaille tranquille, je veille sur toi 🤝',
     ai_tour_offer: 'On dirait que tu aurais besoin d’un coup de main. Ne t’inquiète pas, c’est tout simple ! Je t’aide ?',
     ai_tour_offer_yes: 'Oui, aide-moi',
@@ -5266,6 +5311,8 @@ const I18N = {
     ai_remote_update_yes: '加载',
     ai_remote_update_no: '保持现状',
     remote_update_applied: '已从另一台设备更新数据',
+    sync_boot_checking: '正在更新数据…',
+    sync_boot_done: '数据已同步',
     ai_tour_farewell: '有需要我随时都在。放心干活，我罩着你 🤝',
     ai_tour_offer: '看起来你需要帮忙。别担心，其实很简单！要我帮你吗？',
     ai_tour_offer_yes: '好，帮我一下',
@@ -5834,6 +5881,8 @@ const I18N = {
     ai_remote_update_yes: 'Tải về',
     ai_remote_update_no: 'Giữ nguyên',
     remote_update_applied: 'Đã cập nhật dữ liệu từ thiết bị khác',
+    sync_boot_checking: 'Đang cập nhật dữ liệu…',
+    sync_boot_done: 'Dữ liệu đã đồng bộ',
     ai_tour_farewell: 'Tôi luôn ở đây nếu bạn cần gì. Cứ yên tâm làm việc, tôi lo cho bạn 🤝',
     ai_tour_offer: 'Có vẻ bạn cần trợ giúp. Đừng lo, mọi thứ rất đơn giản! Tôi giúp bạn nhé?',
     ai_tour_offer_yes: 'Được, giúp tôi với',
@@ -6402,6 +6451,8 @@ const I18N = {
     ai_remote_update_yes: 'Yuklash',
     ai_remote_update_no: 'O‘zgartirmaslik',
     remote_update_applied: 'Ma’lumotlar boshqa qurilmadan yangilandi',
+    sync_boot_checking: 'Ma’lumotlar yangilanmoqda…',
+    sync_boot_done: 'Ma’lumotlar sinxronlandi',
     ai_tour_farewell: 'Kerak bo‘lsa men shu yerdaman. Xotirjam ishlayvering, men orqangizdaman 🤝',
     ai_tour_offer: 'Sizga yordam kerakdek ko‘rinyapti. Xavotir olmang, hammasi juda oddiy! Yordam beraymi?',
     ai_tour_offer_yes: 'Ha, yordam bering',
@@ -6970,6 +7021,8 @@ const I18N = {
     ai_remote_update_yes: 'Жүктөө',
     ai_remote_update_no: 'Ушундай калтыруу',
     remote_update_applied: 'Маалыматтар башка түзмөктөн жаңыртылды',
+    sync_boot_checking: 'Маалыматтар жаңыртылууда…',
+    sync_boot_done: 'Маалыматтар шайкештирилди',
     ai_tour_farewell: 'Эмне керек болсо, мен ушул жердемин. Тынч иштей бериңиз, мен колдоймун 🤝',
     ai_tour_offer: 'Сизге жардам керек көрүнөт. Тынчсызданбаңыз, баары абдан жөнөкөй! Жардам берейинби?',
     ai_tour_offer_yes: 'Ооба, жардам бериңиз',
@@ -7538,6 +7591,8 @@ const I18N = {
     ai_remote_update_yes: 'Бор кардан',
     ai_remote_update_no: 'Тағйир надодан',
     remote_update_applied: 'Маълумот аз дастгоҳи дигар навсозӣ шуд',
+    sync_boot_checking: 'Маълумот навсозӣ мешавад…',
+    sync_boot_done: 'Маълумот ҳамоҳанг карда шуд',
     ai_tour_farewell: 'Агар чизе лозим шавад, ман ҳамин ҷоям. Осуда кор кунед, ман пуштибонии шуморо мекунам 🤝',
     ai_tour_offer: 'Ба назар мерасад, ба шумо кӯмак лозим аст. Ташвиш накашед, ҳама чиз хеле содда аст! Кӯмак кунам?',
     ai_tour_offer_yes: 'Ҳа, кӯмак кунед',
@@ -8106,6 +8161,8 @@ const I18N = {
     ai_remote_update_yes: 'ჩატვირთვა',
     ai_remote_update_no: 'უცვლელად დატოვება',
     remote_update_applied: 'მონაცემები განახლდა სხვა მოწყობილობიდან',
+    sync_boot_checking: 'მონაცემები განახლდება…',
+    sync_boot_done: 'მონაცემები სინქრონიზებულია',
     ai_tour_farewell: 'თუ რამე დაგჭირდებათ, აქ ვარ. მშვიდად იმუშავეთ, მე თქვენ გემხრობით 🤝',
     ai_tour_offer: 'როგორც ჩანს, დახმარება გჭირდებათ. ნუ ინერვიულებთ, ყველაფერი ძალიან მარტივია! დაგეხმაროთ?',
     ai_tour_offer_yes: 'დიახ, დამეხმარეთ',
@@ -8674,6 +8731,8 @@ const I18N = {
     ai_remote_update_yes: 'Բեռնել',
     ai_remote_update_no: 'Թողնել առանց փոփոխության',
     remote_update_applied: 'Տվյալները թարմացվել են այլ սարքից',
+    sync_boot_checking: 'Տվյալները թարմացվում են…',
+    sync_boot_done: 'Տվյալները համաժամեցվել են',
     ai_tour_farewell: 'Ես այստեղ եմ, եթե ինչ-որ բան պետք լինի։ Հանգիստ աշխատեք, ես ձեզ ծածկում եմ 🤝',
     ai_tour_offer: 'Կարծես թե օգնություն է պետք։ Մի անհանգստացեք, ամեն ինչ շատ պարզ է! Օգնե՞մ։',
     ai_tour_offer_yes: 'Այո, օգնեք ինձ',
@@ -9242,6 +9301,8 @@ const I18N = {
     ai_remote_update_yes: 'Аныргара',
     ai_remote_update_no: 'Иашьашәалоу иаанхарц',
     remote_update_applied: 'Адыррақәа ҵакырада устройство иҟарҵаз ианышьуп',
+    sync_boot_checking: 'Адыррақәа ҿыц ыҟоуп…',
+    sync_boot_done: 'Адыррақәа еизакны ыҟоуп',
     ai_tour_farewell: 'Сара абраны сыҟоуп, акгьы шәыхәҭазар. Иашьашәалоу шәусура, сара шәхы иасхьоит 🤝',
     ai_tour_offer: 'Шәхы иасхьаны иҟалап. Мгакьым, зегьы иубарҭоуп! Аҧсахра сҟазаап?',
     ai_tour_offer_yes: 'Ааи, сзыхьчала',
@@ -11036,42 +11097,46 @@ function syncDownload() {
   }, t('sync_download_confirm_btn'));
 }
 
-/* ---------- обнаружение новых данных с другого устройства ---------- */
-let pendingRemote = null;
-function checkRemoteUpdates() {
+/* ---------- обнаружение новых данных с другого устройства ----------
+   единый источник правды: облако само решает, у кого свежее — без диалогов
+   «загрузить или оставить», приложение просто тихо подтягивает актуальное.
+   showUi=true — только для проверки при открытии приложения (маленькая рамка
+   с бегущей «змейкой», затем зелёная галочка); при переключении вкладок/фокусе
+   окна та же функция работает молча, без визуального индикатора. ---------- */
+function checkRemoteUpdates(showUi) {
   const s = syncState();
   if (!s.login || !s.pin) return;
-  if (window.__remoteCheckBusy || pendingRemote) return;
+  if (window.__remoteCheckBusy) return;
   if (document.querySelector('.sheet-wrap.open')) return; // не мешаем работе
   window.__remoteCheckBusy = true;
+  if (showUi) syncBootShow();
   syncCall({ login: s.login, pin: s.pin, url: s.url || DEFAULT_SYNC_URL }, 'load')
     .then(res => {
-      if (!res.payload || !res.at) return;
+      if (!res.payload || !res.at) { if (showUi) syncBootHide(); return; }
       // строки ISO дат сравниваются лексикографически корректно
-      if (s.last && res.at <= s.last) return; // это наша же версия или старее — ничего не делаем
-      pendingRemote = { payload: res.payload, at: res.at };
-      offerRemoteUpdate();
+      if (s.last && res.at <= s.last) { if (showUi) syncBootSuccess(); return; } // уже актуально
+      applyRemotePayload(res.payload, { login: s.login, pin: s.pin, url: s.url }, res.at);
+      if (showUi) syncBootSuccess(); else toast(t('remote_update_applied'));
     })
-    .catch(() => {})
+    .catch(() => { if (showUi) syncBootHide(); })
     .finally(() => { window.__remoteCheckBusy = false; });
 }
-function offerRemoteUpdate() {
-  if (!pendingRemote) return;
-  if (window.__tourActive || document.querySelector('.sheet-wrap.open') || document.getElementById('aiPanel').classList.contains('show')) {
-    setTimeout(offerRemoteUpdate, 5000);
-    return;
-  }
-  aiSay(t('ai_remote_update_text'), [
-    { label: t('ai_remote_update_yes'), pri: true, fn: applyPendingRemote },
-    { label: t('ai_remote_update_no'), fn: () => { pendingRemote = null; } }
-  ]);
+function syncBootShow() {
+  const el = document.getElementById('syncBoot');
+  el.classList.remove('success');
+  document.getElementById('syncBootText').textContent = t('sync_boot_checking');
+  document.getElementById('sbCheck').innerHTML = '';
+  el.classList.add('show');
 }
-function applyPendingRemote() {
-  if (!pendingRemote) return;
-  const s = syncState();
-  applyRemotePayload(pendingRemote.payload, { login: s.login, pin: s.pin, url: s.url }, pendingRemote.at);
-  pendingRemote = null;
-  toast(t('remote_update_applied'));
+function syncBootSuccess() {
+  const el = document.getElementById('syncBoot');
+  document.getElementById('sbCheck').innerHTML = ic('check2', 15);
+  document.getElementById('syncBootText').textContent = t('sync_boot_done');
+  el.classList.add('success');
+  setTimeout(() => el.classList.remove('show'), 1600);
+}
+function syncBootHide() {
+  document.getElementById('syncBoot').classList.remove('show');
 }
 
 function errToMsg(err) {
@@ -14161,7 +14226,7 @@ document.addEventListener('visibilitychange', () => {
   if (document.visibilityState === 'hidden') save();
   else checkRemoteUpdates();
 });
-window.addEventListener('focus', checkRemoteUpdates);
+window.addEventListener('focus', () => checkRemoteUpdates());
 
 // refresh "days left" badges hourly
 setInterval(() => { if (!drag) render(); }, 60 * 60 * 1000);
@@ -14203,7 +14268,8 @@ loadCurrencyRates(false); // подтягиваем курс доллара в �
 // ассистент включается после старта: первые сохранения при загрузке не считаются
 setTimeout(() => { window.__bdgReady = true; }, 2500);
 maybeOfferTour();
-setTimeout(checkRemoteUpdates, 3000);
+// при каждом открытии сразу сверяемся с облаком — единый источник правды на всех устройствах
+setTimeout(() => checkRemoteUpdates(true), 400);
 
 // входящие карточки товаров от поставщиков — проверяем сразу и затем периодически
 setTimeout(pollShares, 2000);
