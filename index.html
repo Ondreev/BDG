@@ -801,6 +801,26 @@ input[type=file]{display:none}
 .plr-qty:focus{border-color:var(--accent);background:#fff}
 .plr-footer{display:flex;justify-content:space-between;align-items:baseline;font-size:14px;font-weight:800;margin-bottom:12px}
 
+/* ---------- «Приход»: закупка/продажа/маржа для печати накладной, редактируемая таблица ---------- */
+.rcpt-table{width:100%;border-collapse:collapse;font-size:13px}
+.rcpt-table th{padding:8px 6px;font-size:10px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);font-weight:800;white-space:nowrap;border-bottom:2px solid var(--line);text-align:center}
+.rcpt-table td{padding:5px;border-bottom:1px solid var(--line);white-space:nowrap;text-align:center}
+.rcpt-name{text-align:left !important;font-weight:600;max-width:130px;overflow:hidden;text-overflow:ellipsis}
+.rcpt-sortable{cursor:pointer;user-select:none}
+.rcpt-sortable:active{color:var(--accent)}
+.rcpt-in{text-align:center;padding:6px 3px;border:1.5px solid var(--line);border-radius:9px;font-size:13px;font-weight:700;background:var(--bg);outline:none}
+.rcpt-in:focus{border-color:var(--accent);background:#fff}
+.rcpt-in.rcpt-qty{width:48px}
+.rcpt-in.rcpt-price{width:66px}
+.rcpt-in.rcpt-code{width:78px;text-align:left;padding-left:8px}
+.rcpt-margin{font-weight:800;white-space:nowrap}
+.rcpt-margin .pct{display:block;font-size:10.5px;color:var(--muted);font-weight:700}
+.rcpt-margin.neg{color:var(--red)}
+.rcpt-margin.neg .pct{color:var(--red)}
+.rcpt-sub td{background:var(--accent-soft);font-weight:800}
+.rcpt-summary{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:13px;font-weight:700;margin:12px 4px 14px;color:var(--muted)}
+.rcpt-summary b{color:var(--text);font-weight:900}
+
 /* ---------- schedule ---------- */
 .sched-bar{display:flex;align-items:center;gap:10px;margin-top:14px;flex-wrap:wrap}
 .sched-nav{display:flex;align-items:center;gap:4px;background:var(--card);border-radius:14px;box-shadow:var(--shadow);padding:4px}
@@ -1491,10 +1511,30 @@ input[type=file]{display:none}
     <div class="seg seg-wide">
       <button id="plmDoc" class="on" onclick="setPrintListMode('doc')" data-i18n="print_mode_doc">Накладная A4</button>
       <button id="plmLabels" onclick="setPrintListMode('labels')" data-i18n="print_mode_labels">Этикетки 40×30</button>
+      <button id="plmReceipt" onclick="setPrintListMode('receipt')">Приход</button>
     </div>
     <p id="printListHint" style="color:var(--muted);font-size:12.5px;margin:8px 4px 0"></p>
     <div class="plr-list" id="printListRows"></div>
     <div class="plr-footer" id="printListFooter"></div>
+    <div class="rcpt-wrap" id="receiptWrap" style="display:none">
+      <p style="color:var(--muted);font-size:12.5px;margin:8px 4px 12px">Внутренний артикул и цена продажи — только для этого документа, в карточке товара каталога не отображаются. Нажмите на заголовок «Артикул», чтобы сгруппировать одинаковые позиции.</p>
+      <div class="table-scroll">
+        <table class="rcpt-table">
+          <thead>
+            <tr>
+              <th style="text-align:left">Товар</th>
+              <th class="rcpt-sortable" onclick="sortReceiptByCode()">Артикул ⇅</th>
+              <th>Кол-во</th>
+              <th>Закупка</th>
+              <th>Продажа</th>
+              <th>Маржа</th>
+            </tr>
+          </thead>
+          <tbody id="receiptRows"></tbody>
+        </table>
+      </div>
+      <div class="rcpt-summary" id="receiptSummary"></div>
+    </div>
     <button class="btn btn-primary" onclick="executePrintList()">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M7 8.5V4h10v4.5M7 17.5H5.5A1.5 1.5 0 0 1 4 16v-5a1.5 1.5 0 0 1 1.5-1.5h13A1.5 1.5 0 0 1 20 11v5a1.5 1.5 0 0 1-1.5 1.5H17M7 14.5h10v6H7z"/></svg>
       <span data-i18n="btn_print">Печать</span>
@@ -2276,6 +2316,10 @@ function sanitizeCatalogDB(s) {
     if (!p.wk) p.wk = p.ym ? weekKeyOf(new Date(p.ym + '-01T00:00:00')) : curWk;
   });
   s.inventory = Array.isArray(s.inventory) ? s.inventory : [];
+  // «Приход»: закупочный артикул и цена продажи по товару — конфиденциальные данные
+  // аккаунта, привязаны к товару по названию (в нижнем регистре), но никогда не
+  // показываются в карточке товара каталога, только в самом разделе «Приход»
+  s.receiptData = s.receiptData && typeof s.receiptData === 'object' ? s.receiptData : {};
   // planning module (checklists)
   s.plans = Array.isArray(s.plans) ? s.plans : [];
   s.plans.forEach(p => {
@@ -13251,8 +13295,10 @@ function openPrintListSheet() {
   printListMode = 'doc';
   printListQty = {};
   data().stores.forEach(s => s.items.forEach(it => { printListQty[it.id] = +it.qty || 0; }));
+  resetReceiptWorkingData();
   document.getElementById('plmDoc').classList.add('on');
   document.getElementById('plmLabels').classList.remove('on');
+  document.getElementById('plmReceipt').classList.remove('on');
   renderPrintListRows();
   openSheet('printListSheet');
 }
@@ -13268,7 +13314,12 @@ function setPrintListMode(m) {
   printListMode = m;
   document.getElementById('plmDoc').classList.toggle('on', m === 'doc');
   document.getElementById('plmLabels').classList.toggle('on', m === 'labels');
-  renderPrintListRows();
+  document.getElementById('plmReceipt').classList.toggle('on', m === 'receipt');
+  document.getElementById('printListRows').style.display = m === 'receipt' ? 'none' : '';
+  document.getElementById('printListFooter').style.display = m === 'receipt' ? 'none' : '';
+  document.getElementById('receiptWrap').style.display = m === 'receipt' ? '' : 'none';
+  document.getElementById('printListHint').style.display = m === 'receipt' ? 'none' : '';
+  if (m === 'receipt') renderReceiptRows(); else renderPrintListRows();
 }
 function renderPrintListRows() {
   const rows = printListRowsData();
@@ -13303,6 +13354,208 @@ function updatePrintListFooter() {
     footer.innerHTML = `<span>${t('print_footer_total')}</span><span>${money(total)}</span>`;
   }
 }
+
+/* ---------- «Приход»: закупка/продажа/маржа поверх того же списка, не переводится на другие языки ---------- */
+let receiptQty = {}, receiptCost = {}, receiptSale = {}, receiptCode = {}, receiptSortByCode = false, receiptGroups = [];
+function resetReceiptWorkingData() {
+  receiptQty = {}; receiptCost = {}; receiptSale = {}; receiptCode = {}; receiptSortByCode = false; receiptGroups = [];
+}
+// приоритет — id уже существующего товара каталога (устойчив к переименованию строки списка),
+// если товар в каталоге не найден — откатываемся на название, чтобы данные всё равно не терялись
+function receiptKeyFor(name) {
+  const n = (name || '').trim().toLowerCase();
+  const p = state.catalogDB.products.find(x => x.name.toLowerCase() === n);
+  return p ? 'id:' + p.id : 'nm:' + n;
+}
+function initReceiptDefaults() {
+  printListRowsData().forEach(r => {
+    const id = r.it.id;
+    if (!(id in receiptQty)) receiptQty[id] = +r.it.qty || 0;
+    if (!(id in receiptCost)) receiptCost[id] = +r.it.price || 0;
+    if (!(id in receiptSale) || !(id in receiptCode)) {
+      const saved = state.receiptData[receiptKeyFor(r.it.name)];
+      if (!(id in receiptSale)) receiptSale[id] = saved && saved.salePrice ? +saved.salePrice : 0;
+      if (!(id in receiptCode)) receiptCode[id] = saved && saved.item ? saved.item : '';
+    }
+  });
+}
+function receiptGroupTotals(ids) {
+  let qty = 0, cost = 0, sale = 0;
+  ids.forEach(id => { const q = receiptQty[id] || 0; qty += q; cost += q * (receiptCost[id] || 0); sale += q * (receiptSale[id] || 0); });
+  const margin = sale - cost;
+  return { qty, cost, sale, margin, pct: sale > 0 ? margin / sale * 100 : 0 };
+}
+// без цены продажи маржа не имеет смысла — показываем прочерк, а не пугающий «убыток»
+function marginHtml(sale, margin, pct) {
+  if (!sale) return '<span style="color:var(--muted)">—</span>';
+  return `${money(margin)}<span class="pct">${pct.toFixed(0)}%</span>`;
+}
+function receiptRowHtml(r) {
+  const id = r.it.id;
+  const qty = receiptQty[id] || 0, cost = receiptCost[id] || 0, sale = receiptSale[id] || 0, code = receiptCode[id] || '';
+  const margin = (sale - cost) * qty, pct = sale > 0 ? (sale - cost) / sale * 100 : 0;
+  return `<tr data-row="${id}">
+    <td class="rcpt-name">${esc(r.it.name)}${r.it.loc ? `<br><span style="color:var(--muted);font-size:11px">${esc(r.it.loc)}</span>` : ''}</td>
+    <td><input class="rcpt-in rcpt-code" autocomplete="off" value="${esc(code)}" oninput="rcptOnInput('${id}','code',this.value)"></td>
+    <td><input class="rcpt-in rcpt-qty" type="number" min="0" inputmode="numeric" autocomplete="off" value="${qty}" oninput="rcptOnInput('${id}','qty',this.value)"></td>
+    <td><input class="rcpt-in rcpt-price" type="number" min="0" inputmode="decimal" autocomplete="off" value="${cost || ''}" oninput="rcptOnInput('${id}','cost',this.value)"></td>
+    <td><input class="rcpt-in rcpt-price" type="number" min="0" inputmode="decimal" autocomplete="off" value="${sale || ''}" oninput="rcptOnInput('${id}','sale',this.value)"></td>
+    <td id="rcptMargin-${id}" class="rcpt-margin${sale && margin < 0 ? ' neg' : ''}">${marginHtml(sale, margin, pct)}</td>
+  </tr>`;
+}
+function receiptSubtotalRowHtml(gi, code, ids) {
+  const g = receiptGroupTotals(ids);
+  return `<tr class="rcpt-sub" data-sub="${gi}">
+    <td class="rcpt-name" colspan="2">Подытог «${esc(code)}» (${ids.length})</td>
+    <td id="rcptSubQty-${gi}">${fmt(g.qty)}</td>
+    <td id="rcptSubCost-${gi}">${money(g.cost)}</td>
+    <td id="rcptSubSale-${gi}">${money(g.sale)}</td>
+    <td id="rcptSubMargin-${gi}" class="rcpt-margin${g.sale && g.margin < 0 ? ' neg' : ''}">${marginHtml(g.sale, g.margin, g.pct)}</td>
+  </tr>`;
+}
+function receiptOrderedRows() {
+  const rows = printListRowsData();
+  if (!receiptSortByCode) return rows;
+  return rows.slice().sort((a, b) => {
+    const ca = (receiptCode[a.it.id] || '').trim(), cb = (receiptCode[b.it.id] || '').trim();
+    if (!ca && cb) return 1;
+    if (ca && !cb) return -1;
+    if (ca !== cb) return ca.localeCompare(cb, 'ru');
+    return a.it.name.localeCompare(b.it.name, 'ru');
+  });
+}
+function renderReceiptRows() {
+  initReceiptDefaults();
+  const rows = receiptOrderedRows();
+  receiptGroups = [];
+  let html = '';
+  if (!rows.length) {
+    html = `<tr><td colspan="6" style="padding:20px;text-align:center;color:var(--muted)">Список пуст</td></tr>`;
+  } else if (receiptSortByCode) {
+    let i = 0;
+    while (i < rows.length) {
+      const code = (receiptCode[rows[i].it.id] || '').trim();
+      let j = i;
+      while (j < rows.length && (receiptCode[rows[j].it.id] || '').trim() === code) j++;
+      const group = rows.slice(i, j);
+      group.forEach(r => html += receiptRowHtml(r));
+      if (code && group.length > 1) {
+        const gi = receiptGroups.length;
+        const ids = group.map(r => r.it.id);
+        receiptGroups.push({ code, ids });
+        html += receiptSubtotalRowHtml(gi, code, ids);
+      }
+      i = j;
+    }
+  } else {
+    rows.forEach(r => html += receiptRowHtml(r));
+  }
+  document.getElementById('receiptRows').innerHTML = html;
+  updateReceiptSummary();
+}
+function sortReceiptByCode() {
+  receiptSortByCode = !receiptSortByCode;
+  renderReceiptRows();
+}
+function rcptOnInput(id, field, val) {
+  if (field === 'code') receiptCode[id] = val;
+  else {
+    const map = field === 'qty' ? receiptQty : field === 'cost' ? receiptCost : receiptSale;
+    map[id] = Math.max(0, +val || 0);
+  }
+  const cell = document.getElementById('rcptMargin-' + id);
+  if (cell) {
+    const qty = receiptQty[id] || 0, cost = receiptCost[id] || 0, sale = receiptSale[id] || 0;
+    const margin = (sale - cost) * qty, pct = sale > 0 ? (sale - cost) / sale * 100 : 0;
+    cell.className = 'rcpt-margin' + (sale && margin < 0 ? ' neg' : '');
+    cell.innerHTML = marginHtml(sale, margin, pct);
+  }
+  receiptGroups.forEach((g, gi) => {
+    if (!g.ids.includes(id)) return;
+    const t = receiptGroupTotals(g.ids);
+    const q = document.getElementById('rcptSubQty-' + gi); if (q) q.textContent = fmt(t.qty);
+    const c = document.getElementById('rcptSubCost-' + gi); if (c) c.textContent = money(t.cost);
+    const s = document.getElementById('rcptSubSale-' + gi); if (s) s.textContent = money(t.sale);
+    const m = document.getElementById('rcptSubMargin-' + gi);
+    if (m) { m.className = 'rcpt-margin' + (t.sale && t.margin < 0 ? ' neg' : ''); m.innerHTML = marginHtml(t.sale, t.margin, t.pct); }
+  });
+  updateReceiptSummary();
+}
+function updateReceiptSummary() {
+  const t = receiptGroupTotals(printListRowsData().map(r => r.it.id));
+  document.getElementById('receiptSummary').innerHTML =
+    `<span>Закупка: <b>${money(t.cost)}</b></span><span>Продажа: <b>${money(t.sale)}</b></span>` +
+    `<span>Маржа: <b>${t.sale ? money(t.margin) : '—'}</b></span><span>% маржи: <b>${t.sale ? t.pct.toFixed(1) + '%' : '—'}</b></span>`;
+}
+// после печати «Приход» запоминаем введённые артикул/цену продажи по товару — конфиденциально,
+// в рамках аккаунта (обычный save()/синхронизация), но никогда не показываем в карточке товара
+function persistReceiptData(rows) {
+  rows.forEach(r => {
+    const id = r.it.id;
+    const code = (receiptCode[id] || '').trim();
+    const sale = +receiptSale[id] || 0;
+    if (!code && !sale) return;
+    state.receiptData[receiptKeyFor(r.it.name)] = { item: code, salePrice: sale };
+  });
+  save();
+}
+function printReceiptDoc() {
+  const rows = receiptOrderedRows().filter(r => (receiptQty[r.it.id] || 0) > 0);
+  if (!rows.length) { toast('Нет товаров с количеством больше нуля'); return false; }
+  let totalQty = 0, totalCost = 0, totalSale = 0, body = '';
+  let i = 0;
+  while (i < rows.length) {
+    const code0 = (receiptCode[rows[i].it.id] || '').trim();
+    let j = i + 1;
+    if (receiptSortByCode) { while (j < rows.length && (receiptCode[rows[j].it.id] || '').trim() === code0) j++; }
+    const group = rows.slice(i, j);
+    group.forEach(r => {
+      const id = r.it.id;
+      const qty = receiptQty[id] || 0, cost = receiptCost[id] || 0, sale = receiptSale[id] || 0;
+      const costSum = qty * cost, saleSum = qty * sale, margin = saleSum - costSum;
+      totalQty += qty; totalCost += costSum; totalSale += saleSum;
+      body += `<tr>
+        <td style="${PTD}"><b>${esc(r.it.name)}</b>${r.it.loc ? `<span style="color:#64748B;font-size:11px"> · ${esc(r.it.loc)}</span>` : ''}</td>
+        <td style="${PTD}">${esc(receiptCode[id] || '')}</td>
+        <td style="${PTD};text-align:center">${fmt(qty)}</td>
+        <td style="${PTD};text-align:right">${money(cost)}</td>
+        <td style="${PTD};text-align:right">${money(costSum)}</td>
+        <td style="${PTD};text-align:right">${money(sale)}</td>
+        <td style="${PTD};text-align:right">${money(saleSum)}</td>
+        <td style="${PTD};text-align:right;font-weight:800">${money(margin)}</td>
+      </tr>`;
+    });
+    if (receiptSortByCode && code0 && group.length > 1) {
+      const g = receiptGroupTotals(group.map(r => r.it.id));
+      body += `<tr style="background:#F1F5F9">
+        <td style="${PTD}" colspan="2"><b>Подытог «${esc(code0)}»</b></td>
+        <td style="${PTD};text-align:center"><b>${fmt(g.qty)}</b></td>
+        <td style="${PTD}"></td><td style="${PTD};text-align:right"><b>${money(g.cost)}</b></td>
+        <td style="${PTD}"></td><td style="${PTD};text-align:right"><b>${money(g.sale)}</b></td>
+        <td style="${PTD};text-align:right;font-weight:900">${money(g.margin)}</td>
+      </tr>`;
+    }
+    i = j;
+  }
+  const totalMargin = totalSale - totalCost, totalPct = totalSale > 0 ? totalMargin / totalSale * 100 : 0;
+  printDoc('landscape', 'Приход', list().name, `
+    <table style="border-collapse:collapse;width:100%">
+      <tr>
+        <th style="${PTH};text-align:left">Товар</th><th style="${PTH}">Артикул</th><th style="${PTH}">Кол-во</th>
+        <th style="${PTH}">Закупка</th><th style="${PTH}">Сумма закупки</th>
+        <th style="${PTH}">Продажа</th><th style="${PTH}">Сумма продажи</th><th style="${PTH}">Маржа</th>
+      </tr>${body}
+    </table>
+    <div style="margin-top:14px;font-size:14px;font-weight:800;display:flex;gap:28px;flex-wrap:wrap">
+      <span>Итого закупка: ${money(totalCost)}</span>
+      <span>Итого продажа: ${money(totalSale)}</span>
+      <span>Маржа: ${money(totalMargin)}</span>
+      <span>% маржи: ${totalSale ? totalPct.toFixed(1) + '%' : '—'}</span>
+    </div>`);
+  persistReceiptData(rows);
+  return true;
+}
+
 function executePrintList() {
   const rows = printListRowsData();
   if (printListMode === 'labels') {
@@ -13310,6 +13563,8 @@ function executePrintList() {
       .map(r => ({ name: r.it.name, sku: r.sku, qty: printListQty[r.it.id] }));
     if (!items.length) { toast(t('print_no_labels')); return; }
     printLabelsBatch(items);
+  } else if (printListMode === 'receipt') {
+    if (!printReceiptDoc()) return;
   } else {
     const picks = rows.filter(r => (printListQty[r.it.id] || 0) > 0);
     if (!picks.length) { toast(t('print_no_qty')); return; }
