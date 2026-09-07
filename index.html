@@ -2491,18 +2491,28 @@ function blankList(name) {
     data: { budget: 0, stores: [], catalog: [] } };
 }
 
-// счётчик локальных правок, ещё не подтверждённых как отправленные в облако.
-// НЕ зависит от window.__bdgReady/autoSyncTimer — раньше проверки "не перетираем ли
-// мы несохранённую правку" (checkRemoteUpdates и др.) полагались на autoSyncTimer,
-// а scheduleAutoSync() первые 2.5с после загрузки страницы его не заводит (чтобы не
-// слать в облако собственные технические пересохранения при старте). Из-за этого
-// правка, сделанная человеком в эти первые секунды (например, сразу добавил товар
-// в список), была НЕВИДИМА для защиты от перезаписи — стартовая проверка облака
-// (в 400мс после загрузки) могла применить старые данные с сервера и стереть её,
-// даже без второго устройства. localEditSeq считает правки всегда, безусловно
-let localEditSeq = 0, lastConfirmedSyncedSeq = 0;
-function hasUnsyncedLocalEdit() { return localEditSeq !== lastConfirmedSyncedSeq; }
+// счётчик локальных правок, ещё не подтверждённых как отправленные в облако — хранится
+// прямо в state.sync (editSeq/syncedSeq), а не в переменной JS, и потому переживает
+// перезагрузку страницы. Раньше это была обычная переменная в памяти — обнулялась при
+// каждой перезагрузке, и ровно поэтому: человек добавляет товар (save() поставил
+// правку в очередь на отправку через 17с), тут же обновляет страницу (потянул вниз на
+// телефоне, или просто рефреш) до того, как правка успела уйти — после перезагрузки
+// приложение понятия не имело, что в localStorage лежит ещё не отправленная правка,
+// и следующая же фоновая сверка с облаком могла её тихо перезаписать данными с сервера.
+// Второй случай, для которого это и заводилось изначально: scheduleAutoSync() не
+// планирует отправку первые 2.5с после загрузки (чтобы не слать в облако собственные
+// технические пересохранения при старте) — правка, сделанная человеком именно в эти
+// секунды, тоже должна быть видна проверкам "можно ли сейчас перезаписать локальные
+// данные", и hasUnsyncedLocalEdit() не зависит ни от autoSyncTimer, ни от __bdgReady
+function hasUnsyncedLocalEdit() {
+  const sy = state.sync;
+  return !!sy && (sy.editSeq || 0) !== (sy.syncedSeq || 0);
+}
 function save(skipAutoSync) {
+  if (!skipAutoSync) {
+    state.sync = state.sync || {};
+    state.sync.editSeq = (state.sync.editSeq || 0) + 1;
+  }
   try {
     const json = JSON.stringify(state);
     localStorage.setItem(KEY, json);
@@ -2510,10 +2520,7 @@ function save(skipAutoSync) {
   } catch (e) {
     toast(t('save_failed_toast'));
   }
-  if (!skipAutoSync) {
-    localEditSeq++;
-    try { scheduleAutoSync(); } catch (e) {}
-  }
+  if (!skipAutoSync) { try { scheduleAutoSync(); } catch (e) {} }
 }
 
 function tryParse(raw) { try { return JSON.parse(raw); } catch (e) { return null; } }
@@ -2560,17 +2567,25 @@ function load() {
     l.data.stores = l.data.stores || [];
     l.data.catalog = l.data.catalog || [];
     l.data.stores.forEach(st => { st.id = st.id || uid(); st.items = st.items || []; });
+    // отметки времени удаления магазинов/позиций — нужны для слияния списков между
+    // устройствами по записям (см. mergeListsClient), а не заменой документа целиком
+    l.data.deletedStoreIds = Array.isArray(l.data.deletedStoreIds) ? l.data.deletedStoreIds : [];
+    l.data.deletedItemIds = Array.isArray(l.data.deletedItemIds) ? l.data.deletedItemIds : [];
     // список, полученный от покупателя как заказ — редактируется/печатается как обычный
     // список, но группируется отдельно во «Входящих» и знает, от кого пришёл
     l.incoming = !!l.incoming;
     l.fromLogin = l.fromLogin || '';
     l.fromPhone = l.fromPhone || '';
   });
+  s.deletedListIds = Array.isArray(s.deletedListIds) ? s.deletedListIds : [];
   s.myContactPhone = typeof s.myContactPhone === 'string' ? s.myContactPhone : '';
   if (!s.lists.some(l => l.id === s.currentId)) s.currentId = s.lists[0].id;
   sanitizeCatalogDB(s);
   state = s;
-  save();
+  // save(true): это только фиксация санитайза/дефолтов при старте, а не правка
+  // человека — иначе editSeq поднимался бы на каждой загрузке страницы и
+  // hasUnsyncedLocalEdit() был бы истинным всегда, блокируя обычные обновления с сервера
+  save(true);
 }
 
 function sanitizeCatalogDB(s) {
@@ -11220,8 +11235,13 @@ function deleteStore(sid) {
   confirmAction(t('store_delete_title'), tf('store_delete_text', { name: s.name, n: s.items.length }), () => {
     const idx = data().stores.findIndex(x => x.id === sid);
     const removed = data().stores.splice(idx, 1)[0];
+    // отметка удаления — чтобы слияние с другим устройством (см. mergeListsClient)
+    // не "воскресило" магазин, если там лежит более старая копия этого списка
+    data().deletedStoreIds.push(sid);
     save(); render();
     snackbar(tf('store_deleted_snack', { name: removed.name }), () => {
+      const i = data().deletedStoreIds.indexOf(sid);
+      if (i !== -1) data().deletedStoreIds.splice(i, 1);
       data().stores.splice(Math.min(idx, data().stores.length), 0, removed);
       save(); render();
     });
@@ -11386,8 +11406,11 @@ function deleteItemFromSheet() {
   const idx = s.items.findIndex(i => i.id === itemSheetEditId);
   if (idx === -1) { closeSheet('itemSheet'); return; }
   const removed = s.items.splice(idx, 1)[0];
+  data().deletedItemIds.push(removed.id);
   save(); render(); closeSheet('itemSheet');
   snackbar(tf('item_deleted_snack', { name: removed.name }), () => {
+    const i = data().deletedItemIds.indexOf(removed.id);
+    if (i !== -1) data().deletedItemIds.splice(i, 1);
     s.items.splice(Math.min(idx, s.items.length), 0, removed);
     save(); render();
   });
@@ -11484,6 +11507,7 @@ function deleteListById(id) {
   confirmAction(t('list_delete_title'), tf('list_delete_text', { name: l.name }), () => {
     const idx = state.lists.findIndex(x => x.id === id);
     const removed = state.lists.splice(idx, 1)[0];
+    state.deletedListIds.push(id);
     if (state.currentId === id) {
       // после удаления остаёмся в том же режиме (исходящие/входящие), если там ещё есть списки
       const sameMode = state.lists.find(x => !!x.incoming === !!removed.incoming);
@@ -11491,6 +11515,8 @@ function deleteListById(id) {
     }
     save(); render();
     snackbar(tf('list_deleted_snack', { name: removed.name }), () => {
+      const i = state.deletedListIds.indexOf(id);
+      if (i !== -1) state.deletedListIds.splice(i, 1);
       state.lists.splice(Math.min(idx, state.lists.length), 0, removed);
       save(); render();
     });
@@ -11771,18 +11797,18 @@ function syncCall(creds, action, payload, force, skipMerge) {
 // это стало упираться в тайм-аут общей блокировки скрипта ("другой процесс слишком
 // долго удерживает блокировку")
 function performUpload(creds, force, skipCatalogMerge) {
-  const seqAtBuild = localEditSeq; // что именно из локальных правок уедет в этом запросе
+  const seqAtBuild = syncState().editSeq || 0; // что именно из локальных правок уедет в этом запросе
   const payload = JSON.parse(JSON.stringify(state));
   delete payload.sync; // PIN не кладём в сами данные
   return syncCall(creds, 'save', payload, force, skipCatalogMerge).then(res => {
     syncState().last = res.at;
-    // save(true) — это только запись сервисной метки sync.last в localStorage, а не
-    // новая правка; save() без true засчитал бы это как ещё одну "несинхронизированную
-    // правку" и вечно держал бы hasUnsyncedLocalEdit() истинным сразу после успешной отправки
-    save(true); renderSyncStatusSafe();
     // если пока шёл запрос не появилось новых правок сверх тех, что уже уехали —
     // считаем локальную копию подтверждённо синхронизированной
-    if (seqAtBuild > lastConfirmedSyncedSeq) lastConfirmedSyncedSeq = seqAtBuild;
+    if (seqAtBuild > (syncState().syncedSeq || 0)) syncState().syncedSeq = seqAtBuild;
+    // save(true) — это только запись сервисных меток sync.last/syncedSeq, а не новая
+    // правка; save() без true засчитал бы это как ещё одну "несинхронизированную
+    // правку" и вечно держал бы hasUnsyncedLocalEdit() истинным сразу после успешной отправки
+    save(true); renderSyncStatusSafe();
     return res;
   });
 }
@@ -11874,6 +11900,66 @@ function mergeCatalogDB(localDB, remoteDB) {
     locations: [...locMap.values()]
   };
 }
+// слияние содержимого ОДНОГО списка, присутствующего на обеих сторонах — объединяем
+// магазины и позиции по id (глобально по всему списку, а не по каждому магазину
+// отдельно, иначе товар, перемещённый между магазинами на одном из устройств,
+// задвоился бы), а не заменяем список целиком версией с "победившим" таймстампом.
+// Скалярные поля (название магазина, бюджет и т.п.) при конфликте берём из локальной
+// версии — без полноценных меток времени на каждом поле это простой, но безопасный
+// компромисс: никогда не тянем чужое поверх локально ещё не отправленной правки
+function mergeListContents(localList, remoteList) {
+  const deletedStoreIds = new Set([...(localList.data.deletedStoreIds || []), ...(remoteList.data.deletedStoreIds || [])]);
+  const deletedItemIds = new Set([...(localList.data.deletedItemIds || []), ...(remoteList.data.deletedItemIds || [])]);
+
+  const storeOrder = [], storeMeta = new Map();
+  function regStore(st) {
+    if (!storeMeta.has(st.id)) { storeOrder.push(st.id); storeMeta.set(st.id, { id: st.id, name: st.name, collapsed: st.collapsed, storeDirId: st.storeDirId }); }
+  }
+  (localList.data.stores || []).forEach(regStore);
+  (remoteList.data.stores || []).forEach(regStore);
+
+  // позиции — глобально по id во всём списке, чтобы не задвоить товар, перемещённый
+  // между магазинами; расположение (в каком магазине) берём из локальной версии,
+  // если товар там вообще есть, иначе из удалённой
+  const itemLoc = new Map();
+  (localList.data.stores || []).forEach(st => st.items.forEach(it => itemLoc.set(it.id, { storeId: st.id, item: it })));
+  (remoteList.data.stores || []).forEach(st => st.items.forEach(it => {
+    if (!itemLoc.has(it.id)) itemLoc.set(it.id, { storeId: st.id, item: it });
+  }));
+
+  const stores = storeOrder
+    .filter(id => !deletedStoreIds.has(id))
+    .map(id => {
+      const meta = storeMeta.get(id);
+      const items = [...itemLoc.values()].filter(x => x.storeId === id && !deletedItemIds.has(x.item.id)).map(x => x.item);
+      return { ...meta, items };
+    });
+
+  return {
+    ...remoteList, ...localList,
+    data: {
+      ...remoteList.data, ...localList.data,
+      stores, deletedStoreIds: [...deletedStoreIds], deletedItemIds: [...deletedItemIds]
+    }
+  };
+}
+// то же слияние по записям, что и для каталога товаров (mergeCatalogDB), но для
+// списков закупок целиком: раньше state.lists при синхронизации просто заменялся
+// содержимым другого устройства — если на телефоне добавляли товар в список, а на
+// компьютере лежала чуть более старая копия того же списка, любая синхронизация в
+// любую сторону могла откатить список к "победившей" версии, и добавленный товар
+// пропадал, даже если сам телефон успешно отправил его в облако
+function mergeLists(localLists, localDeletedListIds, remoteLists, remoteDeletedListIds) {
+  const deletedListIds = new Set([...(localDeletedListIds || []), ...(remoteDeletedListIds || [])]);
+  const order = [], map = new Map();
+  (localLists || []).forEach(l => { order.push(l.id); map.set(l.id, l); });
+  (remoteLists || []).forEach(l => {
+    if (!map.has(l.id)) { order.push(l.id); map.set(l.id, l); }
+    else map.set(l.id, mergeListContents(map.get(l.id), l));
+  });
+  const lists = order.filter(id => !deletedListIds.has(id)).map(id => map.get(id));
+  return { lists, deletedListIds: [...deletedListIds] };
+}
 function syncUpload(silent) {
   const creds = silent
     ? (syncState().login && syncState().pin && syncState().url ? syncState() : null)
@@ -11938,6 +12024,12 @@ function applyRemotePayload(payload, creds, at) {
   // могло стереть локальную правку (например, только что добавленное фото),
   // которую то устройство ещё не видело
   payload.catalogDB = mergeCatalogDB(state.catalogDB, payload.catalogDB);
+  // то же самое для списков закупок (см. mergeLists) — иначе более новый по времени
+  // список с другого устройства мог целиком заменить локальный и стереть только
+  // что добавленный товар, который то устройство ещё не подтянуло
+  const mergedLists = mergeLists(state.lists, state.deletedListIds, payload.lists, payload.deletedListIds);
+  payload.lists = mergedLists.lists;
+  payload.deletedListIds = mergedLists.deletedListIds;
   payload.sync = { login: creds.login, pin: creds.pin, url: creds.url, last: at };
   state = payload;
   if (!state.lists.some(l => l.id === state.currentId)) state.currentId = state.lists[0].id;
@@ -13821,8 +13913,11 @@ function removeItemFromListViaCatalog() {
   const idx = store ? store.items.findIndex(i => i.id === catProdListCtx.itemId) : -1;
   if (idx === -1) { closeSheet('catProductSheet'); return; }
   const removed = store.items.splice(idx, 1)[0];
+  data().deletedItemIds.push(removed.id);
   save(); render(); closeSheet('catProductSheet');
   snackbar(tf('item_deleted_snack', { name: removed.name }), () => {
+    const i = data().deletedItemIds.indexOf(removed.id);
+    if (i !== -1) data().deletedItemIds.splice(i, 1);
     store.items.splice(Math.min(idx, store.items.length), 0, removed);
     save(); render();
   });
@@ -15560,10 +15655,14 @@ loadCurrencyRates(false); // подтягиваем курс доллара в �
 // ассистент включается после старта: первые сохранения при загрузке не считаются
 setTimeout(() => {
   window.__bdgReady = true;
-  // если правка случилась ДО этого момента, scheduleAutoSync() тогда её проигнорировал
-  // (это и было целью грейс-периода — не путать её со служебными пересохранениями при
-  // старте) — но саму правку из-за этого нельзя было забыть отправить в облако
-  if (hasUnsyncedLocalEdit()) scheduleAutoSync();
+  // hasUnsyncedLocalEdit() тут может быть истинным по двум причинам: (1) правка
+  // случилась в эти первые 2.5с, когда scheduleAutoSync() её ещё игнорировал, или
+  // (2) правка осталась с ПРОШЛОЙ загрузки страницы — например, человек добавил
+  // товар и тут же обновил страницу (потянул вниз на телефоне) до того, как правка
+  // успела уйти в облако; editSeq/syncedSeq хранятся в самих данных и переживают
+  // перезагрузку, поэтому это видно и сейчас. В обоих случаях правку нельзя оставлять
+  // висеть до следующего добавления — отправляем сразу, а не через ещё 17с ожидания
+  if (hasUnsyncedLocalEdit()) autoSyncNow();
 }, 2500);
 maybeOfferTour();
 // при каждом открытии сразу сверяемся с облаком — единый источник правды на всех устройствах

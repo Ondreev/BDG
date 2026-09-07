@@ -103,6 +103,12 @@ function doPost(e) {
           try {
             var existingPayload = JSON.parse(existingJson);
             payload.catalogDB = mergeCatalogDBServer(existingPayload.catalogDB, payload.catalogDB);
+            // то же самое для списков закупок (см. mergeListsServer) — без этого
+            // список с чуть более старой локальной копией на другом устройстве мог
+            // вслепую затереть только что добавленный сюда товар
+            var mergedLists = mergeListsServer(existingPayload.lists, existingPayload.deletedListIds, payload.lists, payload.deletedListIds);
+            payload.lists = mergedLists.lists;
+            payload.deletedListIds = mergedLists.deletedListIds;
           } catch (eMerge) {}
         }
         var json = JSON.stringify(payload);
@@ -571,4 +577,108 @@ function mergeCatalogDBServer(existingDB, incomingDB) {
   merged.deletedProducts = tomb;
   merged.locations = locations;
   return merged;
+}
+
+// то же слияние по записям, что и mergeCatalogDBServer, но для списков закупок —
+// портировано из клиентского mergeListContents/mergeLists (index.html) 1-в-1, чтобы
+// поведение при сохранении (здесь) и при скачивании (на клиенте) не расходилось.
+// Магазины и позиции объединяются по id ГЛОБАЛЬНО по всему списку (не по каждому
+// магазину отдельно) — иначе товар, перемещённый между магазинами на одном из
+// устройств, задвоился бы после слияния
+function mergeListContentsServer(existingList, incomingList) {
+  var exData = existingList.data || {}, inData = incomingList.data || {};
+  var delStoreIds = {}, id, i;
+  var exDelStores = exData.deletedStoreIds || [], inDelStores = inData.deletedStoreIds || [];
+  for (i = 0; i < exDelStores.length; i++) delStoreIds[exDelStores[i]] = true;
+  for (i = 0; i < inDelStores.length; i++) delStoreIds[inDelStores[i]] = true;
+  var delItemIds = {};
+  var exDelItems = exData.deletedItemIds || [], inDelItems = inData.deletedItemIds || [];
+  for (i = 0; i < exDelItems.length; i++) delItemIds[exDelItems[i]] = true;
+  for (i = 0; i < inDelItems.length; i++) delItemIds[inDelItems[i]] = true;
+
+  // существование магазина/позиции — чистое объединение (никогда не теряем то, что
+  // знает только одна сторона), а вот СОДЕРЖИМОЕ и РАСПОЛОЖЕНИЕ для того, что есть
+  // на обеих сторонах, берём из ПРИСЫЛАЕМОЙ версии (incoming — то, что это устройство
+  // сохраняет прямо сейчас): без пометок времени на каждом поле это единственный
+  // способ не потерять, например, переименование магазина или перемещение товара —
+  // если бы тут побеждала "уже сохранённая" версия, любая правка существующей записи
+  // молча пропадала бы при каждом сохранении
+  var storeOrder = [], storeMeta = {};
+  function regStore(st, canOverwrite) {
+    if (!(st.id in storeMeta)) storeOrder.push(st.id);
+    if (canOverwrite || !(st.id in storeMeta)) storeMeta[st.id] = { id: st.id, name: st.name, collapsed: st.collapsed, storeDirId: st.storeDirId };
+  }
+  var exStores = exData.stores || [], inStores = inData.stores || [];
+  for (i = 0; i < exStores.length; i++) regStore(exStores[i], false);
+  for (i = 0; i < inStores.length; i++) regStore(inStores[i], true);
+
+  // позиции — глобально по id во всём списке; для общих id содержимое и расположение
+  // берём из присылаемой версии (см. пояснение выше), товары, известные только
+  // сохранённой на сервере копии, сохраняются как есть
+  var itemLoc = {}, st, j, it;
+  for (i = 0; i < exStores.length; i++) {
+    st = exStores[i];
+    for (j = 0; j < (st.items || []).length; j++) { it = st.items[j]; itemLoc[it.id] = { storeId: st.id, item: it }; }
+  }
+  for (i = 0; i < inStores.length; i++) {
+    st = inStores[i];
+    for (j = 0; j < (st.items || []).length; j++) {
+      it = st.items[j];
+      itemLoc[it.id] = { storeId: st.id, item: it };
+    }
+  }
+
+  var stores = [];
+  for (i = 0; i < storeOrder.length; i++) {
+    var sid = storeOrder[i];
+    if (delStoreIds[sid]) continue;
+    var meta = storeMeta[sid];
+    var items = [];
+    for (var key in itemLoc) {
+      var entry = itemLoc[key];
+      if (entry.storeId === sid && !delItemIds[entry.item.id]) items.push(entry.item);
+    }
+    stores.push({ id: meta.id, name: meta.name, collapsed: meta.collapsed, storeDirId: meta.storeDirId, items: items });
+  }
+
+  var merged = {};
+  for (id in existingList) merged[id] = existingList[id];
+  for (id in incomingList) merged[id] = incomingList[id];
+  var mergedData = {};
+  for (id in exData) mergedData[id] = exData[id];
+  for (id in inData) mergedData[id] = inData[id];
+  mergedData.stores = stores;
+  var delStoreArr = [], delItemArr = [];
+  for (id in delStoreIds) delStoreArr.push(id);
+  for (id in delItemIds) delItemArr.push(id);
+  mergedData.deletedStoreIds = delStoreArr;
+  mergedData.deletedItemIds = delItemArr;
+  merged.data = mergedData;
+  return merged;
+}
+// слияние массива списков целиком — портировано из клиентского mergeLists. Раньше
+// state.lists при сохранении просто заменялся целиком присланным — если на одном
+// устройстве список только что пополнили, а другое устройство (с чуть более старой
+// локальной копией того же списка) сохранялось следом, весь список откатывался к
+// версии второго устройства и добавленный товар пропадал, хотя первое устройство
+// уже успешно его отправило
+function mergeListsServer(existingLists, existingDeletedListIds, incomingLists, incomingDeletedListIds) {
+  var delListIds = {}, id, i;
+  existingDeletedListIds = existingDeletedListIds || [];
+  incomingDeletedListIds = incomingDeletedListIds || [];
+  for (i = 0; i < existingDeletedListIds.length; i++) delListIds[existingDeletedListIds[i]] = true;
+  for (i = 0; i < incomingDeletedListIds.length; i++) delListIds[incomingDeletedListIds[i]] = true;
+
+  var order = [], map = {};
+  existingLists = existingLists || []; incomingLists = incomingLists || [];
+  for (i = 0; i < existingLists.length; i++) { order.push(existingLists[i].id); map[existingLists[i].id] = existingLists[i]; }
+  for (i = 0; i < incomingLists.length; i++) {
+    var l = incomingLists[i];
+    if (!(l.id in map)) { order.push(l.id); map[l.id] = l; }
+    else map[l.id] = mergeListContentsServer(map[l.id], l);
+  }
+  var lists = [], delListArr = [];
+  for (i = 0; i < order.length; i++) { if (!delListIds[order[i]]) lists.push(map[order[i]]); }
+  for (id in delListIds) delListArr.push(id);
+  return { lists: lists, deletedListIds: delListArr };
 }
