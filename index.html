@@ -2566,7 +2566,13 @@ function load() {
     l.data = l.data || { budget: 0, stores: [], catalog: [] };
     l.data.stores = l.data.stores || [];
     l.data.catalog = l.data.catalog || [];
-    l.data.stores.forEach(st => { st.id = st.id || uid(); st.items = st.items || []; });
+    l.data.stores.forEach(st => {
+      st.id = st.id || uid(); st.items = st.items || [];
+      // метка времени правки позиции — нужна для слияния по записям между устройствами
+      // (см. mergeListContents/mergeListContentsServer): без неё нельзя понять, чья
+      // отметка "куплено" новее, если товар менялся сразу на двух устройствах
+      st.items.forEach(it => { it.updatedAt = +it.updatedAt || 0; });
+    });
     // отметки времени удаления магазинов/позиций — нужны для слияния списков между
     // устройствами по записям (см. mergeListsClient), а не заменой документа целиком
     l.data.deletedStoreIds = Array.isArray(l.data.deletedStoreIds) ? l.data.deletedStoreIds : [];
@@ -2637,10 +2643,13 @@ function sanitizeCatalogDB(s) {
   });
   // debts / staff / inventory modules
   s.debts = Array.isArray(s.debts) ? s.debts : [];
+  // отметка удаления — для слияния долгов между устройствами по записям (см. mergePlainRecords)
+  s.deletedDebtIds = Array.isArray(s.deletedDebtIds) ? s.deletedDebtIds : [];
   s.debts.forEach(d => {
     d.id = d.id || uid(); d.paid = !!d.paid;
+    d.updatedAt = +d.updatedAt || 0;
     // старые записи хранили только одно число — превращаем его в первую операцию истории,
-    // дальше сумма всегда пересчитывается из операций, а не хранится отдельно от них
+    // дальше сумма всегда пересчитывается из операций, а не хранится отдельно от него
     if (!Array.isArray(d.transactions) || !d.transactions.length) {
       d.transactions = [{ id: uid(), amount: +d.amount || 0, note: d.note || '', date: d.date || today() }];
     }
@@ -2670,9 +2679,14 @@ function sanitizeCatalogDB(s) {
     p.id = p.id || uid();
     p.name = p.name || 'Мой план';
     p.items = Array.isArray(p.items) ? p.items : [];
-    p.items.forEach(it => { it.id = it.id || uid(); it.done = !!it.done; });
+    p.items.forEach(it => { it.id = it.id || uid(); it.done = !!it.done; it.updatedAt = +it.updatedAt || 0; });
+    // отметка удаления задач — для слияния планов между устройствами по записям
+    // (см. mergePlans), чтобы отметка "выполнено" на одном устройстве не терялась
+    // из-за того, что на другом лежит чуть более старая копия того же плана
+    p.deletedItemIds = Array.isArray(p.deletedItemIds) ? p.deletedItemIds : [];
   });
-  if (!s.plans.length) s.plans.push({ id: uid(), name: 'Мой план', date: today(), items: [] });
+  s.deletedPlanIds = Array.isArray(s.deletedPlanIds) ? s.deletedPlanIds : [];
+  if (!s.plans.length) s.plans.push({ id: uid(), name: 'Мой план', date: today(), items: [], deletedItemIds: [] });
   if (!s.plans.some(p => p.id === s.currentPlanId)) s.currentPlanId = s.plans[0].id;
   // публичные предложения "всем" сервер не удаляет по одиночному accept/decline —
   // список уже скрытых у себя предложений синхронизируем вместе с остальными данными
@@ -11226,7 +11240,8 @@ function openStoreMenu(sid) {
   openSheet('storeMenuSheet');
 }
 function checkAll(sid, val) {
-  findStore(sid).items.forEach(it => it.bought = val);
+  const now = Date.now();
+  findStore(sid).items.forEach(it => { it.bought = val; it.updatedAt = now; });
   save(); render(); closeSheet('storeMenuSheet'); vibrate(10);
 }
 function deleteStore(sid) {
@@ -11368,7 +11383,7 @@ function saveItemSheet() {
     const fromStore = findStore(itemSheetStore);
     const idx = fromStore.items.findIndex(i => i.id === itemSheetEditId);
     const it = fromStore.items[idx];
-    Object.assign(it, { name, qty, price, loc, catId, note }); // день месяца убран из формы — существующее значение не трогаем
+    Object.assign(it, { name, qty, price, loc, catId, note, updatedAt: Date.now() }); // день месяца убран из формы — существующее значение не трогаем
     if (targetSid !== itemSheetStore) {
       fromStore.items.splice(idx, 1);
       findStore(targetSid).items.push(it);
@@ -11382,8 +11397,9 @@ function saveItemSheet() {
       if (loc) merged.loc = loc;
       if (catId) merged.catId = catId;
       if (note) merged.note = note;
+      merged.updatedAt = Date.now();
     } else {
-      store.items.push({ id: uid(), name, qty, price, day: null, loc, catId, bought: false, note });
+      store.items.push({ id: uid(), name, qty, price, day: null, loc, catId, bought: false, note, updatedAt: Date.now() });
     }
   }
   // history upsert (per-list autocomplete)
@@ -11419,6 +11435,7 @@ function deleteItemFromSheet() {
 function toggleItem(sid, id) {
   const it = findStore(sid).items.find(i => i.id === id);
   it.bought = !it.bought;
+  it.updatedAt = Date.now();
   save(); render(); vibrate(15);
 }
 
@@ -11904,27 +11921,34 @@ function mergeCatalogDB(localDB, remoteDB) {
 // магазины и позиции по id (глобально по всему списку, а не по каждому магазину
 // отдельно, иначе товар, перемещённый между магазинами на одном из устройств,
 // задвоился бы), а не заменяем список целиком версией с "победившим" таймстампом.
-// Скалярные поля (название магазина, бюджет и т.п.) при конфликте берём из локальной
-// версии — без полноценных меток времени на каждом поле это простой, но безопасный
-// компромисс: никогда не тянем чужое поверх локально ещё не отправленной правки
+// Существование магазина/позиции — чистое объединение (никогда не теряем то, что
+// знает только одна сторона). Содержимое позиции (отметка "куплено", цена,
+// количество) для общих id решается по updatedAt каждой позиции — чья правка
+// новее, та и остаётся. Простое "чужая версия всегда побеждает" тут не годится:
+// устройство может прислать СВОЙ старый локальный снимок товара (например, из-за
+// защиты от дедлока автосинка, когда правка отправляется, даже если в облаке уже
+// есть более новая версия) — без метки времени на каждой позиции такой старый
+// снимок мог бы тихо откатить чужую более свежую отметку "куплено"
 function mergeListContents(localList, remoteList) {
   const deletedStoreIds = new Set([...(localList.data.deletedStoreIds || []), ...(remoteList.data.deletedStoreIds || [])]);
   const deletedItemIds = new Set([...(localList.data.deletedItemIds || []), ...(remoteList.data.deletedItemIds || [])]);
 
   const storeOrder = [], storeMeta = new Map();
-  function regStore(st) {
-    if (!storeMeta.has(st.id)) { storeOrder.push(st.id); storeMeta.set(st.id, { id: st.id, name: st.name, collapsed: st.collapsed, storeDirId: st.storeDirId }); }
+  function regStore(st, canOverwrite) {
+    if (!storeMeta.has(st.id)) storeOrder.push(st.id);
+    if (canOverwrite || !storeMeta.has(st.id)) storeMeta.set(st.id, { id: st.id, name: st.name, collapsed: st.collapsed, storeDirId: st.storeDirId });
   }
-  (localList.data.stores || []).forEach(regStore);
-  (remoteList.data.stores || []).forEach(regStore);
+  (localList.data.stores || []).forEach(st => regStore(st, false));
+  (remoteList.data.stores || []).forEach(st => regStore(st, true));
 
   // позиции — глобально по id во всём списке, чтобы не задвоить товар, перемещённый
-  // между магазинами; расположение (в каком магазине) берём из локальной версии,
-  // если товар там вообще есть, иначе из удалённой
+  // между магазинами; для общих id содержимое и расположение берём из присылаемой
+  // версии (см. пояснение выше), товары, известные только локально, остаются как есть
   const itemLoc = new Map();
   (localList.data.stores || []).forEach(st => st.items.forEach(it => itemLoc.set(it.id, { storeId: st.id, item: it })));
   (remoteList.data.stores || []).forEach(st => st.items.forEach(it => {
-    if (!itemLoc.has(it.id)) itemLoc.set(it.id, { storeId: st.id, item: it });
+    const cur = itemLoc.get(it.id);
+    if (!cur || (+it.updatedAt || 0) >= (+cur.item.updatedAt || 0)) itemLoc.set(it.id, { storeId: st.id, item: it });
   }));
 
   const stores = storeOrder
@@ -11936,9 +11960,9 @@ function mergeListContents(localList, remoteList) {
     });
 
   return {
-    ...remoteList, ...localList,
+    ...localList, ...remoteList,
     data: {
-      ...remoteList.data, ...localList.data,
+      ...localList.data, ...remoteList.data,
       stores, deletedStoreIds: [...deletedStoreIds], deletedItemIds: [...deletedItemIds]
     }
   };
@@ -11959,6 +11983,42 @@ function mergeLists(localLists, localDeletedListIds, remoteLists, remoteDeletedL
   });
   const lists = order.filter(id => !deletedListIds.has(id)).map(id => map.get(id));
   return { lists, deletedListIds: [...deletedListIds] };
+}
+// универсальное слияние плоского массива записей по id (долги, и т.п.) — существование
+// объединяется (не теряем то, что знает только одна сторона), содержимое общей записи
+// берётся из remote (см. пояснение в mergeListContents — к моменту вызова applyRemotePayload
+// у локальной стороны уже точно нет ничего неотправленного, так что тянуть отсюда
+// именно remote безопасно и правильно), удаления — по отметкам (tombstone-массив id)
+function mergePlainRecords(localRecords, remoteRecords, localDeletedIds, remoteDeletedIds) {
+  const deletedIds = new Set([...(localDeletedIds || []), ...(remoteDeletedIds || [])]);
+  const order = [], map = new Map();
+  (localRecords || []).forEach(r => { if (!map.has(r.id)) order.push(r.id); map.set(r.id, r); });
+  (remoteRecords || []).forEach(r => {
+    if (!map.has(r.id)) { order.push(r.id); map.set(r.id, r); return; }
+    const cur = map.get(r.id);
+    if ((+r.updatedAt || 0) >= (+cur.updatedAt || 0)) map.set(r.id, r);
+  });
+  const records = order.filter(id => !deletedIds.has(id)).map(id => map.get(id));
+  return { records, deletedIds: [...deletedIds] };
+}
+// слияние планов (чек-листов) — та же идея, что и mergeLists/mergeListContents, но
+// на один уровень вложенности мельче: план -> задачи (без промежуточного "магазина")
+function mergePlanContents(localPlan, remotePlan) {
+  const deletedItemIds = new Set([...(localPlan.deletedItemIds || []), ...(remotePlan.deletedItemIds || [])]);
+  const merged = mergePlainRecords(localPlan.items, remotePlan.items, [], []);
+  const items = merged.records.filter(it => !deletedItemIds.has(it.id));
+  return { ...localPlan, ...remotePlan, items, deletedItemIds: [...deletedItemIds] };
+}
+function mergePlans(localPlans, localDeletedPlanIds, remotePlans, remoteDeletedPlanIds) {
+  const deletedPlanIds = new Set([...(localDeletedPlanIds || []), ...(remoteDeletedPlanIds || [])]);
+  const order = [], map = new Map();
+  (localPlans || []).forEach(p => { order.push(p.id); map.set(p.id, p); });
+  (remotePlans || []).forEach(p => {
+    if (!map.has(p.id)) { order.push(p.id); map.set(p.id, p); }
+    else map.set(p.id, mergePlanContents(map.get(p.id), p));
+  });
+  const plans = order.filter(id => !deletedPlanIds.has(id)).map(id => map.get(id));
+  return { plans, deletedPlanIds: [...deletedPlanIds] };
 }
 function syncUpload(silent) {
   const creds = silent
@@ -12030,9 +12090,22 @@ function applyRemotePayload(payload, creds, at) {
   const mergedLists = mergeLists(state.lists, state.deletedListIds, payload.lists, payload.deletedListIds);
   payload.lists = mergedLists.lists;
   payload.deletedListIds = mergedLists.deletedListIds;
+  // то же самое для долгов и планов (см. mergePlainRecords/mergePlans) — любое поле,
+  // которое не сливается по записям, рискует быть тихо затёртым push'ем ДРУГОГО
+  // устройства, даже если тот push был вообще про другое (например, про список
+  // покупок) — каждая отправка несёт полный слепок состояния, включая устаревшую
+  // локальную копию долгов/планов, если их не обновляли только что
+  const mergedDebts = mergePlainRecords(state.debts, payload.debts, state.deletedDebtIds, payload.deletedDebtIds);
+  payload.debts = mergedDebts.records;
+  payload.deletedDebtIds = mergedDebts.deletedIds;
+  const mergedPlans = mergePlans(state.plans, state.deletedPlanIds, payload.plans, payload.deletedPlanIds);
+  payload.plans = mergedPlans.plans;
+  payload.deletedPlanIds = mergedPlans.deletedPlanIds;
   payload.sync = { login: creds.login, pin: creds.pin, url: creds.url, last: at };
   state = payload;
   if (!state.lists.some(l => l.id === state.currentId)) state.currentId = state.lists[0].id;
+  if (!state.plans.length) state.plans.push({ id: uid(), name: 'Мой план', date: today(), items: [], deletedItemIds: [] });
+  if (!state.plans.some(p => p.id === state.currentPlanId)) state.currentPlanId = state.plans[0].id;
   save(true); render();
   prefetchProductPhotos();
 }
@@ -12787,7 +12860,7 @@ function acceptOrder(id) {
           items: items.map(it => ({
             id: uid(), name: it.name || '', qty: +it.qty || 0, price: +it.price || 0,
             day: null, loc: it.loc || '', catId: null, bought: false, note: it.note || '',
-            photoId: it.photoId || null
+            photoId: it.photoId || null, updatedAt: Date.now()
           }))
         }], catalog: [] },
         incoming: true, fromLogin: order.fromLogin, fromPhone: order.fromPhone || ''
@@ -13892,7 +13965,7 @@ function saveCatProduct() {
 function syncProductToListItems(productId) {
   const p = prodById(productId); if (!p) return;
   state.lists.forEach(l => ((l.data && l.data.stores) || []).forEach(s => s.items.forEach(it => {
-    if (it.productId === productId) { it.name = p.name; it.price = p.price; it.photoId = p.photoId || null; }
+    if (it.productId === productId) { it.name = p.name; it.price = p.price; it.photoId = p.photoId || null; it.updatedAt = Date.now(); }
   })));
 }
 function deleteCatProduct() {
@@ -13983,8 +14056,9 @@ function saveCatAdd() {
     if (addNote) merged.note = addNote;
     if (!merged.photoId && p.photoId) merged.photoId = p.photoId;
     if (!merged.productId) merged.productId = p.id;
+    merged.updatedAt = Date.now();
   } else {
-    store.items.push({ id: uid(), name: p.name, qty, price, day: null, loc: addLoc, catId: p.categoryId || null, bought: false, note: addNote, photoId: p.photoId || null, productId: p.id });
+    store.items.push({ id: uid(), name: p.name, qty, price, day: null, loc: addLoc, catId: p.categoryId || null, bought: false, note: addNote, photoId: p.photoId || null, productId: p.id, updatedAt: Date.now() });
   }
   if (addLoc && addLoc !== (p.loc || '')) { p.loc = addLoc; }
   if (addNote !== (p.note || '')) { p.note = addNote; }
@@ -14085,6 +14159,7 @@ function planTaskBadge(it) {
 function togglePlanTask(id) {
   const it = curPlan().items.find(x => x.id === id);
   it.done = !it.done;
+  it.updatedAt = Date.now();
   save(); renderPlan(); vibrate(15);
 }
 function openPlanTaskSheet(id) {
@@ -14102,8 +14177,8 @@ function savePlanTask() {
   const text = document.getElementById('planTaskText').value.trim();
   if (!text) { document.getElementById('planTaskText').focus(); return; }
   const date = document.getElementById('planTaskDate').value || null;
-  if (planTaskEditId) Object.assign(curPlan().items.find(x => x.id === planTaskEditId), { text, date });
-  else curPlan().items.push({ id: uid(), text, done: false, date });
+  if (planTaskEditId) Object.assign(curPlan().items.find(x => x.id === planTaskEditId), { text, date, updatedAt: Date.now() });
+  else curPlan().items.push({ id: uid(), text, done: false, date, updatedAt: Date.now() });
   save(); renderPlan(); closeSheet('planTaskSheet'); vibrate(10);
 }
 function deletePlanTaskFromSheet() {
@@ -14111,8 +14186,11 @@ function deletePlanTaskFromSheet() {
   const idx = p.items.findIndex(x => x.id === planTaskEditId);
   if (idx === -1) { closeSheet('planTaskSheet'); return; }
   const removed = p.items.splice(idx, 1)[0];
+  p.deletedItemIds.push(removed.id);
   save(); renderPlan(); closeSheet('planTaskSheet');
   snackbar(tf('plan_task_deleted_snack', { name: removed.text }), () => {
+    const i = p.deletedItemIds.indexOf(removed.id);
+    if (i !== -1) p.deletedItemIds.splice(i, 1);
     p.items.splice(Math.min(idx, p.items.length), 0, removed);
     save(); renderPlan();
   });
@@ -14147,9 +14225,12 @@ function deletePlanById(id) {
   confirmAction(t('plan_delete_title'), tf('plan_delete_text', { name: p.name }), () => {
     const idx = state.plans.findIndex(x => x.id === id);
     const removed = state.plans.splice(idx, 1)[0];
+    state.deletedPlanIds.push(id);
     if (state.currentPlanId === id) state.currentPlanId = state.plans[0].id;
     save(); renderPlan();
     snackbar(tf('plan_deleted_snack', { name: removed.name }), () => {
+      const i = state.deletedPlanIds.indexOf(id);
+      if (i !== -1) state.deletedPlanIds.splice(i, 1);
       state.plans.splice(Math.min(idx, state.plans.length), 0, removed);
       save(); renderPlan();
     });
@@ -14249,20 +14330,22 @@ function toggleDebt(id) {
     const prev = d.date;
     d.date = dt.toISOString().slice(0, 10);
     d.paidCount = (d.paidCount || 0) + 1;
+    d.updatedAt = Date.now();
     save(); renderDebts(); vibrate(15);
     snackbar(tf('debt_payment_marked_snack', { date: dt.toLocaleDateString(dateLocale(), { day: 'numeric', month: 'short' }) }), () => {
-      d.date = prev; d.paidCount--; save(); renderDebts();
+      d.date = prev; d.paidCount--; d.updatedAt = Date.now(); save(); renderDebts();
     });
     return;
   }
   d.paid = !d.paid;
+  d.updatedAt = Date.now();
   save(); renderDebts(); vibrate(15);
 }
 // сумма долга больше не хранится отдельно — это всегда сумма всех операций пополнения/
 // списания, с датой и заметкой к каждой. Так по истории видно, когда и почему сумма менялась
 let debtTxnEditId = null, debtTxnKind = 'add';
 function debtBalance(d) { return (d.transactions || []).reduce((s, t) => s + (+t.amount || 0), 0); }
-function debtRecalcAmount(d) { d.amount = debtBalance(d); }
+function debtRecalcAmount(d) { d.amount = debtBalance(d); d.updatedAt = Date.now(); }
 
 function openDebtSheet(id) {
   debtEditId = id || null;
@@ -14305,12 +14388,12 @@ function saveDebtSheet() {
   const note = document.getElementById('debtNote').value.trim();
   if (!name) { document.getElementById('debtName').focus(); return; }
   if (debtEditId) {
-    Object.assign(state.debts.find(x => x.id === debtEditId), { type, name, date, note });
+    Object.assign(state.debts.find(x => x.id === debtEditId), { type, name, date, note, updatedAt: Date.now() });
   } else {
     const amount = Math.abs(parseFloat(document.getElementById('debtAmount').value) || 0);
     if (!amount) { document.getElementById('debtAmount').focus(); return; }
     state.debts.push({
-      id: uid(), type, name, date, note, paid: false, paidCount: 0, amount,
+      id: uid(), type, name, date, note, paid: false, paidCount: 0, amount, updatedAt: Date.now(),
       transactions: [{ id: uid(), amount, note: '', date: date || today() }]
     });
   }
@@ -14322,8 +14405,11 @@ function deleteDebtFromSheet() {
   const idx = state.debts.findIndex(x => x.id === debtEditId);
   if (idx === -1) { closeSheet('debtSheet'); return; }
   const removed = state.debts.splice(idx, 1)[0];
+  state.deletedDebtIds.push(removed.id);
   save(); renderDebts(); closeSheet('debtSheet');
   snackbar(tf('debt_deleted_snack', { name: removed.name }), () => {
+    const i = state.deletedDebtIds.indexOf(removed.id);
+    if (i !== -1) state.deletedDebtIds.splice(i, 1);
     state.debts.splice(Math.min(idx, state.debts.length), 0, removed);
     save(); renderDebts();
   });
@@ -15467,7 +15553,7 @@ function invTransfer() {
   picks.forEach(r => {
     const p = prodById(r.productId);
     if (!p) return;
-    store.items.push({ id: uid(), name: p.name, qty: +r.buy, price: +p.price || 0, day: null, loc: p.loc || '', catId: p.categoryId || null, bought: false });
+    store.items.push({ id: uid(), name: p.name, qty: +r.buy, price: +p.price || 0, day: null, loc: p.loc || '', catId: p.categoryId || null, bought: false, updatedAt: Date.now() });
     r.buy = 0;
   });
   save(); render(); renderInv(); closeSheet('invStoreSheet');

@@ -109,6 +109,15 @@ function doPost(e) {
             var mergedLists = mergeListsServer(existingPayload.lists, existingPayload.deletedListIds, payload.lists, payload.deletedListIds);
             payload.lists = mergedLists.lists;
             payload.deletedListIds = mergedLists.deletedListIds;
+            // то же самое для долгов и планов — любое несливаемое поле рискует быть
+            // тихо затёртым push'ем с другого устройства, даже если тот push был
+            // вообще не про долги/планы (каждая отправка несёт полный слепок состояния)
+            var mergedDebts = mergePlainRecordsServer(existingPayload.debts, payload.debts, existingPayload.deletedDebtIds, payload.deletedDebtIds);
+            payload.debts = mergedDebts.records;
+            payload.deletedDebtIds = mergedDebts.deletedIds;
+            var mergedPlans = mergePlansServer(existingPayload.plans, existingPayload.deletedPlanIds, payload.plans, payload.deletedPlanIds);
+            payload.plans = mergedPlans.plans;
+            payload.deletedPlanIds = mergedPlans.deletedPlanIds;
           } catch (eMerge) {}
         }
         var json = JSON.stringify(payload);
@@ -613,8 +622,11 @@ function mergeListContentsServer(existingList, incomingList) {
   for (i = 0; i < inStores.length; i++) regStore(inStores[i], true);
 
   // позиции — глобально по id во всём списке; для общих id содержимое и расположение
-  // берём из присылаемой версии (см. пояснение выше), товары, известные только
-  // сохранённой на сервере копии, сохраняются как есть
+  // решаются по updatedAt каждой позиции (чья правка новее), а не "присылаемая всегда
+  // побеждает" — присланный снимок может быть устаревшим (например, из-за защиты от
+  // дедлока автосинка на клиенте, когда правка отправляется, даже если в облаке уже
+  // есть более новая версия), и без метки времени такой снимок мог бы откатить чужую
+  // более свежую отметку "куплено"
   var itemLoc = {}, st, j, it;
   for (i = 0; i < exStores.length; i++) {
     st = exStores[i];
@@ -624,7 +636,8 @@ function mergeListContentsServer(existingList, incomingList) {
     st = inStores[i];
     for (j = 0; j < (st.items || []).length; j++) {
       it = st.items[j];
-      itemLoc[it.id] = { storeId: st.id, item: it };
+      var curLoc = itemLoc[it.id];
+      if (!curLoc || (Number(it.updatedAt) || 0) >= (Number(curLoc.item.updatedAt) || 0)) itemLoc[it.id] = { storeId: st.id, item: it };
     }
   }
 
@@ -681,4 +694,69 @@ function mergeListsServer(existingLists, existingDeletedListIds, incomingLists, 
   for (i = 0; i < order.length; i++) { if (!delListIds[order[i]]) lists.push(map[order[i]]); }
   for (id in delListIds) delListArr.push(id);
   return { lists: lists, deletedListIds: delListArr };
+}
+// универсальное слияние плоского массива записей по id (долги и т.п.) — портировано
+// из клиентского mergePlainRecords: существование объединяется, содержимое общей
+// записи берётся из ПРИСЫЛАЕМОЙ (incoming) версии — то же самое правило, что и для
+// товаров каталога и позиций списков: без этого правки долгов/планов, отправленные
+// с ОДНОГО устройства, стирались бы следующим push'ом ЛЮБОГО другого устройства,
+// даже если тот push был вообще не про долги/планы — каждая отправка несёт полный
+// слепок состояния целиком
+function mergePlainRecordsServer(existingRecords, incomingRecords, existingDeletedIds, incomingDeletedIds) {
+  var delIds = {}, id, i;
+  existingDeletedIds = existingDeletedIds || []; incomingDeletedIds = incomingDeletedIds || [];
+  for (i = 0; i < existingDeletedIds.length; i++) delIds[existingDeletedIds[i]] = true;
+  for (i = 0; i < incomingDeletedIds.length; i++) delIds[incomingDeletedIds[i]] = true;
+
+  var order = [], map = {};
+  existingRecords = existingRecords || []; incomingRecords = incomingRecords || [];
+  for (i = 0; i < existingRecords.length; i++) { if (!(existingRecords[i].id in map)) order.push(existingRecords[i].id); map[existingRecords[i].id] = existingRecords[i]; }
+  for (i = 0; i < incomingRecords.length; i++) {
+    var rec = incomingRecords[i];
+    if (!(rec.id in map)) { order.push(rec.id); map[rec.id] = rec; continue; }
+    var curRec = map[rec.id];
+    if ((Number(rec.updatedAt) || 0) >= (Number(curRec.updatedAt) || 0)) map[rec.id] = rec;
+  }
+  var records = [], delArr = [];
+  for (i = 0; i < order.length; i++) { if (!delIds[order[i]]) records.push(map[order[i]]); }
+  for (id in delIds) delArr.push(id);
+  return { records: records, deletedIds: delArr };
+}
+// слияние планов (чек-листов) — та же идея, что mergeListsServer/mergeListContentsServer,
+// но на один уровень вложенности мельче: план -> задачи (без промежуточного "магазина")
+function mergePlanContentsServer(existingPlan, incomingPlan) {
+  var exDel = existingPlan.deletedItemIds || [], inDel = incomingPlan.deletedItemIds || [];
+  var delItemIds = {}, i;
+  for (i = 0; i < exDel.length; i++) delItemIds[exDel[i]] = true;
+  for (i = 0; i < inDel.length; i++) delItemIds[inDel[i]] = true;
+  var mergedRecs = mergePlainRecordsServer(existingPlan.items, incomingPlan.items, [], []);
+  var items = [];
+  for (i = 0; i < mergedRecs.records.length; i++) { if (!delItemIds[mergedRecs.records[i].id]) items.push(mergedRecs.records[i]); }
+  var merged = {}, id2;
+  for (id2 in existingPlan) merged[id2] = existingPlan[id2];
+  for (id2 in incomingPlan) merged[id2] = incomingPlan[id2];
+  merged.items = items;
+  var delArr = [];
+  for (id2 in delItemIds) delArr.push(id2);
+  merged.deletedItemIds = delArr;
+  return merged;
+}
+function mergePlansServer(existingPlans, existingDeletedPlanIds, incomingPlans, incomingDeletedPlanIds) {
+  var delPlanIds = {}, id, i;
+  existingDeletedPlanIds = existingDeletedPlanIds || []; incomingDeletedPlanIds = incomingDeletedPlanIds || [];
+  for (i = 0; i < existingDeletedPlanIds.length; i++) delPlanIds[existingDeletedPlanIds[i]] = true;
+  for (i = 0; i < incomingDeletedPlanIds.length; i++) delPlanIds[incomingDeletedPlanIds[i]] = true;
+
+  var order = [], map = {};
+  existingPlans = existingPlans || []; incomingPlans = incomingPlans || [];
+  for (i = 0; i < existingPlans.length; i++) { order.push(existingPlans[i].id); map[existingPlans[i].id] = existingPlans[i]; }
+  for (i = 0; i < incomingPlans.length; i++) {
+    var p = incomingPlans[i];
+    if (!(p.id in map)) { order.push(p.id); map[p.id] = p; }
+    else map[p.id] = mergePlanContentsServer(map[p.id], p);
+  }
+  var plans = [], delArr = [];
+  for (i = 0; i < order.length; i++) { if (!delPlanIds[order[i]]) plans.push(map[order[i]]); }
+  for (id in delPlanIds) delArr.push(id);
+  return { plans: plans, deletedPlanIds: delArr };
 }
