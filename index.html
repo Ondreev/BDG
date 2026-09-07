@@ -516,6 +516,40 @@ label.sku-check{display:flex;align-items:center;gap:6px;font-size:11.5px;font-we
 .cat-hint .chb:active{transform:scale(.94)}
 @keyframes hintIn{from{opacity:0;transform:translateY(-4px) scale(.97)}to{opacity:1;transform:translateY(0) scale(1)}}
 
+/* ---------- фото товара ---------- */
+.photo-tile{
+  position:relative;width:96px;height:96px;border-radius:18px;overflow:hidden;flex:none;
+  background:var(--line);display:flex;align-items:center;justify-content:center;cursor:pointer;
+  margin:0 0 14px;
+}
+.photo-tile img{width:100%;height:100%;object-fit:cover;display:block}
+.photo-tile .ph-empty{display:flex;flex-direction:column;align-items:center;gap:4px;color:var(--muted)}
+.photo-tile .ph-empty span{font-size:11px;font-weight:700}
+.photo-tile.busy{opacity:.55;pointer-events:none}
+.photo-tile .ph-spin{
+  width:22px;height:22px;border-radius:50%;border:3px solid rgba(0,0,0,.15);border-top-color:var(--accent);
+  animation:phSpin .7s linear infinite;
+}
+@keyframes phSpin{to{transform:rotate(360deg)}}
+.photo-remove{
+  position:absolute;top:5px;right:5px;width:24px;height:24px;border-radius:50%;border:none;
+  background:rgba(15,23,42,.6);color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;
+}
+.cat-thumb{
+  width:44px;height:44px;border-radius:12px;flex:none;object-fit:cover;cursor:zoom-in;
+}
+.cat-thumb-ph{
+  width:44px;height:44px;border-radius:12px;flex:none;display:flex;align-items:center;justify-content:center;
+  font-size:16px;font-weight:800;color:#fff;
+}
+.item-thumb{width:34px;height:34px;border-radius:10px;flex:none;object-fit:cover;cursor:zoom-in;margin-right:2px}
+.photo-viewer{
+  position:fixed;inset:0;z-index:300;background:rgba(10,12,20,.92);display:none;
+  align-items:center;justify-content:center;padding:24px;
+}
+.photo-viewer.show{display:flex}
+.photo-viewer img{max-width:100%;max-height:100%;border-radius:16px;object-fit:contain}
+
 .stepper{display:flex;align-items:center;gap:8px}
 .stepper button{
   width:50px;height:50px;flex:none;border:none;border-radius:16px;background:var(--accent-soft);
@@ -1392,6 +1426,8 @@ input[type=file]{display:none}
 
 <div class="snackbar" id="snackbar"><span class="msg" id="snackMsg"></span><button id="snackBtn" data-i18n="btn_undo">Отменить</button></div>
 
+<div class="photo-viewer" id="photoViewer" onclick="closePhotoViewer()"><img id="photoViewerImg" alt=""></div>
+
 <!-- при открытии приложения тихо сверяемся с облаком: крупный квадрат с бегущей «змейкой»
      посередине экрана пока идёт проверка, затем эффектная зелёная галочка — чтобы не нужно
      было вручную жать «Загрузить»/«Отправить»; не блокирует интерфейс под собой -->
@@ -1796,6 +1832,8 @@ input[type=file]{display:none}
       <h2 id="catProductTitle" style="margin:0" data-i18n="cat_product_sheet_title">Товар каталога</h2>
       <button class="icon-btn" id="catProdFavBtn" onclick="toggleFavorite(catEditProductId)" aria-label="Избранное" data-i18n-aria="aria_favorite" style="width:38px;height:38px;border-radius:12px"></button>
     </div>
+    <input type="file" id="catProdPhotoInput" accept="image/*" style="display:none" onchange="onCatProdPhotoSelected(event)">
+    <div class="photo-tile" id="catProdPhotoTile" onclick="catProdPhotoTileClick()"></div>
     <div class="field">
       <label data-i18n="field_name">Название</label>
       <input id="catProdName" type="text" placeholder="Например: Молоко 3,2%" data-i18n-ph="catprod_name_ph" autocomplete="off" oninput="renderCatHint('catalog')">
@@ -2408,6 +2446,7 @@ function sanitizeCatalogDB(s) {
     // округляется до кратного; 1 значит «пачки нет», кратность не применяется
     p.pack = +p.pack > 1 ? +p.pack : 1;
     p.note = p.note || '';
+    p.photoId = p.photoId || null;
   });
 
   // единый справочник магазинов (код + полное название) — общий для магазинов в списках закупок
@@ -2727,6 +2766,9 @@ const I18N = {
     loc_manage_empty: 'Мест пока нет',
     loc_manage_applied_toast: 'Магазин присвоен: {n} мест',
     cat_product_sheet_title: 'Товар каталога',
+    photo_add_hint: 'Добавить фото',
+    photo_remove_aria: 'Удалить фото',
+    photo_need_sync: 'Сначала настройте синхронизацию с облаком — фото хранятся там',
     cat_product_edit_title: 'Редактировать товар',
     aria_favorite: 'Избранное',
     catprod_name_ph: 'Например: Молоко 3,2%',
@@ -3315,6 +3357,9 @@ const I18N = {
     loc_manage_empty: 'No locations yet',
     loc_manage_applied_toast: 'Store assigned to {n} locations',
     cat_product_sheet_title: 'Catalog product',
+    photo_add_hint: 'Add photo',
+    photo_remove_aria: 'Remove photo',
+    photo_need_sync: 'Set up cloud sync first — photos are stored there',
     cat_product_edit_title: 'Edit product',
     aria_favorite: 'Favorite',
     catprod_name_ph: 'E.g.: Milk 3.2%',
@@ -3903,6 +3948,9 @@ const I18N = {
     loc_manage_empty: 'Noch keine Standorte',
     loc_manage_applied_toast: 'Geschäft {n} Standorten zugewiesen',
     cat_product_sheet_title: 'Katalogprodukt',
+    photo_add_hint: 'Foto hinzufügen',
+    photo_remove_aria: 'Foto entfernen',
+    photo_need_sync: 'Zuerst die Cloud-Synchronisierung einrichten — Fotos werden dort gespeichert',
     cat_product_edit_title: 'Produkt bearbeiten',
     aria_favorite: 'Favorit',
     catprod_name_ph: 'Z. B.: Milch 3,2 %',
@@ -4489,6 +4537,9 @@ const I18N = {
     loc_manage_empty: 'Aún no hay ubicaciones',
     loc_manage_applied_toast: 'Tienda asignada a {n} ubicaciones',
     cat_product_sheet_title: 'Producto del catálogo',
+    photo_add_hint: 'Añadir foto',
+    photo_remove_aria: 'Quitar foto',
+    photo_need_sync: 'Configura primero la sincronización con la nube — las fotos se guardan ahí',
     cat_product_edit_title: 'Editar producto',
     aria_favorite: 'Favorito',
     catprod_name_ph: 'Ej.: Leche 3,2 %',
@@ -5075,6 +5126,9 @@ const I18N = {
     loc_manage_empty: 'Pas encore d\'emplacements',
     loc_manage_applied_toast: 'Magasin assigné à {n} emplacements',
     cat_product_sheet_title: 'Produit du catalogue',
+    photo_add_hint: 'Ajouter une photo',
+    photo_remove_aria: 'Supprimer la photo',
+    photo_need_sync: 'Configurez d\'abord la synchronisation cloud — les photos y sont stockées',
     cat_product_edit_title: 'Modifier le produit',
     aria_favorite: 'Favori',
     catprod_name_ph: 'Ex. : Lait 3,2 %',
@@ -5661,6 +5715,9 @@ const I18N = {
     loc_manage_empty: '暂无位置',
     loc_manage_applied_toast: '已为 {n} 个位置指定商店',
     cat_product_sheet_title: '目录商品',
+    photo_add_hint: '添加照片',
+    photo_remove_aria: '删除照片',
+    photo_need_sync: '请先设置云同步——照片保存在那里',
     cat_product_edit_title: '编辑商品',
     aria_favorite: '收藏',
     catprod_name_ph: '例如：牛奶3.2%',
@@ -6247,6 +6304,9 @@ const I18N = {
     loc_manage_empty: 'Chưa có vị trí nào',
     loc_manage_applied_toast: 'Đã gán cửa hàng cho {n} vị trí',
     cat_product_sheet_title: 'Sản phẩm trong danh mục',
+    photo_add_hint: 'Thêm ảnh',
+    photo_remove_aria: 'Xóa ảnh',
+    photo_need_sync: 'Hãy thiết lập đồng bộ đám mây trước — ảnh được lưu ở đó',
     cat_product_edit_title: 'Sửa sản phẩm',
     aria_favorite: 'Yêu thích',
     catprod_name_ph: 'VD: Sữa 3.2%',
@@ -6833,6 +6893,9 @@ const I18N = {
     loc_manage_empty: 'Hozircha joylar yo\'q',
     loc_manage_applied_toast: 'Do\'kon {n} ta joyga biriktirildi',
     cat_product_sheet_title: 'Katalog mahsuloti',
+    photo_add_hint: 'Foto qo\'shish',
+    photo_remove_aria: 'Fotoni o\'chirish',
+    photo_need_sync: 'Avval bulutli sinxronlashni sozlang — fotolar shu yerda saqlanadi',
     cat_product_edit_title: 'Mahsulotni tahrirlash',
     aria_favorite: 'Sevimli',
     catprod_name_ph: 'Masalan: Sut 3,2%',
@@ -7419,6 +7482,9 @@ const I18N = {
     loc_manage_empty: 'Азырынча орундар жок',
     loc_manage_applied_toast: 'Дүкөн {n} орунга дайындалды',
     cat_product_sheet_title: 'Каталог товары',
+    photo_add_hint: 'Сүрөт кошуу',
+    photo_remove_aria: 'Сүрөттү өчүрүү',
+    photo_need_sync: 'Алгач булут синхрондоштурууну тууралаңыз — сүрөттөр ошол жерде сакталат',
     cat_product_edit_title: 'Товарды түзөтүү',
     aria_favorite: 'Тандалма',
     catprod_name_ph: 'Мисалы: Сүт 3,2%',
@@ -8005,6 +8071,9 @@ const I18N = {
     loc_manage_empty: 'Ҳанӯз ҷой нест',
     loc_manage_applied_toast: 'Мағоза ба {n} ҷой таъин шуд',
     cat_product_sheet_title: 'Маҳсулоти каталог',
+    photo_add_hint: 'Илова кардани акс',
+    photo_remove_aria: 'Нест кардани акс',
+    photo_need_sync: 'Аввал синхронизатсияи абрро танзим кунед — аксҳо дар он ҷо нигоҳ дошта мешаванд',
     cat_product_edit_title: 'Таҳрири маҳсулот',
     aria_favorite: 'Дӯстдошта',
     catprod_name_ph: 'Масалан: Шир 3,2%',
@@ -8591,6 +8660,9 @@ const I18N = {
     loc_manage_empty: 'ჯერ არ არის ადგილები',
     loc_manage_applied_toast: 'მაღაზია მიენიჭა {n} ადგილს',
     cat_product_sheet_title: 'კატალოგის პროდუქტი',
+    photo_add_hint: 'ფოტოს დამატება',
+    photo_remove_aria: 'ფოტოს წაშლა',
+    photo_need_sync: 'ჯერ დააყენეთ ღრუბლოვანი სინქრონიზაცია — ფოტოები იქ ინახება',
     cat_product_edit_title: 'პროდუქტის რედაქტირება',
     aria_favorite: 'რჩეული',
     catprod_name_ph: 'მაგ.: რძე 3.2%',
@@ -9177,6 +9249,9 @@ const I18N = {
     loc_manage_empty: 'Դեռ վայրեր չկան',
     loc_manage_applied_toast: 'Խանութը նշանակվեց {n} վայրի',
     cat_product_sheet_title: 'Կատալոգի ապրանք',
+    photo_add_hint: 'Ավելացնել լուսանկար',
+    photo_remove_aria: 'Հեռացնել լուսանկարը',
+    photo_need_sync: 'Նախ կարգավորեք ամպային համաժամեցումը — լուսանկարները պահվում են այնտեղ',
     cat_product_edit_title: 'Խմբագրել ապրանքը',
     aria_favorite: 'Ընտրյալ',
     catprod_name_ph: 'Օր.՝ Կաթ 3.2%',
@@ -9763,6 +9838,9 @@ const I18N = {
     loc_manage_empty: 'Аҭыԥқәа гыҵәаны рацәаӡам',
     loc_manage_applied_toast: 'Амарҭаққа {n} аҭыԥ рзы иашьҭыз',
     cat_product_sheet_title: 'Акаталог апродукт',
+    photo_add_hint: 'Асахьа аҵакы',
+    photo_remove_aria: 'Асахьа алҵра',
+    photo_need_sync: 'Раҧхьа адыхьчаз асинхронизациа рҭагылазаашьа — асахьақәа убри аҟны еихьчоуп',
     cat_product_edit_title: 'Апродукт аԥсахра',
     aria_favorite: 'Иҭаху',
     catprod_name_ph: 'Абра: Ахәшчы 3.2%',
@@ -10360,7 +10438,9 @@ const ICONS = {
   refresh: '<path d="M20 12a8 8 0 1 1-2.4-5.7M20 4v4.5h-4.5"/>',
   printer: '<path d="M7 8.5V4h10v4.5M7 17.5H5.5A1.5 1.5 0 0 1 4 16v-5a1.5 1.5 0 0 1 1.5-1.5h13A1.5 1.5 0 0 1 20 11v5a1.5 1.5 0 0 1-1.5 1.5H17M7 14.5h10v6H7z"/>',
   currency: '<path d="M4 8.5h11M4 8.5l3.5-3.5M4 8.5l3.5 3.5M20 15.5H9M20 15.5l-3.5-3.5M20 15.5l-3.5 3.5"/>',
-  star: '<path d="M12 3.6l2.5 5.1 5.6.8-4 4 1 5.6-5.1-2.7-5.1 2.7 1-5.6-4-4 5.6-.8z"/>'
+  star: '<path d="M12 3.6l2.5 5.1 5.6.8-4 4 1 5.6-5.1-2.7-5.1 2.7 1-5.6-4-4 5.6-.8z"/>',
+  camera: '<path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/>',
+  close: '<path d="M6 6l12 12M18 6 6 18"/>'
 };
 function ic(name, size) {
   return `<svg width="${size || 19}" height="${size || 19}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${ICONS[name] || ''}</svg>`;
@@ -10720,6 +10800,7 @@ function itemRowHTML(sid, it) {
     <button class="check" onclick="toggleItem('${sid}','${it.id}')" aria-label="${t('aria_bought')}">
       <span class="box"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 12.5l5 5 10-11"/></svg></span>
     </button>
+    ${itemThumbHTML(it)}
     <div class="item-body" onclick="openItemSheet('${sid}','${it.id}')">
       <div class="item-name">${esc(it.name)}</div>
       ${it.note ? `<div class="item-note">${esc(it.note)}</div>` : ''}
@@ -12734,6 +12815,7 @@ function renderCatalog() {
     const picked = catSelectedIds.has(p.id);
     return `
     <div class="cat-row ${catSelectMode && picked ? 'picked' : ''}" ${catSelectMode ? `onclick="toggleCatSelect('${p.id}')"` : ''}>
+      ${catThumbHTML(p)}
       <div class="cat-info" ${catSelectMode ? '' : `onclick="openCatProductSheet('${p.id}')"`}>
         <div class="cat-name">${esc(p.name)}</div>
         <div class="cat-meta">${cat ? esc(cat.name) : t('shop_uncategorized')}${p.loc ? ' · ' + esc(p.loc) : ''}${p.sku ? ' · #' + esc(p.sku) : ''}${p.pack > 1 ? ' · ' + tf('field_pack_hint', { n: fmt(p.pack) }) : ''}</div>
@@ -12842,9 +12924,128 @@ function catSearchEnter() {
 }
 
 /* ---------- catalog product add / edit ---------- */
+/* ---------- фото товара: снимок камерой/из галереи, сжатие в браузере, ---------
+   загрузка на Google Диск через тот же скрипт синхронизации. В самих данных
+   товара/позиции списка хранится только id файла — картинка живёт в облаке. */
+let catProdPhotoId = null;      // значение для сохраняемой карточки
+let catProdPhotoPreview = null; // локальный dataURL для мгновенного превью до сохранения
+let catProdPhotoBusy = false;
+
+function photoDisplayUrl(id, size) {
+  return id ? 'https://lh3.googleusercontent.com/d/' + id + '=w' + (size || 200) : null;
+}
+const AVATAR_COLORS = ['#F97066', '#F79009', '#EAAA08', '#3CCB7F', '#4CC2C4', '#53B1FD', '#8098F9', '#9B8AFB', '#F670C7'];
+function avatarColorFor(name) {
+  let h = 0;
+  for (let i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) >>> 0;
+  return AVATAR_COLORS[h % AVATAR_COLORS.length];
+}
+function catThumbHTML(p) {
+  const url = photoDisplayUrl(p.photoId, 100);
+  if (url) return `<img class="cat-thumb" src="${url}" alt="" onclick="event.stopPropagation();openPhotoViewer('${p.photoId}')">`;
+  const letter = (p.name || '?').trim().charAt(0).toUpperCase();
+  return `<div class="cat-thumb-ph" style="background:${avatarColorFor(p.name || '')}">${esc(letter)}</div>`;
+}
+function itemThumbHTML(it) {
+  if (!it.photoId) return '';
+  const url = photoDisplayUrl(it.photoId, 90);
+  return `<img class="item-thumb" src="${url}" alt="" onclick="event.stopPropagation();openPhotoViewer('${it.photoId}')">`;
+}
+function openPhotoViewer(id, directUrl) {
+  const src = directUrl || photoDisplayUrl(id, 900);
+  if (!src) return;
+  document.getElementById('photoViewerImg').src = src;
+  document.getElementById('photoViewer').classList.add('show');
+}
+function closePhotoViewer() {
+  document.getElementById('photoViewer').classList.remove('show');
+  document.getElementById('photoViewerImg').src = '';
+}
+function renderCatProdPhotoTile() {
+  const tile = document.getElementById('catProdPhotoTile');
+  tile.classList.toggle('busy', catProdPhotoBusy);
+  if (catProdPhotoBusy) { tile.innerHTML = '<div class="ph-spin"></div>'; return; }
+  const src = catProdPhotoPreview || photoDisplayUrl(catProdPhotoId, 240);
+  tile.innerHTML = src
+    ? `<img src="${src}" alt=""><button type="button" class="photo-remove" onclick="event.stopPropagation();removeCatProdPhoto()" aria-label="${t('photo_remove_aria')}">${ic('close', 14)}</button>`
+    : `<div class="ph-empty">${ic('camera', 22)}<span>${t('photo_add_hint')}</span></div>`;
+}
+function catProdPhotoTileClick() {
+  if (catProdPhotoBusy) return;
+  const s = syncState();
+  if (!s.login || !s.pin) { toast(t('photo_need_sync')); return; }
+  document.getElementById('catProdPhotoInput').value = '';
+  document.getElementById('catProdPhotoInput').click();
+}
+function removeCatProdPhoto() {
+  if (catProdPhotoBusy) return;
+  catProdPhotoId = null;
+  catProdPhotoPreview = null;
+  renderCatProdPhotoTile();
+}
+function onCatProdPhotoSelected(evt) {
+  const file = evt.target.files && evt.target.files[0];
+  if (!file) return;
+  catProdPhotoBusy = true; renderCatProdPhotoTile();
+  resizeImageForUpload(file).then(({ base64, mime, dataUrl }) => {
+    const s = syncState();
+    const creds = { login: s.login, pin: s.pin, url: s.url || DEFAULT_SYNC_URL };
+    return syncCall(creds, 'photo_upload', { data: base64, mime }).then(res => {
+      catProdPhotoId = res.id;
+      catProdPhotoPreview = dataUrl;
+      catProdPhotoBusy = false;
+      renderCatProdPhotoTile();
+    });
+  }).catch(err => {
+    catProdPhotoBusy = false;
+    renderCatProdPhotoTile();
+    toast(errToMsg(err));
+  });
+}
+// сжимаем и обрезаем прямо в браузере — фото с камеры телефона весит по 3-5 МБ,
+// а для карточки товара с запасом достаточно ~150-250 КБ
+function resizeImageForUpload(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = () => reject(new Error('read_fail'));
+    reader.onload = () => {
+      const img = new Image();
+      img.onerror = () => reject(new Error('decode_fail'));
+      img.onload = () => {
+        const maxDim = 1024;
+        let width = img.width, height = img.height;
+        if (width > maxDim || height > maxDim) {
+          if (width > height) { height = Math.round(height * maxDim / width); width = maxDim; }
+          else { width = Math.round(width * maxDim / height); height = maxDim; }
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = width; canvas.height = height;
+        canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+        const dataUrl = canvas.toDataURL('image/jpeg', 0.72);
+        resolve({ base64: dataUrl.split(',')[1], mime: 'image/jpeg', dataUrl });
+      };
+      img.src = reader.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+// лучшее из возможного, не блокируем сохранение карточки на результат: если не удалилось —
+// просто останется неиспользуемый файл на Диске, не критично
+function deletePhotoRemote(id) {
+  if (!id) return;
+  const s = syncState();
+  if (!s.login || !s.pin) return;
+  const creds = { login: s.login, pin: s.pin, url: s.url || DEFAULT_SYNC_URL };
+  syncCall(creds, 'photo_delete', { id }).catch(() => {});
+}
+
 function openCatProductSheet(id) {
   catEditProductId = id || null;
   const p = id ? prodById(id) : null;
+  catProdPhotoId = p ? (p.photoId || null) : null;
+  catProdPhotoPreview = null;
+  catProdPhotoBusy = false;
+  renderCatProdPhotoTile();
   document.getElementById('catProductTitle').textContent = p ? t('cat_product_edit_title') : t('cat_product_sheet_title');
   document.getElementById('catProdSaveBtn').textContent = p ? t('btn_save') : t('btn_add');
   document.getElementById('catProdDeleteBtn').style.display = p ? 'flex' : 'none';
@@ -13016,10 +13217,13 @@ function saveCatProduct() {
   const note = document.getElementById('catProdNote').value.trim();
   if (skuExists(sku, catEditProductId)) { onCatProdSkuInput(); return; }
   findOrCreateLocation(loc);
+  const photoId = catProdPhotoId;
   if (catEditProductId) {
-    Object.assign(prodById(catEditProductId), { name, price, categoryId, loc, sku, pack, note });
+    const prod = prodById(catEditProductId);
+    if (prod.photoId && prod.photoId !== photoId) deletePhotoRemote(prod.photoId);
+    Object.assign(prod, { name, price, categoryId, loc, sku, pack, note, photoId });
   } else {
-    state.catalogDB.products.push({ id: uid(), name, price, categoryId, loc, sku, pack, note });
+    state.catalogDB.products.push({ id: uid(), name, price, categoryId, loc, sku, pack, note, photoId });
   }
   save(); renderCatalog(); renderInv(); closeSheet('catProductSheet'); vibrate(10);
 }
@@ -13028,7 +13232,12 @@ function deleteCatProduct() {
   if (idx === -1) { closeSheet('catProductSheet'); return; }
   const removed = state.catalogDB.products.splice(idx, 1)[0];
   save(); renderCatalog(); renderInv(); closeSheet('catProductSheet');
+  let undone = false;
+  // фото с Диска чистим только если удаление не отменили через сникбар — иначе
+  // "Отменить" вернуло бы карточку, а её фото уже стёрто
+  if (removed.photoId) setTimeout(() => { if (!undone) deletePhotoRemote(removed.photoId); }, 5200);
   snackbar(tf('cat_product_deleted_snack', { name: removed.name }), () => {
+    undone = true;
     state.catalogDB.products.splice(Math.min(idx, state.catalogDB.products.length), 0, removed);
     save(); renderCatalog(); renderInv();
   });
@@ -13082,8 +13291,9 @@ function saveCatAdd() {
     merged.qty = (parseFloat(merged.qty) || 0) + qty;
     if (addLoc) merged.loc = addLoc;
     if (addNote) merged.note = addNote;
+    if (!merged.photoId && p.photoId) merged.photoId = p.photoId;
   } else {
-    store.items.push({ id: uid(), name: p.name, qty, price, day: null, loc: addLoc, catId: p.categoryId || null, bought: false, note: addNote });
+    store.items.push({ id: uid(), name: p.name, qty, price, day: null, loc: addLoc, catId: p.categoryId || null, bought: false, note: addNote, photoId: p.photoId || null });
   }
   if (addLoc && addLoc !== (p.loc || '')) { p.loc = addLoc; }
   if (addNote !== (p.note || '')) { p.note = addNote; }

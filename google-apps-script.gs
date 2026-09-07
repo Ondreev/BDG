@@ -30,10 +30,16 @@
  * оттуда, когда поставщик его примет или отклонит. У поставщика принятый заказ
  * становится обычным списком закупок (просто помечен «входящий»).
  *
+ * Фото товаров хранятся не в самой таблице (там текстовые ячейки), а в Google Диске —
+ * скрипт сам создаст на Диске папку «BDG_photos» с подпапками по логинам. Это требует
+ * доступа к Диску: при первом сохранении фото после обновления скрипта Google попросит
+ * заново подтвердить разрешения — это нормально, просто разрешите.
+ *
  * Если вы уже развернули более раннюю версию скрипта — вставьте этот файл заново и
  * создайте новую версию развёртывания (Развернуть → Управление развертываниями →
  * значок карандаша → Версия: «Новая версия» → Развернуть), иначе новые функции (печать
- * с телефона, обмен карточками, заказы поставщику) будут отвечать ошибкой bad_action.
+ * с телефона, обмен карточками, заказы поставщику, фото товаров) будут отвечать ошибкой
+ * bad_action.
  */
 
 var SHEET_NAME = 'users';
@@ -51,6 +57,9 @@ var ORDER_MAXCH = 12; // до ~540 КБ на один заказ поставщ�
 
 var BACKUP_SHEET_NAME = 'backups';
 var BACKUP_WINDOW_MS = 24 * 60 * 60 * 1000; // сутки, как и просили — окно, пока предлагаем восстановить
+
+var PHOTO_ROOT_FOLDER_NAME = 'BDG_photos';
+var PHOTO_MAX_BASE64_LEN = 2000000; // с запасом достаточно для сжатого фото с телефона
 
 function doPost(e) {
   try {
@@ -289,6 +298,44 @@ function doPost(e) {
         return out({ ok: true });
       }
 
+      // фото товара: сохраняется в Google Диске, а не в самой таблице (там текстовые
+      // ячейки) — в данных товара хранится только id файла. Ссылка на просмотр строится
+      // на клиенте (lh3.googleusercontent.com/d/{id}), доступ открыт "всем, у кого есть
+      // ссылка" — иначе браузеру нечем было бы её показать в <img>.
+      if (req.action === 'photo_upload') {
+        if (row === -1) return out({ ok: false, error: 'not_found' });
+        if (getPin(sh, row) !== pin) return out({ ok: false, error: 'wrong_pin' });
+        var b64 = String((req.payload && req.payload.data) || '');
+        if (!b64) return out({ ok: false, error: 'no_data' });
+        if (b64.length > PHOTO_MAX_BASE64_LEN) return out({ ok: false, error: 'too_big' });
+        var mime = String((req.payload && req.payload.mime) || 'image/jpeg');
+        var bytes = Utilities.base64Decode(b64);
+        var blob = Utilities.newBlob(bytes, mime, login + '_' + Date.now() + '.jpg');
+        var folder = getUserPhotoFolder(login);
+        var file = folder.createFile(blob);
+        file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+        return out({ ok: true, id: file.getId() });
+      }
+
+      // удаление фото (заменили на другое или убрали) — чистим Диск, чтобы файлы не
+      // копились без дела; проверяем, что файл лежит в папке именно этого логина
+      if (req.action === 'photo_delete') {
+        if (row === -1) return out({ ok: false, error: 'not_found' });
+        if (getPin(sh, row) !== pin) return out({ ok: false, error: 'wrong_pin' });
+        var pid = String((req.payload && req.payload.id) || '');
+        if (pid) {
+          try {
+            var ownFolder = getUserPhotoFolder(login);
+            var pfile = DriveApp.getFileById(pid);
+            var parents = pfile.getParents();
+            var owns = false;
+            while (parents.hasNext()) { if (parents.next().getId() === ownFolder.getId()) owns = true; }
+            if (owns) pfile.setTrashed(true);
+          } catch (ignored) {} // файла уже нет/недоступен — удалять нечего
+        }
+        return out({ ok: true });
+      }
+
       return out({ ok: false, error: 'bad_action' });
     } finally {
       lock.releaseLock();
@@ -420,6 +467,18 @@ function getBackupInfo(login) {
   var at = String(bsh.getRange(brow, 2).getDisplayValue());
   var age = Date.now() - new Date(at).getTime();
   return { has: age >= 0 && age < BACKUP_WINDOW_MS, at: at };
+}
+
+// у каждого логина своя подпапка внутри общей "BDG_photos" — так фото разных аккаунтов
+// на одном скрипте не путаются и их проще найти вручную на Диске при необходимости
+function getPhotosRootFolder() {
+  var it = DriveApp.getFoldersByName(PHOTO_ROOT_FOLDER_NAME);
+  return it.hasNext() ? it.next() : DriveApp.createFolder(PHOTO_ROOT_FOLDER_NAME);
+}
+function getUserPhotoFolder(login) {
+  var root = getPhotosRootFolder();
+  var it = root.getFoldersByName(login);
+  return it.hasNext() ? it.next() : root.createFolder(login);
 }
 
 function out(obj) {
