@@ -386,32 +386,26 @@ input,select{font-family:inherit}
   width:48px;height:52px;border:none;background:none;cursor:pointer;flex:none;
   display:flex;align-items:center;justify-content:center;
 }
-.check .box, .check-thumb .box{
+.check .box{
   width:26px;height:26px;border-radius:9px;border:2px solid #CBD5E1;background:#fff;
   display:flex;align-items:center;justify-content:center;transition:all .18s;
 }
-.check .box svg, .check-thumb .box svg{opacity:0;transform:scale(.4);transition:all .18s}
-.item-row.done .check .box, .item-row.done .check-thumb .box{background:var(--green);border-color:var(--green)}
-.item-row.done .check .box svg, .item-row.done .check-thumb .box svg{opacity:1;transform:scale(1)}
-/* мобильный вариант строки списка: чекбокс заменён на фото/миниатюру товара —
-   тап по ней отмечает купленным так же, как раньше тап по чекбоксу; ручка
-   перетаскивания убрана (на телефоне и так тесно), справа компактная кнопка
-   редактирования на её месте. На десктопе (см. медиа-запрос ниже) — как было. */
+.check .box svg{opacity:0;transform:scale(.4);transition:all .18s}
+.item-row.done .check .box{background:var(--green);border-color:var(--green)}
+.item-row.done .check .box svg{opacity:1;transform:scale(1)}
+/* мобильный вариант строки списка: чекбокса нет, тап по самой строке (названию)
+   отмечает товар купленным — вся строка темнеет; тап по фото открывает его
+   увеличенно и не отмечает купленным; ручка перетаскивания убрана (на телефоне и
+   так тесно), справа вместо неё компактная кнопка редактирования. На десктопе
+   (см. медиа-запрос ниже) — классический чекбокс и перетаскивание, как было. */
 .item-row .check{display:none}
 .item-row .item-thumb{display:none}
 .check-thumb{
-  width:44px;height:52px;border:none;background:none;cursor:pointer;flex:none;
-  display:flex;align-items:center;justify-content:center;padding:0;
+  width:44px;height:52px;border:none;background:none;cursor:zoom-in;flex:none;padding:0;
+  display:flex;align-items:center;justify-content:center;
 }
-.check-thumb .thumb-photo{width:38px;height:38px;border-radius:11px;overflow:hidden;position:relative;flex:none}
-.check-thumb .thumb-photo img{width:100%;height:100%;object-fit:cover;display:block;transition:filter .18s}
-.item-row.done .check-thumb .thumb-photo img{filter:grayscale(.65) brightness(.8)}
-.check-thumb .thumb-badge{
-  position:absolute;right:-3px;bottom:-3px;width:17px;height:17px;border-radius:50%;
-  background:var(--green);border:2px solid #fff;display:flex;align-items:center;justify-content:center;
-  opacity:0;transform:scale(.3);transition:all .18s;
-}
-.item-row.done .check-thumb .thumb-badge{opacity:1;transform:scale(1)}
+.check-thumb img{width:38px;height:38px;border-radius:11px;object-fit:cover;display:block;transition:filter .18s}
+.item-row.done .check-thumb img{filter:grayscale(.65) brightness(.8)}
 .item-edit-btn{
   width:34px;height:52px;border:none;background:none;cursor:pointer;flex:none;color:var(--muted);
   display:flex;align-items:center;justify-content:center;
@@ -1875,6 +1869,7 @@ input[type=file]{display:none}
       <button class="icon-btn" id="catProdFavBtn" onclick="toggleFavorite(catEditProductId)" aria-label="Избранное" data-i18n-aria="aria_favorite" style="width:38px;height:38px;border-radius:12px"></button>
     </div>
     <input type="file" id="catProdPhotoInput" accept="image/*" style="display:none" onchange="onCatProdPhotoSelected(event)">
+    <input type="file" id="catProdPhotoInputCam" accept="image/*" capture="environment" style="display:none" onchange="onCatProdPhotoSelected(event)">
     <div class="cp-primary">
       <div class="photo-tile" id="catProdPhotoTile" onclick="catProdPhotoTileClick()"></div>
       <div class="cp-primary-fields">
@@ -2702,6 +2697,7 @@ const I18N = {
     aria_store_actions: 'Действия',
     aria_drag: 'Перетащить',
     aria_edit_item: 'Редактировать',
+    aria_view_photo: 'Смотреть фото',
     aria_bought: 'Куплено',
 
     store_menu_add_item: 'Добавить товар',
@@ -2821,6 +2817,9 @@ const I18N = {
     loc_manage_applied_toast: 'Магазин присвоен: {n} мест',
     cat_product_sheet_title: 'Товар каталога',
     photo_add_hint: 'Добавить фото',
+    photo_source_prompt: 'Как сделать фото?',
+    photo_source_camera: 'Камера',
+    photo_source_gallery: 'Галерея',
     photo_remove_aria: 'Удалить фото',
     photo_need_sync: 'Сначала настройте синхронизацию с облаком — фото хранятся там',
     cat_product_edit_title: 'Редактировать товар',
@@ -3295,6 +3294,7 @@ const I18N = {
     aria_store_actions: 'Actions',
     aria_drag: 'Drag',
     aria_edit_item: 'Edit',
+    aria_view_photo: 'View photo',
     aria_bought: 'Bought',
 
     store_menu_add_item: 'Add item',
@@ -3414,6 +3414,9 @@ const I18N = {
     loc_manage_applied_toast: 'Store assigned to {n} locations',
     cat_product_sheet_title: 'Catalog product',
     photo_add_hint: 'Add photo',
+    photo_source_prompt: 'How do you want to add a photo?',
+    photo_source_camera: 'Camera',
+    photo_source_gallery: 'Gallery',
     photo_remove_aria: 'Remove photo',
     photo_need_sync: 'Set up cloud sync first — photos are stored there',
     cat_product_edit_title: 'Edit product',
@@ -3888,6 +3891,7 @@ const I18N = {
     aria_store_actions: 'Aktionen',
     aria_drag: 'Verschieben',
     aria_edit_item: 'Bearbeiten',
+    aria_view_photo: 'Foto ansehen',
     aria_bought: 'Gekauft',
 
     store_menu_add_item: 'Artikel hinzufügen',
@@ -4007,6 +4011,9 @@ const I18N = {
     loc_manage_applied_toast: 'Geschäft {n} Standorten zugewiesen',
     cat_product_sheet_title: 'Katalogprodukt',
     photo_add_hint: 'Foto hinzufügen',
+    photo_source_prompt: 'Wie möchtest du das Foto hinzufügen?',
+    photo_source_camera: 'Kamera',
+    photo_source_gallery: 'Galerie',
     photo_remove_aria: 'Foto entfernen',
     photo_need_sync: 'Zuerst die Cloud-Synchronisierung einrichten — Fotos werden dort gespeichert',
     cat_product_edit_title: 'Produkt bearbeiten',
@@ -4479,6 +4486,7 @@ const I18N = {
     aria_store_actions: 'Acciones',
     aria_drag: 'Arrastrar',
     aria_edit_item: 'Editar',
+    aria_view_photo: 'Ver foto',
     aria_bought: 'Comprado',
 
     store_menu_add_item: 'Añadir artículo',
@@ -4598,6 +4606,9 @@ const I18N = {
     loc_manage_applied_toast: 'Tienda asignada a {n} ubicaciones',
     cat_product_sheet_title: 'Producto del catálogo',
     photo_add_hint: 'Añadir foto',
+    photo_source_prompt: '¿Cómo quieres añadir la foto?',
+    photo_source_camera: 'Cámara',
+    photo_source_gallery: 'Galería',
     photo_remove_aria: 'Quitar foto',
     photo_need_sync: 'Configura primero la sincronización con la nube — las fotos se guardan ahí',
     cat_product_edit_title: 'Editar producto',
@@ -5070,6 +5081,7 @@ const I18N = {
     aria_store_actions: 'Actions',
     aria_drag: 'Déplacer',
     aria_edit_item: 'Modifier',
+    aria_view_photo: 'Voir la photo',
     aria_bought: 'Acheté',
 
     store_menu_add_item: 'Ajouter un article',
@@ -5189,6 +5201,9 @@ const I18N = {
     loc_manage_applied_toast: 'Magasin assigné à {n} emplacements',
     cat_product_sheet_title: 'Produit du catalogue',
     photo_add_hint: 'Ajouter une photo',
+    photo_source_prompt: 'Comment ajouter la photo ?',
+    photo_source_camera: 'Appareil photo',
+    photo_source_gallery: 'Galerie',
     photo_remove_aria: 'Supprimer la photo',
     photo_need_sync: 'Configurez d\'abord la synchronisation cloud — les photos y sont stockées',
     cat_product_edit_title: 'Modifier le produit',
@@ -5661,6 +5676,7 @@ const I18N = {
     aria_store_actions: '操作',
     aria_drag: '拖动',
     aria_edit_item: '编辑',
+    aria_view_photo: '查看照片',
     aria_bought: '已购买',
 
     store_menu_add_item: '添加商品',
@@ -5780,6 +5796,9 @@ const I18N = {
     loc_manage_applied_toast: '已为 {n} 个位置指定商店',
     cat_product_sheet_title: '目录商品',
     photo_add_hint: '添加照片',
+    photo_source_prompt: '如何添加照片？',
+    photo_source_camera: '拍照',
+    photo_source_gallery: '相册',
     photo_remove_aria: '删除照片',
     photo_need_sync: '请先设置云同步——照片保存在那里',
     cat_product_edit_title: '编辑商品',
@@ -6252,6 +6271,7 @@ const I18N = {
     aria_store_actions: 'Thao tác',
     aria_drag: 'Kéo',
     aria_edit_item: 'Chỉnh sửa',
+    aria_view_photo: 'Xem ảnh',
     aria_bought: 'Đã mua',
 
     store_menu_add_item: 'Thêm sản phẩm',
@@ -6371,6 +6391,9 @@ const I18N = {
     loc_manage_applied_toast: 'Đã gán cửa hàng cho {n} vị trí',
     cat_product_sheet_title: 'Sản phẩm trong danh mục',
     photo_add_hint: 'Thêm ảnh',
+    photo_source_prompt: 'Bạn muốn thêm ảnh bằng cách nào?',
+    photo_source_camera: 'Máy ảnh',
+    photo_source_gallery: 'Thư viện ảnh',
     photo_remove_aria: 'Xóa ảnh',
     photo_need_sync: 'Hãy thiết lập đồng bộ đám mây trước — ảnh được lưu ở đó',
     cat_product_edit_title: 'Sửa sản phẩm',
@@ -6843,6 +6866,7 @@ const I18N = {
     aria_store_actions: 'Amallar',
     aria_drag: 'Surish',
     aria_edit_item: 'Tahrirlash',
+    aria_view_photo: 'Fotoni ko\'rish',
     aria_bought: 'Sotib olingan',
 
     store_menu_add_item: 'Mahsulot qo‘shish',
@@ -6962,6 +6986,9 @@ const I18N = {
     loc_manage_applied_toast: 'Do\'kon {n} ta joyga biriktirildi',
     cat_product_sheet_title: 'Katalog mahsuloti',
     photo_add_hint: 'Foto qo\'shish',
+    photo_source_prompt: 'Rasmni qanday qo\'shasiz?',
+    photo_source_camera: 'Kamera',
+    photo_source_gallery: 'Galereya',
     photo_remove_aria: 'Fotoni o\'chirish',
     photo_need_sync: 'Avval bulutli sinxronlashni sozlang — fotolar shu yerda saqlanadi',
     cat_product_edit_title: 'Mahsulotni tahrirlash',
@@ -7434,6 +7461,7 @@ const I18N = {
     aria_store_actions: 'Аракеттер',
     aria_drag: 'Жылдыруу',
     aria_edit_item: 'Түзөтүү',
+    aria_view_photo: 'Сүрөттү көрүү',
     aria_bought: 'Сатылып алынды',
 
     store_menu_add_item: 'Товар кошуу',
@@ -7553,6 +7581,9 @@ const I18N = {
     loc_manage_applied_toast: 'Дүкөн {n} орунга дайындалды',
     cat_product_sheet_title: 'Каталог товары',
     photo_add_hint: 'Сүрөт кошуу',
+    photo_source_prompt: 'Сүрөттү кантип кошосуз?',
+    photo_source_camera: 'Камера',
+    photo_source_gallery: 'Галерея',
     photo_remove_aria: 'Сүрөттү өчүрүү',
     photo_need_sync: 'Алгач булут синхрондоштурууну тууралаңыз — сүрөттөр ошол жерде сакталат',
     cat_product_edit_title: 'Товарды түзөтүү',
@@ -8025,6 +8056,7 @@ const I18N = {
     aria_store_actions: 'Амалҳо',
     aria_drag: 'Кашидан',
     aria_edit_item: 'Таҳрир',
+    aria_view_photo: 'Дидани акс',
     aria_bought: 'Харида шуд',
 
     store_menu_add_item: 'Илова кардани маҳсулот',
@@ -8144,6 +8176,9 @@ const I18N = {
     loc_manage_applied_toast: 'Мағоза ба {n} ҷой таъин шуд',
     cat_product_sheet_title: 'Маҳсулоти каталог',
     photo_add_hint: 'Илова кардани акс',
+    photo_source_prompt: 'Чӣ тавр акс илова мекунед?',
+    photo_source_camera: 'Камера',
+    photo_source_gallery: 'Галерея',
     photo_remove_aria: 'Нест кардани акс',
     photo_need_sync: 'Аввал синхронизатсияи абрро танзим кунед — аксҳо дар он ҷо нигоҳ дошта мешаванд',
     cat_product_edit_title: 'Таҳрири маҳсулот',
@@ -8616,6 +8651,7 @@ const I18N = {
     aria_store_actions: 'მოქმედებები',
     aria_drag: 'გადათრევა',
     aria_edit_item: 'რედაქტირება',
+    aria_view_photo: 'ფოტოს ნახვა',
     aria_bought: 'ნაყიდი',
 
     store_menu_add_item: 'პროდუქტის დამატება',
@@ -8735,6 +8771,9 @@ const I18N = {
     loc_manage_applied_toast: 'მაღაზია მიენიჭა {n} ადგილს',
     cat_product_sheet_title: 'კატალოგის პროდუქტი',
     photo_add_hint: 'ფოტოს დამატება',
+    photo_source_prompt: 'როგორ დაამატებთ ფოტოს?',
+    photo_source_camera: 'კამერა',
+    photo_source_gallery: 'გალერეა',
     photo_remove_aria: 'ფოტოს წაშლა',
     photo_need_sync: 'ჯერ დააყენეთ ღრუბლოვანი სინქრონიზაცია — ფოტოები იქ ინახება',
     cat_product_edit_title: 'პროდუქტის რედაქტირება',
@@ -9207,6 +9246,7 @@ const I18N = {
     aria_store_actions: 'Գործողություններ',
     aria_drag: 'Տեղափոխել',
     aria_edit_item: 'Խմբագրել',
+    aria_view_photo: 'Դիտել լուսանկարը',
     aria_bought: 'Գնված',
 
     store_menu_add_item: 'Ավելացնել ապրանք',
@@ -9326,6 +9366,9 @@ const I18N = {
     loc_manage_applied_toast: 'Խանութը նշանակվեց {n} վայրի',
     cat_product_sheet_title: 'Կատալոգի ապրանք',
     photo_add_hint: 'Ավելացնել լուսանկար',
+    photo_source_prompt: 'Ինչպե՞ս ավելացնել լուսանկարը',
+    photo_source_camera: 'Տեսախցիկ',
+    photo_source_gallery: 'Պատկերասրահ',
     photo_remove_aria: 'Հեռացնել լուսանկարը',
     photo_need_sync: 'Նախ կարգավորեք ամպային համաժամեցումը — լուսանկարները պահվում են այնտեղ',
     cat_product_edit_title: 'Խմբագրել ապրանքը',
@@ -9798,6 +9841,7 @@ const I18N = {
     aria_store_actions: 'Аусқәа',
     aria_drag: 'Аҵыхра',
     aria_edit_item: 'Ԥсахра',
+    aria_view_photo: 'Асахьа аҭаара',
     aria_bought: 'Аиуит',
 
     store_menu_add_item: 'Апродукт алышәх',
@@ -9917,6 +9961,9 @@ const I18N = {
     loc_manage_applied_toast: 'Амарҭаққа {n} аҭыԥ рзы иашьҭыз',
     cat_product_sheet_title: 'Акаталог апродукт',
     photo_add_hint: 'Асахьа аҵакы',
+    photo_source_prompt: 'Ишәа ишеиуоу асахьа аҵакы?',
+    photo_source_camera: 'Акамера',
+    photo_source_gallery: 'Агалерея',
     photo_remove_aria: 'Асахьа алҵра',
     photo_need_sync: 'Раҧхьа адыхьчаз асинхронизациа рҭагылазаашьа — асахьақәа убри аҟны еихьчоуп',
     cat_product_edit_title: 'Апродукт аԥсахра',
@@ -10879,15 +10926,11 @@ function itemRowHTML(sid, it) {
       <span class="box"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 12.5l5 5 10-11"/></svg></span>
     </button>
     ${itemThumbHTML(it)}
-    <button class="check-thumb" onclick="toggleItem('${sid}','${it.id}')" aria-label="${t('aria_bought')}">
-      ${it.photoId ? `
-      <span class="thumb-photo">
-        <img src="${photoDisplayUrl(it.photoId, 90)}" alt="">
-        <span class="thumb-badge"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 12.5l5 5 10-11"/></svg></span>
-      </span>` : `
-      <span class="box"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 12.5l5 5 10-11"/></svg></span>`}
-    </button>
-    <div class="item-body" onclick="openItemSheet('${sid}','${it.id}')">
+    ${it.photoId ? `
+    <button class="check-thumb" onclick="event.stopPropagation();openPhotoViewer('${it.photoId}')" aria-label="${t('aria_view_photo')}">
+      <img src="${photoDisplayUrl(it.photoId, 90)}" alt="">
+    </button>` : ''}
+    <div class="item-body" onclick="toggleItem('${sid}','${it.id}')">
       <div class="item-name">${esc(it.name)}</div>
       ${it.note ? `<div class="item-note">${esc(it.note)}</div>` : ''}
       <div class="item-meta"><span>${fmt(it.qty)} × ${fmt(it.price)} ${currSym()}</span>${it.loc ? `<span class="loc-badge ${groupMode === 'loc' ? 'active' : ''}" onclick="event.stopPropagation();toggleGroupMode()">${esc(it.loc)}</span>` : ''}${badge}</div>
@@ -11566,6 +11609,14 @@ function payloadStats(s) {
     size: s ? JSON.stringify(s).length : 0
   };
 }
+// «нечего терять» на этом устройстве или уже есть реальный контент? Не по размеру
+// JSON (пустой стейт по умолчанию и так не нулевой), а по факту: товары в списках,
+// больше одного списка, что-то в каталоге
+function localHasMeaningfulData() {
+  const itemsInLists = state.lists.reduce((sum, l) =>
+    sum + (((l.data && l.data.stores) || []).reduce((s2, st) => s2 + st.items.length, 0)), 0);
+  return state.lists.length > 1 || itemsInLists > 0 || state.catalogDB.products.length > 0;
+}
 function syncUpload(silent) {
   const creds = silent
     ? (syncState().login && syncState().pin && syncState().url ? syncState() : null)
@@ -11655,6 +11706,15 @@ function checkRemoteUpdates(showUi) {
       if (!res.payload || !res.at) { if (showUi) syncBootHide(); return; }
       // строки ISO дат сравниваются лексикографически корректно
       if (s.last && res.at <= s.last) { if (showUi) syncBootSuccess(); return; } // уже актуально
+      // s.last ещё не установлен — на этом устройстве не было завершённой синхронизации
+      // (например, только что настроили облако или сбросились права). Раньше в этом
+      // случае облако принималось без раздумий — а если тут же, до первой синхронизации,
+      // успели создать список/товар/фото, эти правки тихо стирались. Теперь сначала
+      // проверяем, есть ли вообще что терять — сравнение по «сырому» размеру тут не
+      // подходит (пустой стейт по умолчанию и так весит сотни символов служебных полей),
+      // поэтому смотрим на реальное содержимое: список с товарами внутри, больше одного
+      // списка или что-то в каталоге — явно не «нечего терять»
+      if (!s.last && localHasMeaningfulData()) { if (showUi) syncBootHide(); return; }
       applyRemotePayload(res.payload, creds, res.at);
       if (showUi) syncBootSuccess(); else toast(t('remote_update_applied'));
     })
@@ -13063,8 +13123,12 @@ function catProdPhotoTileClick() {
   if (catProdPhotoBusy) return;
   const s = syncState();
   if (!s.login || !s.pin) { toast(t('photo_need_sync')); return; }
-  document.getElementById('catProdPhotoInput').value = '';
-  document.getElementById('catProdPhotoInput').click();
+  // на телефоне обычный <input type=file> не всегда честно предлагает камеру в списке
+  // выбора (зависит от браузера) — поэтому спрашиваем явно, каким способом фотографировать
+  aiSay(t('photo_source_prompt'), [
+    { label: t('photo_source_camera'), pri: true, fn: () => { document.getElementById('catProdPhotoInputCam').value = ''; document.getElementById('catProdPhotoInputCam').click(); } },
+    { label: t('photo_source_gallery'), fn: () => { document.getElementById('catProdPhotoInput').value = ''; document.getElementById('catProdPhotoInput').click(); } }
+  ]);
 }
 function removeCatProdPhoto() {
   if (catProdPhotoBusy) return;
