@@ -386,13 +386,37 @@ input,select{font-family:inherit}
   width:48px;height:52px;border:none;background:none;cursor:pointer;flex:none;
   display:flex;align-items:center;justify-content:center;
 }
-.check .box{
+.check .box, .check-thumb .box{
   width:26px;height:26px;border-radius:9px;border:2px solid #CBD5E1;background:#fff;
   display:flex;align-items:center;justify-content:center;transition:all .18s;
 }
-.check .box svg{opacity:0;transform:scale(.4);transition:all .18s}
-.item-row.done .check .box{background:var(--green);border-color:var(--green)}
-.item-row.done .check .box svg{opacity:1;transform:scale(1)}
+.check .box svg, .check-thumb .box svg{opacity:0;transform:scale(.4);transition:all .18s}
+.item-row.done .check .box, .item-row.done .check-thumb .box{background:var(--green);border-color:var(--green)}
+.item-row.done .check .box svg, .item-row.done .check-thumb .box svg{opacity:1;transform:scale(1)}
+/* мобильный вариант строки списка: чекбокс заменён на фото/миниатюру товара —
+   тап по ней отмечает купленным так же, как раньше тап по чекбоксу; ручка
+   перетаскивания убрана (на телефоне и так тесно), справа компактная кнопка
+   редактирования на её месте. На десктопе (см. медиа-запрос ниже) — как было. */
+.item-row .check{display:none}
+.item-row .item-thumb{display:none}
+.check-thumb{
+  width:44px;height:52px;border:none;background:none;cursor:pointer;flex:none;
+  display:flex;align-items:center;justify-content:center;padding:0;
+}
+.check-thumb .thumb-photo{width:38px;height:38px;border-radius:11px;overflow:hidden;position:relative;flex:none}
+.check-thumb .thumb-photo img{width:100%;height:100%;object-fit:cover;display:block;transition:filter .18s}
+.item-row.done .check-thumb .thumb-photo img{filter:grayscale(.65) brightness(.8)}
+.check-thumb .thumb-badge{
+  position:absolute;right:-3px;bottom:-3px;width:17px;height:17px;border-radius:50%;
+  background:var(--green);border:2px solid #fff;display:flex;align-items:center;justify-content:center;
+  opacity:0;transform:scale(.3);transition:all .18s;
+}
+.item-row.done .check-thumb .thumb-badge{opacity:1;transform:scale(1)}
+.item-edit-btn{
+  width:34px;height:52px;border:none;background:none;cursor:pointer;flex:none;color:var(--muted);
+  display:flex;align-items:center;justify-content:center;
+}
+.item-row .drag-handle{display:none}
 .item-body{flex:1;min-width:0;padding:10px 4px;cursor:pointer}
 .item-name{font-size:15.5px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;transition:color .2s}
 .item-meta{font-size:12.5px;color:var(--muted);margin-top:2px;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
@@ -549,6 +573,17 @@ label.sku-check{display:flex;align-items:center;gap:6px;font-size:11.5px;font-we
 }
 .photo-viewer.show{display:flex}
 .photo-viewer img{max-width:100%;max-height:100%;border-radius:16px;object-fit:contain}
+.cp-primary{display:flex;gap:14px;align-items:flex-start}
+.cp-primary .photo-tile{margin:0}
+.cp-primary-fields{flex:1;min-width:0;display:flex;flex-direction:column}
+.cp-more-toggle{
+  display:flex;align-items:center;gap:6px;width:100%;border:none;background:none;cursor:pointer;
+  padding:8px 2px 14px;color:var(--accent);font-size:13.5px;font-weight:700;
+}
+.cp-more-toggle .chev{margin-left:auto;transition:transform .2s}
+.cp-more-toggle.open .chev{transform:rotate(180deg)}
+.cp-more{display:none}
+.cp-more.open{display:block}
 
 .stepper{display:flex;align-items:center;gap:8px}
 .stepper button{
@@ -1167,6 +1202,13 @@ input[type=file]{display:none}
   .snackbar{bottom:44px}
   .donut-wrap{width:170px;height:170px}
   .donut-center{inset:35px}
+  /* на десктопе места достаточно — оставляем чекбокс и перетаскивание как есть,
+     мобильные фото-чекбокс и компактную кнопку редактирования прячем */
+  .item-row .check{display:flex}
+  .item-row .item-thumb{display:inline-block}
+  .item-row .drag-handle{display:flex}
+  .item-row .check-thumb{display:none}
+  .item-row .item-edit-btn{display:none}
 }
 </style>
 </head>
@@ -1833,19 +1875,23 @@ input[type=file]{display:none}
       <button class="icon-btn" id="catProdFavBtn" onclick="toggleFavorite(catEditProductId)" aria-label="Избранное" data-i18n-aria="aria_favorite" style="width:38px;height:38px;border-radius:12px"></button>
     </div>
     <input type="file" id="catProdPhotoInput" accept="image/*" style="display:none" onchange="onCatProdPhotoSelected(event)">
-    <div class="photo-tile" id="catProdPhotoTile" onclick="catProdPhotoTileClick()"></div>
-    <div class="field">
-      <label data-i18n="field_name">Название</label>
-      <input id="catProdName" type="text" placeholder="Например: Молоко 3,2%" data-i18n-ph="catprod_name_ph" autocomplete="off" oninput="renderCatHint('catalog')">
-    </div>
-    <div class="field-row">
-      <div class="field">
-        <label data-i18n-cur="lbl_catprod_price">Цена закупки, ₽</label>
-        <input id="catProdPrice" type="number" inputmode="decimal" min="0" step="any" placeholder="0">
-      </div>
-      <div class="field">
-        <label data-i18n="field_category">Категория</label>
-        <select id="catProdCategory" onchange="onCatProdCategoryChange();renderCatHint('catalog')"></select>
+    <div class="cp-primary">
+      <div class="photo-tile" id="catProdPhotoTile" onclick="catProdPhotoTileClick()"></div>
+      <div class="cp-primary-fields">
+        <div class="field">
+          <label data-i18n="field_name">Название</label>
+          <input id="catProdName" type="text" placeholder="Например: Молоко 3,2%" data-i18n-ph="catprod_name_ph" autocomplete="off" oninput="renderCatHint('catalog')">
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label data-i18n-cur="lbl_catprod_price">Цена закупки, ₽</label>
+            <input id="catProdPrice" type="number" inputmode="decimal" min="0" step="any" placeholder="0">
+          </div>
+          <div class="field">
+            <label data-i18n="field_category">Категория</label>
+            <select id="catProdCategory" onchange="onCatProdCategoryChange();renderCatHint('catalog')"></select>
+          </div>
+        </div>
       </div>
     </div>
     <div class="cat-hint" id="catProdCatHint" style="display:none"></div>
@@ -1853,31 +1899,37 @@ input[type=file]{display:none}
       <label data-i18n="catprod_newcat_label">Название новой категории</label>
       <input id="catProdNewCat" type="text" placeholder="Например: Молочка" data-i18n-ph="catprod_newcat_ph" autocomplete="off">
     </div>
-    <div class="field">
-      <label data-i18n="field_location">Место (ряд, полка)</label>
-      <div class="chips" id="catProdLocChips"></div>
-      <div style="display:flex;gap:8px">
-        <input id="catProdLoc" type="text" placeholder="Например: 2Г, линия 2А" data-i18n-ph="field_location_ph" autocomplete="off" oninput="renderCatProdLocChips();refreshCatProdLocStore()" style="flex:1.3;min-width:0">
-        <select id="catProdLocStore" onchange="onCatProdLocStoreChange()" style="flex:1;min-width:0"></select>
-      </div>
-    </div>
-    <div class="field-row">
+    <button type="button" class="cp-more-toggle" id="catProdMoreToggle" onclick="toggleCatProdMore()">
+      <span data-i18n="catprod_more_toggle">Ещё параметры</span>
+      <svg class="chev" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+    </button>
+    <div class="cp-more" id="catProdMore">
       <div class="field">
-        <label data-i18n="field_pack">Пачка, шт.</label>
-        <input id="catProdPack" type="number" inputmode="decimal" min="1" step="any" placeholder="1">
+        <label data-i18n="field_location">Место (ряд, полка)</label>
+        <div class="chips" id="catProdLocChips"></div>
+        <div style="display:flex;gap:8px">
+          <input id="catProdLoc" type="text" placeholder="Например: 2Г, линия 2А" data-i18n-ph="field_location_ph" autocomplete="off" oninput="renderCatProdLocChips();refreshCatProdLocStore()" style="flex:1.3;min-width:0">
+          <select id="catProdLocStore" onchange="onCatProdLocStoreChange()" style="flex:1;min-width:0"></select>
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label data-i18n="field_pack">Пачка, шт.</label>
+          <input id="catProdPack" type="number" inputmode="decimal" min="1" step="any" placeholder="1">
+        </div>
+        <div class="field">
+          <label data-i18n="field_note">Примечание</label>
+          <input id="catProdNote" type="text" placeholder="Например: 48-56, чёрный" data-i18n-ph="field_note_ph" autocomplete="off">
+        </div>
       </div>
       <div class="field">
-        <label data-i18n="field_note">Примечание</label>
-        <input id="catProdNote" type="text" placeholder="Например: 48-56, чёрный" data-i18n-ph="field_note_ph" autocomplete="off">
+        <div class="sku-head">
+          <label data-i18n="field_id_label">ID / номер товара в кассе</label>
+          <label class="sku-check"><input type="checkbox" id="catProdSkuOn" onchange="toggleCatProdSku(this.checked)"><span class="sku-box"></span><span data-i18n="field_id_use">Использовать</span></label>
+        </div>
+        <input id="catProdSku" type="text" inputmode="numeric" placeholder="Например: 10234" data-i18n-ph="field_id_ph" autocomplete="off" oninput="onCatProdSkuInput()">
+        <div class="sku-warn" id="catProdSkuWarn" data-i18n="field_id_dup_warn">Такой ID уже есть</div>
       </div>
-    </div>
-    <div class="field">
-      <div class="sku-head">
-        <label data-i18n="field_id_label">ID / номер товара в кассе</label>
-        <label class="sku-check"><input type="checkbox" id="catProdSkuOn" onchange="toggleCatProdSku(this.checked)"><span class="sku-box"></span><span data-i18n="field_id_use">Использовать</span></label>
-      </div>
-      <input id="catProdSku" type="text" inputmode="numeric" placeholder="Например: 10234" data-i18n-ph="field_id_ph" autocomplete="off" oninput="onCatProdSkuInput()">
-      <div class="sku-warn" id="catProdSkuWarn" data-i18n="field_id_dup_warn">Такой ID уже есть</div>
     </div>
     <button class="btn btn-primary" id="catProdSaveBtn" onclick="saveCatProduct()" data-i18n="btn_add">Добавить</button>
     <button class="btn btn-ghost" id="catProdPrintBtn" onclick="printLabel(catEditProductId)" style="display:none">
@@ -2649,6 +2701,7 @@ const I18N = {
     store_add_item_btn: 'Товар',
     aria_store_actions: 'Действия',
     aria_drag: 'Перетащить',
+    aria_edit_item: 'Редактировать',
     aria_bought: 'Куплено',
 
     store_menu_add_item: 'Добавить товар',
@@ -2690,6 +2743,7 @@ const I18N = {
     field_id_use: 'Использовать',
     field_id_ph: 'Например: 10234',
     field_id_dup_warn: 'Такой ID уже есть',
+    catprod_more_toggle: 'Ещё параметры',
     field_store: 'Магазин',
     item_delete_btn: 'Удалить товар',
     item_deleted_snack: '«{name}» удалён',
@@ -3240,6 +3294,7 @@ const I18N = {
     store_add_item_btn: 'Item',
     aria_store_actions: 'Actions',
     aria_drag: 'Drag',
+    aria_edit_item: 'Edit',
     aria_bought: 'Bought',
 
     store_menu_add_item: 'Add item',
@@ -3281,6 +3336,7 @@ const I18N = {
     field_id_use: 'Use',
     field_id_ph: 'E.g.: 10234',
     field_id_dup_warn: 'This ID is already used',
+    catprod_more_toggle: 'More options',
     field_store: 'Store',
     item_delete_btn: 'Delete item',
     item_deleted_snack: '«{name}» deleted',
@@ -3831,6 +3887,7 @@ const I18N = {
     store_add_item_btn: 'Artikel',
     aria_store_actions: 'Aktionen',
     aria_drag: 'Verschieben',
+    aria_edit_item: 'Bearbeiten',
     aria_bought: 'Gekauft',
 
     store_menu_add_item: 'Artikel hinzufügen',
@@ -3872,6 +3929,7 @@ const I18N = {
     field_id_use: 'Verwenden',
     field_id_ph: 'Z. B.: 10234',
     field_id_dup_warn: 'Diese ID wird bereits verwendet',
+    catprod_more_toggle: 'Weitere Optionen',
     field_store: 'Laden',
     item_delete_btn: 'Artikel löschen',
     item_deleted_snack: '"{name}" gelöscht',
@@ -4420,6 +4478,7 @@ const I18N = {
     store_add_item_btn: 'Artículo',
     aria_store_actions: 'Acciones',
     aria_drag: 'Arrastrar',
+    aria_edit_item: 'Editar',
     aria_bought: 'Comprado',
 
     store_menu_add_item: 'Añadir artículo',
@@ -4461,6 +4520,7 @@ const I18N = {
     field_id_use: 'Usar',
     field_id_ph: 'Ej.: 10234',
     field_id_dup_warn: 'Este ID ya está en uso',
+    catprod_more_toggle: 'Más opciones',
     field_store: 'Tienda',
     item_delete_btn: 'Eliminar artículo',
     item_deleted_snack: '"{name}" eliminado',
@@ -5009,6 +5069,7 @@ const I18N = {
     store_add_item_btn: 'Article',
     aria_store_actions: 'Actions',
     aria_drag: 'Déplacer',
+    aria_edit_item: 'Modifier',
     aria_bought: 'Acheté',
 
     store_menu_add_item: 'Ajouter un article',
@@ -5050,6 +5111,7 @@ const I18N = {
     field_id_use: 'Utiliser',
     field_id_ph: 'Ex. : 10234',
     field_id_dup_warn: 'Cet ID est déjà utilisé',
+    catprod_more_toggle: 'Plus d\'options',
     field_store: 'Magasin',
     item_delete_btn: 'Supprimer l’article',
     item_deleted_snack: '"{name}" supprimé',
@@ -5598,6 +5660,7 @@ const I18N = {
     store_add_item_btn: '商品',
     aria_store_actions: '操作',
     aria_drag: '拖动',
+    aria_edit_item: '编辑',
     aria_bought: '已购买',
 
     store_menu_add_item: '添加商品',
@@ -5639,6 +5702,7 @@ const I18N = {
     field_id_use: '使用',
     field_id_ph: '例如：10234',
     field_id_dup_warn: '此ID已被使用',
+    catprod_more_toggle: '更多选项',
     field_store: '商店',
     item_delete_btn: '删除商品',
     item_deleted_snack: '"{name}"已删除',
@@ -6187,6 +6251,7 @@ const I18N = {
     store_add_item_btn: 'Sản phẩm',
     aria_store_actions: 'Thao tác',
     aria_drag: 'Kéo',
+    aria_edit_item: 'Chỉnh sửa',
     aria_bought: 'Đã mua',
 
     store_menu_add_item: 'Thêm sản phẩm',
@@ -6228,6 +6293,7 @@ const I18N = {
     field_id_use: 'Dùng',
     field_id_ph: 'VD: 10234',
     field_id_dup_warn: 'ID này đã được sử dụng',
+    catprod_more_toggle: 'Thêm tùy chọn',
     field_store: 'Cửa hàng',
     item_delete_btn: 'Xóa sản phẩm',
     item_deleted_snack: 'Đã xóa "{name}"',
@@ -6776,6 +6842,7 @@ const I18N = {
     store_add_item_btn: 'Mahsulot',
     aria_store_actions: 'Amallar',
     aria_drag: 'Surish',
+    aria_edit_item: 'Tahrirlash',
     aria_bought: 'Sotib olingan',
 
     store_menu_add_item: 'Mahsulot qo‘shish',
@@ -6817,6 +6884,7 @@ const I18N = {
     field_id_use: 'Ishlatish',
     field_id_ph: 'Masalan: 10234',
     field_id_dup_warn: 'Bu ID allaqachon ishlatilgan',
+    catprod_more_toggle: 'Yana parametrlar',
     field_store: 'Do‘kon',
     item_delete_btn: 'Mahsulotni o‘chirish',
     item_deleted_snack: '"{name}" o‘chirildi',
@@ -7365,6 +7433,7 @@ const I18N = {
     store_add_item_btn: 'Товар',
     aria_store_actions: 'Аракеттер',
     aria_drag: 'Жылдыруу',
+    aria_edit_item: 'Түзөтүү',
     aria_bought: 'Сатылып алынды',
 
     store_menu_add_item: 'Товар кошуу',
@@ -7406,6 +7475,7 @@ const I18N = {
     field_id_use: 'Колдонуу',
     field_id_ph: 'Мисалы: 10234',
     field_id_dup_warn: 'Бул ID мурунтан эле колдонулган',
+    catprod_more_toggle: 'Дагы параметрлер',
     field_store: 'Дүкөн',
     item_delete_btn: 'Товарды өчүрүү',
     item_deleted_snack: '"{name}" өчүрүлдү',
@@ -7954,6 +8024,7 @@ const I18N = {
     store_add_item_btn: 'Маҳсулот',
     aria_store_actions: 'Амалҳо',
     aria_drag: 'Кашидан',
+    aria_edit_item: 'Таҳрир',
     aria_bought: 'Харида шуд',
 
     store_menu_add_item: 'Илова кардани маҳсулот',
@@ -7995,6 +8066,7 @@ const I18N = {
     field_id_use: 'Истифода',
     field_id_ph: 'Масалан: 10234',
     field_id_dup_warn: 'Ин ID аллакай истифода шудааст',
+    catprod_more_toggle: 'Танзимоти иловагӣ',
     field_store: 'Мағоза',
     item_delete_btn: 'Нест кардани маҳсулот',
     item_deleted_snack: '"{name}" нест карда шуд',
@@ -8543,6 +8615,7 @@ const I18N = {
     store_add_item_btn: 'პროდუქტი',
     aria_store_actions: 'მოქმედებები',
     aria_drag: 'გადათრევა',
+    aria_edit_item: 'რედაქტირება',
     aria_bought: 'ნაყიდი',
 
     store_menu_add_item: 'პროდუქტის დამატება',
@@ -8584,6 +8657,7 @@ const I18N = {
     field_id_use: 'გამოყენება',
     field_id_ph: 'მაგ.: 10234',
     field_id_dup_warn: 'ეს ID უკვე გამოყენებულია',
+    catprod_more_toggle: 'მეტი პარამეტრი',
     field_store: 'მაღაზია',
     item_delete_btn: 'პროდუქტის წაშლა',
     item_deleted_snack: '"{name}" წაიშალა',
@@ -9132,6 +9206,7 @@ const I18N = {
     store_add_item_btn: 'Ապրանք',
     aria_store_actions: 'Գործողություններ',
     aria_drag: 'Տեղափոխել',
+    aria_edit_item: 'Խմբագրել',
     aria_bought: 'Գնված',
 
     store_menu_add_item: 'Ավելացնել ապրանք',
@@ -9173,6 +9248,7 @@ const I18N = {
     field_id_use: 'Օգտագործել',
     field_id_ph: 'Օր.՝ 10234',
     field_id_dup_warn: 'Այս ID-ն արդեն օգտագործվում է',
+    catprod_more_toggle: 'Ավելի շատ ընտրանքներ',
     field_store: 'Խանութ',
     item_delete_btn: 'Ջնջել ապրանքը',
     item_deleted_snack: '«{name}»-ը ջնջվեց',
@@ -9721,6 +9797,7 @@ const I18N = {
     store_add_item_btn: 'Апродукт',
     aria_store_actions: 'Аусқәа',
     aria_drag: 'Аҵыхра',
+    aria_edit_item: 'Ԥсахра',
     aria_bought: 'Аиуит',
 
     store_menu_add_item: 'Апродукт алышәх',
@@ -9762,6 +9839,7 @@ const I18N = {
     field_id_use: 'Ахархәара',
     field_id_ph: 'Абра: 10234',
     field_id_dup_warn: 'Ари ID хазы иҟоуп',
+    catprod_more_toggle: 'Аҵаира апараметрқәа',
     field_store: 'Амаркет',
     item_delete_btn: 'Апродукт ахкра',
     item_deleted_snack: '"{name}" ахкыз',
@@ -10801,6 +10879,14 @@ function itemRowHTML(sid, it) {
       <span class="box"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 12.5l5 5 10-11"/></svg></span>
     </button>
     ${itemThumbHTML(it)}
+    <button class="check-thumb" onclick="toggleItem('${sid}','${it.id}')" aria-label="${t('aria_bought')}">
+      ${it.photoId ? `
+      <span class="thumb-photo">
+        <img src="${photoDisplayUrl(it.photoId, 90)}" alt="">
+        <span class="thumb-badge"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 12.5l5 5 10-11"/></svg></span>
+      </span>` : `
+      <span class="box"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 12.5l5 5 10-11"/></svg></span>`}
+    </button>
     <div class="item-body" onclick="openItemSheet('${sid}','${it.id}')">
       <div class="item-name">${esc(it.name)}</div>
       ${it.note ? `<div class="item-note">${esc(it.note)}</div>` : ''}
@@ -10809,6 +10895,9 @@ function itemRowHTML(sid, it) {
     <span class="item-total ${sum < 0 ? 'neg' : ''}">${money(sum)}</span>
     <button class="drag-handle" aria-label="${t('aria_drag')}">
       <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor"><circle cx="9" cy="6" r="1.7"/><circle cx="15" cy="6" r="1.7"/><circle cx="9" cy="12" r="1.7"/><circle cx="15" cy="12" r="1.7"/><circle cx="9" cy="18" r="1.7"/><circle cx="15" cy="18" r="1.7"/></svg>
+    </button>
+    <button class="item-edit-btn" onclick="event.stopPropagation();openItemSheet('${sid}','${it.id}')" aria-label="${t('aria_edit_item')}">
+      ${ic('pencil', 15)}
     </button>
   </div>`;
 }
@@ -13071,6 +13160,7 @@ function openCatProductSheet(id) {
   onCatProdCategoryChange();
   renderCatHint('catalog');
   onCatProdSkuInput();
+  toggleCatProdMore(!!(p && (p.loc || p.sku || p.pack > 1 || p.note)));
   document.getElementById('catProdSaveBtn').disabled = false;
   openSheet('catProductSheet');
   if (!p) setTimeout(() => document.getElementById('catProdName').focus(), 320);
@@ -13078,6 +13168,16 @@ function openCatProductSheet(id) {
 function onCatProdCategoryChange() {
   const isNew = document.getElementById('catProdCategory').value === '__new';
   document.getElementById('catProdNewCatField').style.display = isNew ? 'block' : 'none';
+}
+// второстепенные поля (место, пачка, примечание, ID) спрятаны по умолчанию — при
+// создании нового товара это лишний шум, а при редактировании уже заполненного
+// открываем их сразу, чтобы не потерять из виду то, что там есть
+function toggleCatProdMore(forceOpen) {
+  const body = document.getElementById('catProdMore');
+  const btn = document.getElementById('catProdMoreToggle');
+  const open = typeof forceOpen === 'boolean' ? forceOpen : !body.classList.contains('open');
+  body.classList.toggle('open', open);
+  btn.classList.toggle('open', open);
 }
 function renderCatProdLocChips() {
   const cur = document.getElementById('catProdLoc').value.trim();
