@@ -2566,7 +2566,14 @@ function sanitizeCatalogDB(s) {
     p.pack = +p.pack > 1 ? +p.pack : 1;
     p.note = p.note || '';
     p.photoId = p.photoId || null;
+    // отметка времени правки товара — без неё синхронизация между устройствами не
+    // может понять, чья версия карточки свежее, и вынуждена гадать по объёму данных
+    p.updatedAt = +p.updatedAt || 0;
   });
+  // отметки времени удаления товаров — чтобы устаревшая копия с другого устройства
+  // не «воскрешала» то, что уже удалили в другом месте
+  s.catalogDB.deletedProducts = (s.catalogDB.deletedProducts && typeof s.catalogDB.deletedProducts === 'object' && !Array.isArray(s.catalogDB.deletedProducts))
+    ? s.catalogDB.deletedProducts : {};
 
   // единый справочник магазинов (код + полное название) — общий для магазинов в списках закупок
   // и для мест каталога, чтобы, например, LUB в любом списке и LUB в местах товара были одним
@@ -11732,16 +11739,35 @@ function syncCall(creds, action, payload, force) {
 }
 
 // общая логика выгрузки — и ручная кнопка «Облако», и ИИ-ассистент шлют данные одним и тем же путём.
-// force=true пропускает и клиентскую, и серверную проверку на потерю данных — используется
-// только после явного подтверждения человеком в диалоге предупреждения
-function performUpload(creds, force) {
-  const payload = JSON.parse(JSON.stringify(state));
-  delete payload.sync; // PIN не кладём в сами данные
-  return syncCall(creds, 'save', payload, force).then(res => {
-    syncState().last = res.at;
-    save(); renderSyncStatusSafe();
-    return res;
-  });
+// force=true пропускает серверную проверку на потерю данных — используется автоматикой
+// (например, "облако выглядит как чужое устаревшее пересохранение" в autoSyncNow), когда
+// решение принимает сама логика, а не человек. skipCatalogMerge=true — отдельный,
+// более редкий случай: человек явно нажал "Всё равно заменить" в диалоге предупреждения,
+// который прямым текстом обещает "товары в каталоге: 30 → 0" — в этом случае мы обязаны
+// сделать ровно то, что обещали, а не тихо подмешать чужие товары обратно
+function performUpload(creds, force, skipCatalogMerge) {
+  const doSave = () => {
+    const payload = JSON.parse(JSON.stringify(state));
+    delete payload.sync; // PIN не кладём в сами данные
+    return syncCall(creds, 'save', payload, force).then(res => {
+      syncState().last = res.at;
+      save(); renderSyncStatusSafe();
+      return res;
+    });
+  };
+  if (skipCatalogMerge) return doSave();
+  // прежде чем что-то отправить — подтягиваем то, что прямо сейчас лежит в облаке,
+  // и вливаем правки каталога оттуда в локальные по каждому товару отдельно
+  // (см. mergeCatalogDB). Без этого шага отправка с этого устройства могла вслепую
+  // затереть в облаке более свежую правку с другого устройства, о которой это
+  // устройство просто ещё не знало — именно так пропадали фото товаров
+  return syncCall(creds, 'load').then(res => {
+    if (res && res.payload) {
+      sanitizeCatalogDB(res.payload);
+      state.catalogDB = mergeCatalogDB(state.catalogDB, res.payload.catalogDB);
+      save(true); render(); renderCatalog();
+    }
+  }).catch(() => {}).then(doSave);
 }
 // сколько списков/товаров каталога в payload — для понятного предупреждения
 // «в облаке данных больше, чем здесь» перед тем, как их заменить
@@ -11777,6 +11803,60 @@ function remoteLooksStaleAndSmaller(remotePayload) {
   const localWeight = contentWeight(state), remoteWeight = contentWeight(remotePayload);
   return localWeight > 0 && remoteWeight < localWeight * 0.5;
 }
+// настоящее слияние каталога товаров по каждой карточке отдельно, а не "чьё
+// устройство сохранилось последним" целиком документом. Раньше синхронизация
+// целиком заменяла state.catalogDB данными с сервера (или наоборот, целиком
+// перезаписывала сервер локальными) — если на телефоне только что добавили
+// фото в 10 карточек, а на компе в это время лежала чуть более старая копия
+// каталога (без этих фото) и он тоже дошёл до сохранения раньше или позже —
+// весь каталог целиком откатывался к той версии, что "победила" по времени,
+// и фото пропадали и на телефоне, и на компе, хотя правка реально была.
+// Здесь каждый товар сравнивается по своей метке времени: чья правка новее,
+// та и остаётся, независимо от того, что происходит с остальным документом.
+// Удаления помечаются отметкой времени (tombstone), чтобы устаревшая копия
+// с другого устройства не "воскрешала" то, что уже удалили в другом месте.
+function mergeCatalogDB(localDB, remoteDB) {
+  localDB = localDB || {};
+  remoteDB = remoteDB || {};
+  const tomb = {};
+  Object.entries(localDB.deletedProducts || {}).forEach(([id, t]) => { tomb[id] = +t || 0; });
+  Object.entries(remoteDB.deletedProducts || {}).forEach(([id, t]) => { tomb[id] = Math.max(tomb[id] || 0, +t || 0); });
+
+  const prodMap = new Map();
+  (localDB.products || []).forEach(p => prodMap.set(p.id, p));
+  (remoteDB.products || []).forEach(p => {
+    const cur = prodMap.get(p.id);
+    if (!cur) { prodMap.set(p.id, p); return; }
+    const curAt = +cur.updatedAt || 0, pAt = +p.updatedAt || 0;
+    // при полном равенстве меток (например, обе ещё нулевые — товар не трогали
+    // с момента введения updatedAt) отдаём предпочтение той версии, где есть фото,
+    // чтобы не потерять его просто из-за порядка слияния
+    if (pAt > curAt || (pAt === curAt && !cur.photoId && p.photoId)) prodMap.set(p.id, p);
+  });
+  const products = [...prodMap.values()].filter(p => (tomb[p.id] || 0) <= (+p.updatedAt || 0));
+
+  const catMap = new Map();
+  (localDB.categories || []).forEach(c => catMap.set(c.id, c));
+  (remoteDB.categories || []).forEach(c => catMap.set(c.id, c));
+
+  // справочник "место -> магазин" — та же логика объединения по id, что и для
+  // категорий: это лёгкий, редко конфликтующий справочник, не пользовательский
+  // контент вроде фото, поэтому полноценные метки времени тут избыточны
+  const locMap = new Map();
+  (localDB.locations || []).forEach(l => locMap.set(l.id, l));
+  (remoteDB.locations || []).forEach(l => locMap.set(l.id, l));
+
+  // на случай появления в будущем ещё каких-то полей catalogDB, о которых это
+  // слияние не знает явно — не роняем их молча, а сохраняем хоть чью-то версию
+  // вместо того, чтобы полностью потерять при слиянии
+  return {
+    ...localDB, ...remoteDB,
+    categories: [...catMap.values()],
+    products,
+    deletedProducts: tomb,
+    locations: [...locMap.values()]
+  };
+}
 function syncUpload(silent) {
   const creds = silent
     ? (syncState().login && syncState().pin && syncState().url ? syncState() : null)
@@ -11808,7 +11888,10 @@ function syncUpload(silent) {
 function doUploadNow(creds, force) {
   const btn = document.getElementById('syncUpBtn');
   btn.textContent = t('sync_uploading_btn'); btn.disabled = true;
-  performUpload(creds, force)
+  // force здесь всегда означает явное подтверждение человеком диалога "Опасно!" —
+  // тот прямо обещает, сколько товаров каталога будет потеряно, так что в этом
+  // единственном месте отключаем слияние каталога и делаем ровно то, что обещали
+  performUpload(creds, force, force)
     .then(() => { closeSheet('syncSheet'); stampShow(); setTimeout(() => aiSay(pickT('ai_ok'), [], 4200), 1500); })
     .catch(err => {
       const msg = String(err && err.message || err);
@@ -11832,6 +11915,12 @@ function doUploadNow(creds, force) {
 // общая логика применения скачанных данных — и ручная кнопка, и подсказка ИИ о новых данных
 function applyRemotePayload(payload, creds, at) {
   sanitizeCatalogDB(payload);
+  // каталог не заменяем целиком присланным с сервера — сливаем его с тем, что
+  // уже есть локально, по каждому товару отдельно (см. mergeCatalogDB), иначе
+  // применение "просто более новых по времени" данных с другого устройства
+  // могло стереть локальную правку (например, только что добавленное фото),
+  // которую то устройство ещё не видело
+  payload.catalogDB = mergeCatalogDB(state.catalogDB, payload.catalogDB);
   payload.sync = { login: creds.login, pin: creds.pin, url: creds.url, last: at };
   state = payload;
   if (!state.lists.some(l => l.id === state.currentId)) state.currentId = state.lists[0].id;
@@ -12382,12 +12471,13 @@ function finalizeShareAccept(id, share, creds, items) {
       existing.loc = it.loc || existing.loc;
       existing.pack = it.pack > 1 ? it.pack : 1;
       existing.note = it.note || '';
+      existing.updatedAt = Date.now();
       updated++;
     } else {
       state.catalogDB.products.push({
         id: uid(), name: it.name || '', price: +it.price || 0, categoryId: catId,
         loc: it.loc || '', sku, favorite: false, shareFrom: fromLogin,
-        pack: it.pack > 1 ? it.pack : 1, note: it.note || ''
+        pack: it.pack > 1 ? it.pack : 1, note: it.note || '', updatedAt: Date.now()
       });
       added++;
     }
@@ -12924,6 +13014,7 @@ function favStarSvg(on) {
 function toggleFavorite(id) {
   const p = prodById(id); if (!p) return;
   p.favorite = !p.favorite;
+  p.updatedAt = Date.now();
   save(); renderCatalog(); renderInv();
   const btn = document.getElementById('catProdFavBtn');
   if (btn && catEditProductId === id) btn.innerHTML = favStarSvg(p.favorite);
@@ -12952,10 +13043,11 @@ function upsertCatalogProduct(name, price, categoryId, loc, sku, pack, note) {
     if (sku) p.sku = sku;
     if (pack > 1) p.pack = pack;
     if (note) p.note = note;
+    p.updatedAt = Date.now();
   } else {
     state.catalogDB.products.push({
       id: uid(), name, price: +price || 0, categoryId: categoryId || null, loc: loc || '', sku: sku || '',
-      pack: pack > 1 ? pack : 1, note: note || ''
+      pack: pack > 1 ? pack : 1, note: note || '', updatedAt: Date.now()
     });
   }
 }
@@ -13192,7 +13284,7 @@ function renderCatBulkBar() {
 function applyCatBulkCategory() {
   if (!catSelectedIds.size) return;
   const categoryId = document.getElementById('catBulkCategorySelect').value || null;
-  catSelectedIds.forEach(id => { const p = prodById(id); if (p) p.categoryId = categoryId; });
+  catSelectedIds.forEach(id => { const p = prodById(id); if (p) { p.categoryId = categoryId; p.updatedAt = Date.now(); } });
   const n = catSelectedIds.size;
   save(); toggleCatSelectMode(); renderInv();
   toast(tf('cat_bulk_applied_toast', { n }));
@@ -13652,13 +13744,13 @@ function saveCatProduct() {
   if (catEditProductId) {
     const prod = prodById(catEditProductId);
     if (prod.photoId && prod.photoId !== photoId) deletePhotoRemote(prod.photoId);
-    Object.assign(prod, { name, price, categoryId, loc, sku, pack, note, photoId });
+    Object.assign(prod, { name, price, categoryId, loc, sku, pack, note, photoId, updatedAt: Date.now() });
     // карточка каталога — общий источник данных для всех позиций во всех списках,
     // куда этот товар уже добавляли: имя/цена/фото должны быть одинаковыми везде,
     // а не расходиться в зависимости от того, откуда в последний раз редактировали
     syncProductToListItems(catEditProductId);
   } else {
-    state.catalogDB.products.push({ id: uid(), name, price, categoryId, loc, sku, pack, note, photoId });
+    state.catalogDB.products.push({ id: uid(), name, price, categoryId, loc, sku, pack, note, photoId, updatedAt: Date.now() });
   }
   // открыли эту карточку из конкретной позиции списка — количество там своё, в
   // каталоге такого понятия нет, сохраняем его прямо в позицию
@@ -13682,6 +13774,9 @@ function deleteCatProduct() {
   const idx = state.catalogDB.products.findIndex(p => p.id === catEditProductId);
   if (idx === -1) { closeSheet('catProductSheet'); return; }
   const removed = state.catalogDB.products.splice(idx, 1)[0];
+  // отметка времени удаления — чтобы устаревшая копия каталога с другого
+  // устройства не "воскресила" этот товар при слиянии (см. mergeCatalogDB)
+  state.catalogDB.deletedProducts[removed.id] = Date.now();
   save(); renderCatalog(); renderInv(); closeSheet('catProductSheet');
   let undone = false;
   // фото с Диска чистим только если удаление не отменили через сникбар — иначе
@@ -13689,6 +13784,8 @@ function deleteCatProduct() {
   if (removed.photoId) setTimeout(() => { if (!undone) deletePhotoRemote(removed.photoId); }, 5200);
   snackbar(tf('cat_product_deleted_snack', { name: removed.name }), () => {
     undone = true;
+    delete state.catalogDB.deletedProducts[removed.id];
+    removed.updatedAt = Date.now();
     state.catalogDB.products.splice(Math.min(idx, state.catalogDB.products.length), 0, removed);
     save(); renderCatalog(); renderInv();
   });
@@ -13819,7 +13916,7 @@ function deleteCatCategory() {
   const idx = state.catalogDB.categories.findIndex(c => c.id === catEditCategoryId);
   if (idx === -1) { closeSheet('catCategorySheet'); return; }
   const removed = state.catalogDB.categories.splice(idx, 1)[0];
-  state.catalogDB.products.forEach(p => { if (p.categoryId === removed.id) p.categoryId = null; });
+  state.catalogDB.products.forEach(p => { if (p.categoryId === removed.id) { p.categoryId = null; p.updatedAt = Date.now(); } });
   if (catFilter === removed.id) catFilter = null;
   save(); renderCatalog(); closeSheet('catCategorySheet');
   toast(tf('cat_category_deleted_toast', { name: removed.name }));
