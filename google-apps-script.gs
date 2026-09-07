@@ -76,33 +76,53 @@ function doPost(e) {
       var row = findRow(sh, login);
 
       if (req.action === 'save') {
-        var json = JSON.stringify(req.payload || {});
+        var payload = req.payload || {};
+        var now = new Date().toISOString();
+        if (row === -1) {
+          // первый вход — регистрация: логин занимается, PIN фиксируется
+          var json0 = JSON.stringify(payload);
+          if (json0.length > CHUNK * MAXCH) return out({ ok: false, error: 'too_big' });
+          var chunks0 = [];
+          for (var i0 = 0; i0 < json0.length; i0 += CHUNK) chunks0.push(json0.slice(i0, i0 + CHUNK));
+          while (chunks0.length < MAXCH) chunks0.push('');
+          sh.appendRow([login, "'" + pin, now].concat(chunks0));
+          return out({ ok: true, at: now });
+        }
+        if (getPin(sh, row) !== pin) return out({ ok: false, error: 'wrong_pin' });
+        var existingVals = sh.getRange(row, 4, 1, MAXCH).getDisplayValues()[0];
+        var existingJson = existingVals.join('');
+        var existingLen = existingJson.length;
+        // каталог товаров сливаем с уже сохранённым на сервере по каждой карточке
+        // отдельно (см. mergeCatalogDBServer), а не заменяем целиком — иначе устройство
+        // с чуть более старой локальной копией могло вслепую затереть чужую свежую
+        // правку (например, только что добавленное на другом устройстве фото).
+        // req.skipMerge — единственное исключение: человек явно нажал "Всё равно
+        // заменить" в диалоге предупреждения о потере данных, и этот диалог прямым
+        // текстом обещает полную замену, поэтому в этом случае делаем ровно её
+        if (!req.skipMerge && existingJson) {
+          try {
+            var existingPayload = JSON.parse(existingJson);
+            payload.catalogDB = mergeCatalogDBServer(existingPayload.catalogDB, payload.catalogDB);
+          } catch (eMerge) {}
+        }
+        var json = JSON.stringify(payload);
         if (json.length > CHUNK * MAXCH) return out({ ok: false, error: 'too_big' });
         var chunks = [];
         for (var i = 0; i < json.length; i += CHUNK) chunks.push(json.slice(i, i + CHUNK));
         while (chunks.length < MAXCH) chunks.push('');
-        var now = new Date().toISOString();
-        if (row === -1) {
-          // первый вход — регистрация: логин занимается, PIN фиксируется
-          sh.appendRow([login, "'" + pin, now].concat(chunks));
-        } else {
-          if (getPin(sh, row) !== pin) return out({ ok: false, error: 'wrong_pin' });
-          // защита от случайной перезаписи большого объёма данных почти пустыми.
-          // Самый частый сценарий потери: слетел логин на устройстве, его ввели заново
-          // и нажали "Выгрузить" раньше, чем успели что-то скачать — без этой проверки
-          // такое одним запросом стирает всё, что накопилось в облаке с других устройств.
-          var existingVals = sh.getRange(row, 4, 1, MAXCH).getDisplayValues()[0];
-          var existingLen = existingVals.join('').length;
-          var risky = existingLen > 500 && json.length < existingLen * 0.3;
-          if (risky && !req.force) {
-            return out({ ok: false, error: 'data_loss_risk', existingSize: existingLen, incomingSize: json.length });
-          }
-          // риск подтверждён явно (или кто-то намеренно решил уничтожить данные) — то, что
-          // заменяется, кладём в резервную копию на сутки, чтобы это всегда можно было отменить
-          if (risky) saveBackup(login, existingVals);
-          sh.getRange(row, 3).setValue(now);
-          sh.getRange(row, 4, 1, MAXCH).setValues([chunks]);
+        // защита от случайной перезаписи большого объёма данных почти пустыми.
+        // Самый частый сценарий потери: слетел логин на устройстве, его ввели заново
+        // и нажали "Выгрузить" раньше, чем успели что-то скачать — без этой проверки
+        // такое одним запросом стирает всё, что накопилось в облаке с других устройств.
+        var risky = existingLen > 500 && json.length < existingLen * 0.3;
+        if (risky && !req.force) {
+          return out({ ok: false, error: 'data_loss_risk', existingSize: existingLen, incomingSize: json.length });
         }
+        // риск подтверждён явно (или кто-то намеренно решил уничтожить данные) — то, что
+        // заменяется, кладём в резервную копию на сутки, чтобы это всегда можно было отменить
+        if (risky) saveBackup(login, existingVals);
+        sh.getRange(row, 3).setValue(now);
+        sh.getRange(row, 4, 1, MAXCH).setValues([chunks]);
         return out({ ok: true, at: now });
       }
 
@@ -484,4 +504,71 @@ function getUserPhotoFolder(login) {
 function out(obj) {
   return ContentService.createTextOutput(JSON.stringify(obj))
     .setMimeType(ContentService.MimeType.JSON);
+}
+
+// слияние каталога товаров по каждой записи отдельно (та же логика, что и на клиенте
+// в mergeCatalogDB) — выполняется здесь, на сервере, внутри той же блокировки, что и
+// сама запись, одним запросом. Раньше это делал клиент: сначала отдельным запросом
+// скачивал текущие данные, сливал у себя и только потом отправлял — на каждое
+// сохранение уходило два обращения к скрипту вместо одного, и при активной работе
+// с нескольких устройств запросы начали упираться в тайм-аут общей блокировки
+// (LockService — она общая для всех действий и всех пользователей сразу).
+// Здесь слияние атомарно: гонка между чтением текущих данных и записью исключена,
+// потому что и то, и другое происходит под одной и той же уже захваченной блокировкой.
+function mergeCatalogDBServer(existingDB, incomingDB) {
+  existingDB = existingDB || {};
+  incomingDB = incomingDB || {};
+  var tomb = {}, id;
+  var exTomb = existingDB.deletedProducts || {};
+  var inTomb = incomingDB.deletedProducts || {};
+  for (id in exTomb) tomb[id] = Number(exTomb[id]) || 0;
+  for (id in inTomb) tomb[id] = Math.max(tomb[id] || 0, Number(inTomb[id]) || 0);
+
+  var prodMap = {}, order = [];
+  var exProducts = existingDB.products || [];
+  var inProducts = incomingDB.products || [];
+  var i, p, cur, curAt, pAt;
+  for (i = 0; i < exProducts.length; i++) {
+    p = exProducts[i];
+    if (!(p.id in prodMap)) order.push(p.id);
+    prodMap[p.id] = p;
+  }
+  for (i = 0; i < inProducts.length; i++) {
+    p = inProducts[i];
+    cur = prodMap[p.id];
+    if (!cur) { prodMap[p.id] = p; order.push(p.id); continue; }
+    curAt = Number(cur.updatedAt) || 0;
+    pAt = Number(p.updatedAt) || 0;
+    if (pAt > curAt || (pAt === curAt && !cur.photoId && p.photoId)) prodMap[p.id] = p;
+  }
+  var products = [];
+  for (i = 0; i < order.length; i++) {
+    p = prodMap[order[i]];
+    if ((tomb[p.id] || 0) <= (Number(p.updatedAt) || 0)) products.push(p);
+  }
+
+  var catMap = {}, catOrder = [], c;
+  var exCats = existingDB.categories || [];
+  var inCats = incomingDB.categories || [];
+  for (i = 0; i < exCats.length; i++) { c = exCats[i]; if (!(c.id in catMap)) catOrder.push(c.id); catMap[c.id] = c; }
+  for (i = 0; i < inCats.length; i++) { c = inCats[i]; if (!(c.id in catMap)) catOrder.push(c.id); catMap[c.id] = c; }
+  var categories = [];
+  for (i = 0; i < catOrder.length; i++) categories.push(catMap[catOrder[i]]);
+
+  var locMap = {}, locOrder = [], l;
+  var exLocs = existingDB.locations || [];
+  var inLocs = incomingDB.locations || [];
+  for (i = 0; i < exLocs.length; i++) { l = exLocs[i]; if (!(l.id in locMap)) locOrder.push(l.id); locMap[l.id] = l; }
+  for (i = 0; i < inLocs.length; i++) { l = inLocs[i]; if (!(l.id in locMap)) locOrder.push(l.id); locMap[l.id] = l; }
+  var locations = [];
+  for (i = 0; i < locOrder.length; i++) locations.push(locMap[locOrder[i]]);
+
+  var merged = {};
+  for (id in existingDB) merged[id] = existingDB[id];
+  for (id in incomingDB) merged[id] = incomingDB[id];
+  merged.categories = categories;
+  merged.products = products;
+  merged.deletedProducts = tomb;
+  merged.locations = locations;
+  return merged;
 }
