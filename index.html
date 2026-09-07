@@ -1529,6 +1529,7 @@ input[type=file]{display:none}
     <div class="grab"></div>
     <h2 id="confirmTitle" data-i18n="confirm_title">Подтвердите</h2>
     <p id="confirmText" style="color:var(--muted);font-size:14.5px;margin:0 0 18px;line-height:1.5"></p>
+    <button class="btn btn-primary" id="confirmAltBtn" style="display:none;margin-bottom:10px"></button>
     <button class="btn btn-danger-ghost" id="confirmBtn" data-i18n="btn_delete">Удалить</button>
     <button class="btn btn-ghost" onclick="closeSheet('confirmSheet')" data-i18n="btn_cancel">Отмена</button>
   </div>
@@ -1952,7 +1953,6 @@ input[type=file]{display:none}
       <input id="syncPin" type="password" inputmode="numeric" maxlength="4" placeholder="••••" autocomplete="off">
     </div>
     <button class="btn btn-primary" id="syncUpBtn" onclick="syncUpload(false)" data-i18n="sync_upload_btn">Выгрузить в облако</button>
-    <button class="btn btn-ghost" id="syncDownBtn" onclick="syncDownload()" data-i18n="sync_download_btn">Загрузить из облака</button>
     <div class="pay-sub" id="syncStatus" style="margin:12px 2px 0"></div>
   </div>
 </div>
@@ -2677,10 +2677,6 @@ const I18N = {
 
     sync_upload_btn: 'Выгрузить в облако',
     sync_uploading_btn: 'Выгружаю…',
-    sync_download_btn: 'Загрузить из облака',
-    sync_downloading_btn: 'Загружаю…',
-    sync_download_confirm_title: 'Загрузить из облака?',
-    sync_download_confirm_text: 'Текущие данные на этом устройстве будут заменены копией из облака.',
     sync_no_cloud_data: 'В облаке пока нет данных',
     sync_downloaded_toast: 'Данные загружены из облака',
 
@@ -2708,13 +2704,13 @@ const I18N = {
     sync_overwrite_warn_title: 'Опасно!',
     sync_overwrite_warn_text: 'Обнаружен большой объём данных в облаке, которого нет на этом устройстве (списки: {rLists} → {lLists}, товары в каталоге: {rProducts} → {lProducts}). Это действие приведёт к потере данных!',
     sync_overwrite_warn_btn: 'Всё равно заменить',
+    sync_use_cloud_btn: 'Использовать данные из облака',
     sync_backup_available_text: 'Недавно на этом аккаунте были заменены большие данные. Резервная копия ещё доступна — восстановить её?',
     sync_backup_restore_btn: 'Восстановить утерянные данные',
     sync_backup_restored_toast: 'Данные восстановлены из резервной копии',
     sync_backup_restore_fail: 'Не удалось восстановить резервную копию',
     sync_err_generic: 'Ошибка облака: {code}',
     sync_err_no_connection: 'Нет связи с облаком — проверьте интернет и адрес скрипта',
-    sync_download_confirm_btn: 'Заменить и загрузить',
 
     cat_sheet_title: 'Каталог товаров',
     cat_search_ph: 'Название, цена или категория',
@@ -3269,10 +3265,6 @@ const I18N = {
 
     sync_upload_btn: 'Upload to cloud',
     sync_uploading_btn: 'Uploading…',
-    sync_download_btn: 'Download from cloud',
-    sync_downloading_btn: 'Downloading…',
-    sync_download_confirm_title: 'Download from cloud?',
-    sync_download_confirm_text: 'The current data on this device will be replaced with the copy from the cloud.',
     sync_no_cloud_data: 'There’s no data in the cloud yet',
     sync_downloaded_toast: 'Data downloaded from the cloud',
 
@@ -3300,13 +3292,13 @@ const I18N = {
     sync_overwrite_warn_title: 'Danger!',
     sync_overwrite_warn_text: 'A large amount of cloud data is missing from this device (lists: {rLists} → {lLists}, catalog products: {rProducts} → {lProducts}). This action will cause data loss!',
     sync_overwrite_warn_btn: 'Replace anyway',
+    sync_use_cloud_btn: 'Use cloud data',
     sync_backup_available_text: 'This account recently had a large amount of data replaced. A backup is still available — restore it?',
     sync_backup_restore_btn: 'Restore lost data',
     sync_backup_restored_toast: 'Data restored from backup',
     sync_backup_restore_fail: 'Failed to restore the backup',
     sync_err_generic: 'Cloud error: {code}',
     sync_err_no_connection: 'No connection to the cloud — check your internet and the script URL',
-    sync_download_confirm_btn: 'Replace and download',
 
     cat_sheet_title: 'Product catalog',
     cat_search_ph: 'Name, price or category',
@@ -3861,10 +3853,6 @@ const I18N = {
 
     sync_upload_btn: 'In die Cloud hochladen',
     sync_uploading_btn: 'Wird hochgeladen…',
-    sync_download_btn: 'Aus der Cloud herunterladen',
-    sync_downloading_btn: 'Wird heruntergeladen…',
-    sync_download_confirm_title: 'Aus der Cloud herunterladen?',
-    sync_download_confirm_text: 'Die aktuellen Daten auf diesem Gerät werden durch die Kopie aus der Cloud ersetzt.',
     sync_no_cloud_data: 'In der Cloud sind noch keine Daten vorhanden',
     sync_downloaded_toast: 'Daten aus der Cloud heruntergeladen',
 
@@ -3892,13 +3880,13 @@ const I18N = {
     sync_overwrite_warn_title: 'Gefahr!',
     sync_overwrite_warn_text: 'Auf diesem Gerät fehlt ein großer Teil der Cloud-Daten (Listen: {rLists} → {lLists}, Katalogartikel: {rProducts} → {lProducts}). Diese Aktion führt zu Datenverlust!',
     sync_overwrite_warn_btn: 'Trotzdem ersetzen',
+    sync_use_cloud_btn: 'Cloud-Daten verwenden',
     sync_backup_available_text: 'Für dieses Konto wurden kürzlich große Datenmengen ersetzt. Eine Sicherung ist noch verfügbar — wiederherstellen?',
     sync_backup_restore_btn: 'Verlorene Daten wiederherstellen',
     sync_backup_restored_toast: 'Daten aus der Sicherung wiederhergestellt',
     sync_backup_restore_fail: 'Sicherung konnte nicht wiederhergestellt werden',
     sync_err_generic: 'Cloud-Fehler: {code}',
     sync_err_no_connection: 'Keine Verbindung zur Cloud — prüfe dein Internet und die Skript-URL',
-    sync_download_confirm_btn: 'Ersetzen und herunterladen',
 
     cat_sheet_title: 'Produktkatalog',
     cat_search_ph: 'Name, Preis oder Kategorie',
@@ -4451,10 +4439,6 @@ const I18N = {
 
     sync_upload_btn: 'Subir a la nube',
     sync_uploading_btn: 'Subiendo…',
-    sync_download_btn: 'Descargar de la nube',
-    sync_downloading_btn: 'Descargando…',
-    sync_download_confirm_title: '¿Descargar de la nube?',
-    sync_download_confirm_text: 'Los datos actuales de este dispositivo se sustituirán por la copia de la nube.',
     sync_no_cloud_data: 'Todavía no hay datos en la nube',
     sync_downloaded_toast: 'Datos descargados de la nube',
 
@@ -4482,13 +4466,13 @@ const I18N = {
     sync_overwrite_warn_title: '¡Peligro!',
     sync_overwrite_warn_text: 'Falta una gran cantidad de datos de la nube en este dispositivo (listas: {rLists} → {lLists}, productos del catálogo: {rProducts} → {lProducts}). ¡Esta acción provocará la pérdida de datos!',
     sync_overwrite_warn_btn: 'Reemplazar de todos modos',
+    sync_use_cloud_btn: 'Usar los datos de la nube',
     sync_backup_available_text: 'Recientemente se reemplazaron grandes cantidades de datos en esta cuenta. Todavía hay una copia de seguridad disponible: ¿restaurarla?',
     sync_backup_restore_btn: 'Restaurar datos perdidos',
     sync_backup_restored_toast: 'Datos restaurados desde la copia de seguridad',
     sync_backup_restore_fail: 'No se pudo restaurar la copia de seguridad',
     sync_err_generic: 'Error de la nube: {code}',
     sync_err_no_connection: 'Sin conexión con la nube — comprueba tu internet y la URL del script',
-    sync_download_confirm_btn: 'Reemplazar y descargar',
 
     cat_sheet_title: 'Catálogo de productos',
     cat_search_ph: 'Nombre, precio o categoría',
@@ -5041,10 +5025,6 @@ const I18N = {
 
     sync_upload_btn: 'Envoyer vers le cloud',
     sync_uploading_btn: 'Envoi en cours…',
-    sync_download_btn: 'Télécharger depuis le cloud',
-    sync_downloading_btn: 'Téléchargement…',
-    sync_download_confirm_title: 'Télécharger depuis le cloud ?',
-    sync_download_confirm_text: 'Les données actuelles de cet appareil seront remplacées par la copie du cloud.',
     sync_no_cloud_data: 'Il n’y a pas encore de données dans le cloud',
     sync_downloaded_toast: 'Données téléchargées depuis le cloud',
 
@@ -5072,13 +5052,13 @@ const I18N = {
     sync_overwrite_warn_title: 'Danger !',
     sync_overwrite_warn_text: 'Une grande quantité de données du cloud est absente de cet appareil (listes : {rLists} → {lLists}, produits du catalogue : {rProducts} → {lProducts}). Cette action entraînera une perte de données !',
     sync_overwrite_warn_btn: 'Remplacer quand même',
+    sync_use_cloud_btn: 'Utiliser les données du cloud',
     sync_backup_available_text: 'De grandes quantités de données ont récemment été remplacées sur ce compte. Une sauvegarde est encore disponible : la restaurer ?',
     sync_backup_restore_btn: 'Restaurer les données perdues',
     sync_backup_restored_toast: 'Données restaurées à partir de la sauvegarde',
     sync_backup_restore_fail: 'Échec de la restauration de la sauvegarde',
     sync_err_generic: 'Erreur du cloud : {code}',
     sync_err_no_connection: 'Pas de connexion au cloud — vérifiez votre connexion internet et l’URL du script',
-    sync_download_confirm_btn: 'Remplacer et télécharger',
 
     cat_sheet_title: 'Catalogue de produits',
     cat_search_ph: 'Nom, prix ou catégorie',
@@ -5631,10 +5611,6 @@ const I18N = {
 
     sync_upload_btn: '上传到云端',
     sync_uploading_btn: '正在上传…',
-    sync_download_btn: '从云端下载',
-    sync_downloading_btn: '正在下载…',
-    sync_download_confirm_title: '从云端下载？',
-    sync_download_confirm_text: '此设备上的当前数据将被云端的副本替换。',
     sync_no_cloud_data: '云端还没有数据',
     sync_downloaded_toast: '已从云端下载数据',
 
@@ -5662,13 +5638,13 @@ const I18N = {
     sync_overwrite_warn_title: '危险！',
     sync_overwrite_warn_text: '此设备上缺少云端的大量数据（清单：{rLists} → {lLists}，目录商品：{rProducts} → {lProducts}）。此操作将导致数据丢失！',
     sync_overwrite_warn_btn: '仍然替换',
+    sync_use_cloud_btn: '使用云端数据',
     sync_backup_available_text: '该账户最近有大量数据被替换。备份仍然可用 — 要恢复吗？',
     sync_backup_restore_btn: '恢复丢失的数据',
     sync_backup_restored_toast: '已从备份恢复数据',
     sync_backup_restore_fail: '恢复备份失败',
     sync_err_generic: '云端错误：{code}',
     sync_err_no_connection: '无法连接云端 — 请检查网络和脚本地址',
-    sync_download_confirm_btn: '替换并下载',
 
     cat_sheet_title: '商品目录',
     cat_search_ph: '名称、价格或分类',
@@ -6221,10 +6197,6 @@ const I18N = {
 
     sync_upload_btn: 'Tải lên đám mây',
     sync_uploading_btn: 'Đang tải lên…',
-    sync_download_btn: 'Tải xuống từ đám mây',
-    sync_downloading_btn: 'Đang tải xuống…',
-    sync_download_confirm_title: 'Tải xuống từ đám mây?',
-    sync_download_confirm_text: 'Dữ liệu hiện tại trên thiết bị này sẽ được thay bằng bản sao từ đám mây.',
     sync_no_cloud_data: 'Chưa có dữ liệu trên đám mây',
     sync_downloaded_toast: 'Đã tải dữ liệu từ đám mây',
 
@@ -6252,13 +6224,13 @@ const I18N = {
     sync_overwrite_warn_title: 'Nguy hiểm!',
     sync_overwrite_warn_text: 'Thiết bị này đang thiếu một lượng lớn dữ liệu trên đám mây (danh sách: {rLists} → {lLists}, sản phẩm trong danh mục: {rProducts} → {lProducts}). Hành động này sẽ gây mất dữ liệu!',
     sync_overwrite_warn_btn: 'Vẫn thay thế',
+    sync_use_cloud_btn: 'Dùng dữ liệu trên đám mây',
     sync_backup_available_text: 'Tài khoản này gần đây đã bị thay thế một lượng lớn dữ liệu. Bản sao lưu vẫn còn — khôi phục chứ?',
     sync_backup_restore_btn: 'Khôi phục dữ liệu đã mất',
     sync_backup_restored_toast: 'Đã khôi phục dữ liệu từ bản sao lưu',
     sync_backup_restore_fail: 'Không thể khôi phục bản sao lưu',
     sync_err_generic: 'Lỗi đám mây: {code}',
     sync_err_no_connection: 'Không có kết nối tới đám mây — kiểm tra internet và địa chỉ script',
-    sync_download_confirm_btn: 'Thay thế và tải xuống',
 
     cat_sheet_title: 'Danh mục sản phẩm',
     cat_search_ph: 'Tên, giá hoặc danh mục',
@@ -6811,10 +6783,6 @@ const I18N = {
 
     sync_upload_btn: 'Bulutga yuklash',
     sync_uploading_btn: 'Yuklanmoqda…',
-    sync_download_btn: 'Bulutdan yuklab olish',
-    sync_downloading_btn: 'Yuklab olinmoqda…',
-    sync_download_confirm_title: 'Bulutdan yuklab olasizmi?',
-    sync_download_confirm_text: 'Bu qurilmadagi joriy ma’lumotlar bulutdagi nusxa bilan almashtiriladi.',
     sync_no_cloud_data: 'Bulutda hali ma’lumot yo‘q',
     sync_downloaded_toast: 'Ma’lumotlar bulutdan yuklab olindi',
 
@@ -6842,13 +6810,13 @@ const I18N = {
     sync_overwrite_warn_title: 'Xavfli!',
     sync_overwrite_warn_text: 'Bu qurilmada bulutdagi katta hajmdagi ma\'lumotlar yo\'q (ro\'yxatlar: {rLists} → {lLists}, katalogdagi mahsulotlar: {rProducts} → {lProducts}). Bu amal ma\'lumotlar yo\'qolishiga olib keladi!',
     sync_overwrite_warn_btn: 'Baribir almashtirish',
+    sync_use_cloud_btn: 'Bulut ma\'lumotlaridan foydalanish',
     sync_backup_available_text: 'Ushbu hisobda yaqinda katta hajmdagi ma\'lumotlar almashtirilgan edi. Zaxira nusxa hali ham mavjud — tiklaymizmi?',
     sync_backup_restore_btn: 'Yo\'qolgan ma\'lumotlarni tiklash',
     sync_backup_restored_toast: 'Ma\'lumotlar zaxira nusxadan tiklandi',
     sync_backup_restore_fail: 'Zaxira nusxani tiklab bo\'lmadi',
     sync_err_generic: 'Bulut xatosi: {code}',
     sync_err_no_connection: 'Bulutga ulanish yo‘q — internet va skript manzilini tekshiring',
-    sync_download_confirm_btn: 'Almashtirish va yuklab olish',
 
     cat_sheet_title: 'Mahsulotlar katalogi',
     cat_search_ph: 'Nomi, narxi yoki kategoriyasi',
@@ -7401,10 +7369,6 @@ const I18N = {
 
     sync_upload_btn: 'Булутка жүктөө',
     sync_uploading_btn: 'Жүктөлүүдө…',
-    sync_download_btn: 'Булуттан жүктөп алуу',
-    sync_downloading_btn: 'Жүктөлүп алынууда…',
-    sync_download_confirm_title: 'Булуттан жүктөп аласызбы?',
-    sync_download_confirm_text: 'Бул түзмөктөгү учурдагы маалымат булуттагы көчүрмө менен алмаштырылат.',
     sync_no_cloud_data: 'Булутта азырынча маалымат жок',
     sync_downloaded_toast: 'Маалымат булуттан жүктөлүп алынды',
 
@@ -7432,13 +7396,13 @@ const I18N = {
     sync_overwrite_warn_title: 'Коркунучтуу!',
     sync_overwrite_warn_text: 'Бул түзмөктө булуттагы чоң көлөмдөгү маалымат жок (тизмелер: {rLists} → {lLists}, каталогдогу товарлар: {rProducts} → {lProducts}). Бул аракет маалыматтардын жоголушуна алып келет!',
     sync_overwrite_warn_btn: 'Баары бир алмаштыруу',
+    sync_use_cloud_btn: 'Булуттагы маалыматты колдонуу',
     sync_backup_available_text: 'Бул аккаунтта жакында чоң көлөмдөгү маалымат алмаштырылган. Резервдик көчүрмө дагы деле жеткиликтүү — калыбына келтиребизби?',
     sync_backup_restore_btn: 'Жоголгон маалыматтарды калыбына келтирүү',
     sync_backup_restored_toast: 'Маалыматтар резервдик көчүрмөдөн калыбына келтирилди',
     sync_backup_restore_fail: 'Резервдик көчүрмөнү калыбына келтирүү мүмкүн болгон жок',
     sync_err_generic: 'Булут катасы: {code}',
     sync_err_no_connection: 'Булутка байланыш жок — интернетиңизди жана скрипт дарегин текшериңиз',
-    sync_download_confirm_btn: 'Алмаштыруу жана жүктөп алуу',
 
     cat_sheet_title: 'Товарлар каталогу',
     cat_search_ph: 'Аты, баасы же категориясы',
@@ -7991,10 +7955,6 @@ const I18N = {
 
     sync_upload_btn: 'Боркунӣ ба абр',
     sync_uploading_btn: 'Бор карда истодааст…',
-    sync_download_btn: 'Боргирӣ аз абр',
-    sync_downloading_btn: 'Бор карда мешавад…',
-    sync_download_confirm_title: 'Аз абр боргирӣ мекунед?',
-    sync_download_confirm_text: 'Маълумоти ҷории ин дастгоҳ бо нусхаи аз абр иваз карда мешавад.',
     sync_no_cloud_data: 'Дар абр ҳанӯз маълумот нест',
     sync_downloaded_toast: 'Маълумот аз абр боргирӣ шуд',
 
@@ -8022,13 +7982,13 @@ const I18N = {
     sync_overwrite_warn_title: 'Хатарнок!',
     sync_overwrite_warn_text: 'Дар ин дастгоҳ ҳаҷми калони маълумоти абр нест (рӯйхатҳо: {rLists} → {lLists}, маҳсулоти каталог: {rProducts} → {lProducts}). Ин амал боиси гум шудани маълумот мешавад!',
     sync_overwrite_warn_btn: 'Ба ҳар ҳол иваз кардан',
+    sync_use_cloud_btn: 'Истифодаи маълумоти абр',
     sync_backup_available_text: 'Дар ин ҳисоб ба наздикӣ ҳаҷми калони маълумот иваз карда шуд. Нусхаи эҳтиётӣ ҳанӯз дастрас аст — барқарор кунем?',
     sync_backup_restore_btn: 'Барқарор кардани маълумоти гумшуда',
     sync_backup_restored_toast: 'Маълумот аз нусхаи эҳтиётӣ барқарор карда шуд',
     sync_backup_restore_fail: 'Барқарор кардани нусхаи эҳтиётӣ ноком шуд',
     sync_err_generic: 'Хатои абр: {code}',
     sync_err_no_connection: 'Пайваст ба абр нест — интернет ва суроғаи скриптро тафтиш кунед',
-    sync_download_confirm_btn: 'Иваз ва боргирӣ кардан',
 
     cat_sheet_title: 'Каталоги маҳсулот',
     cat_search_ph: 'Ном, нарх ё категория',
@@ -8581,10 +8541,6 @@ const I18N = {
 
     sync_upload_btn: 'ღრუბელში ატვირთვა',
     sync_uploading_btn: 'იტვირთება…',
-    sync_download_btn: 'ღრუბლიდან ჩამოტვირთვა',
-    sync_downloading_btn: 'იტვირთება…',
-    sync_download_confirm_title: 'ჩამოვტვირთოთ ღრუბლიდან?',
-    sync_download_confirm_text: 'ამ მოწყობილობის მიმდინარე მონაცემები ჩანაცვლდება ღრუბლის ასლით.',
     sync_no_cloud_data: 'ღრუბელში ჯერ არ არის მონაცემები',
     sync_downloaded_toast: 'მონაცემები ჩამოიტვირთა ღრუბლიდან',
 
@@ -8612,13 +8568,13 @@ const I18N = {
     sync_overwrite_warn_title: 'საშიშია!',
     sync_overwrite_warn_text: 'ამ მოწყობილობას აკლია ღრუბელში არსებული დიდი მოცულობის მონაცემები (სიები: {rLists} → {lLists}, კატალოგის პროდუქტები: {rProducts} → {lProducts}). ეს მოქმედება გამოიწვევს მონაცემების დაკარგვას!',
     sync_overwrite_warn_btn: 'მაინც ჩანაცვლება',
+    sync_use_cloud_btn: 'ღრუბლის მონაცემების გამოყენება',
     sync_backup_available_text: 'ამ ანგარიშზე ცოტა ხნის წინ დიდი მოცულობის მონაცემები ჩანაცვლდა. სარეზერვო ასლი ჯერ კიდევ ხელმისაწვდომია — აღვადგინოთ?',
     sync_backup_restore_btn: 'დაკარგული მონაცემების აღდგენა',
     sync_backup_restored_toast: 'მონაცემები აღდგენილია სარეზერვო ასლიდან',
     sync_backup_restore_fail: 'სარეზერვო ასლის აღდგენა ვერ მოხერხდა',
     sync_err_generic: 'ღრუბლის შეცდომა: {code}',
     sync_err_no_connection: 'კავშირი ღრუბელთან არ არის — შეამოწმეთ ინტერნეტი და სკრიპტის მისამართი',
-    sync_download_confirm_btn: 'ჩანაცვლება და ჩამოტვირთვა',
 
     cat_sheet_title: 'პროდუქტების კატალოგი',
     cat_search_ph: 'სახელი, ფასი ან კატეგორია',
@@ -9171,10 +9127,6 @@ const I18N = {
 
     sync_upload_btn: 'Վերբեռնել ամպ',
     sync_uploading_btn: 'Վերբեռնվում է…',
-    sync_download_btn: 'Ներբեռնել ամպից',
-    sync_downloading_btn: 'Ներբեռնվում է…',
-    sync_download_confirm_title: 'Ներբեռնե՞լ ամպից',
-    sync_download_confirm_text: 'Այս սարքի ընթացիկ տվյալները կփոխարինվեն ամպից ստացված պատճենով։',
     sync_no_cloud_data: 'Ամպում դեռ տվյալներ չկան',
     sync_downloaded_toast: 'Տվյալները ներբեռնվեցին ամպից',
 
@@ -9202,13 +9154,13 @@ const I18N = {
     sync_overwrite_warn_title: 'Վտանգավոր է!',
     sync_overwrite_warn_text: 'Այս սարքում բացակայում են ամպի մեծ ծավալի տվյալները (ցանկեր՝ {rLists} → {lLists}, կատալոգի ապրանքներ՝ {rProducts} → {lProducts})։ Այս գործողությունը կհանգեցնի տվյալների կորստի!',
     sync_overwrite_warn_btn: 'Այնուամենայնիվ փոխարինել',
+    sync_use_cloud_btn: 'Ամպային տվյալների օգտագործում',
     sync_backup_available_text: 'Այս հաշվում վերջերս մեծ ծավալի տվյալներ են փոխարինվել։ Պահուստային պատճենը դեռ հասանելի է․ վերականգնե՞լ։',
     sync_backup_restore_btn: 'Վերականգնել կորած տվյալները',
     sync_backup_restored_toast: 'Տվյալները վերականգնվել են պահուստային պատճենից',
     sync_backup_restore_fail: 'Չհաջողվեց վերականգնել պահուստային պատճենը',
     sync_err_generic: 'Ամպի սխալ՝ {code}',
     sync_err_no_connection: 'Կապ չկա ամպի հետ — ստուգեք ինտերնետը և սկրիպտի հասցեն',
-    sync_download_confirm_btn: 'Փոխարինել և ներբեռնել',
 
     cat_sheet_title: 'Ապրանքների կատալոգ',
     cat_search_ph: 'Անուն, գին կամ կատեգորիա',
@@ -9761,10 +9713,6 @@ const I18N = {
 
     sync_upload_btn: 'Абԥша анагара',
     sync_uploading_btn: 'Инагоит…',
-    sync_download_btn: 'Абԥша аныргара',
-    sync_downloading_btn: 'Аныргоит…',
-    sync_download_confirm_title: 'Абԥша аныргароума?',
-    sync_download_confirm_text: 'Ари устройство иҟоу адыррақәа абԥша иҟоу ирыла ирԥсахуеит.',
     sync_no_cloud_data: 'Абԥша аҟны адыррақәа наӡа рыҟаӡам',
     sync_downloaded_toast: 'Адыррақәа абԥша инаргеит',
 
@@ -9792,13 +9740,13 @@ const I18N = {
     sync_overwrite_warn_title: 'Аҟынтәи!',
     sync_overwrite_warn_text: 'Ари аиашьара абԥшаа хазы адыррақәа рацәоуп, избанзар ари аиашьарахьы дара мап ыҟаӡам (атизмаҩ: {rLists} → {lLists}, акаталог аҭыжьымҭақәа: {rProducts} → {lProducts}). Ари аус адыррақәа рымҩаԥысра иахҟьоит!',
     sync_overwrite_warn_btn: 'Ирыхьаны иҭижьра',
+    sync_use_cloud_btn: 'Аҳауа адыхьчаз аформациа аҟаҵара',
     sync_backup_available_text: 'Ари аккаунт хь ҵыс ыҟоу иахьтәи адыррақәа ду ирыхьеит. Азеиԥш ажәабжь наӡа иахьазы ыҟоуп — ианыҵыхыр?',
     sync_backup_restore_btn: 'Аҧсуа адыррақәа рыҵыхра',
     sync_backup_restored_toast: 'Адыррақәа азеиԥш ажәабжь ианыҵыхуп',
     sync_backup_restore_fail: 'Азеиԥш ажәабжь аныҵыхра мап ацны иаанхеит',
     sync_err_generic: 'Абԥша аԥсхара: {code}',
     sync_err_no_connection: 'Абԥша ду азхьаара ыҟаӡам — интернет насгьы аскрипт адрес шәрыхьчала',
-    sync_download_confirm_btn: 'Аԥсахра насгьы аныргара',
 
     cat_sheet_title: 'Апродуктқәа ркаталог',
     cat_search_ph: 'Ахьӡ, ахә ца акатегориа',
@@ -11218,6 +11166,8 @@ function saveListNameSheet() {
 function confirmAction(title, text, cb, btnLabel, primary) {
   document.getElementById('confirmTitle').textContent = title;
   document.getElementById('confirmText').textContent = text;
+  const altBtn = document.getElementById('confirmAltBtn');
+  altBtn.style.display = 'none'; altBtn.onclick = null;
   const btn = document.getElementById('confirmBtn');
   const clone = btn.cloneNode(true);
   clone.textContent = btnLabel || t('btn_delete');
@@ -11225,6 +11175,15 @@ function confirmAction(title, text, cb, btnLabel, primary) {
   btn.parentNode.replaceChild(clone, btn);
   clone.onclick = () => { closeSheet('confirmSheet'); cb(); };
   openSheet('confirmSheet');
+}
+// вариант с безопасной альтернативой над опасным действием — например «загрузить эти
+// данные из облака» рядом с кнопкой принудительной перезаписи в предупреждении о потере данных
+function confirmActionAlt(title, text, altLabel, altCb, dangerLabel, dangerCb) {
+  confirmAction(title, text, dangerCb, dangerLabel, false);
+  const altBtn = document.getElementById('confirmAltBtn');
+  altBtn.textContent = altLabel;
+  altBtn.style.display = 'block';
+  altBtn.onclick = () => { closeSheet('confirmSheet'); altCb(); };
 }
 
 /* ---------- snackbar ---------- */
@@ -11454,11 +11413,11 @@ function syncUpload(silent) {
     if (remote.size > 500 && (neverSyncedHere || remoteNewer)) {
       btn.textContent = t('sync_upload_btn'); btn.disabled = false;
       const local = payloadStats(state);
-      confirmAction(
+      confirmActionAlt(
         t('sync_overwrite_warn_title'),
         tf('sync_overwrite_warn_text', { rLists: remote.lists, rProducts: remote.products, lLists: local.lists, lProducts: local.products }),
-        () => doUploadNow(creds, true),
-        t('sync_overwrite_warn_btn')
+        t('sync_use_cloud_btn'), () => useCloudPayload(res.payload, creds, res.at),
+        t('sync_overwrite_warn_btn'), () => doUploadNow(creds, true)
       );
       return;
     }
@@ -11474,11 +11433,13 @@ function doUploadNow(creds, force) {
       const msg = String(err && err.message || err);
       if (msg === '#data_loss_risk' && !force) {
         const local = payloadStats(state);
-        confirmAction(
+        confirmActionAlt(
           t('sync_overwrite_warn_title'),
           tf('sync_overwrite_warn_text', { rLists: '?', rProducts: '?', lLists: local.lists, lProducts: local.products }),
-          () => doUploadNow(creds, true),
-          t('sync_overwrite_warn_btn')
+          t('sync_use_cloud_btn'), () => {
+            syncCall(creds, 'load').then(r => useCloudPayload(r.payload, creds, r.at)).catch(err => toast(errToMsg(err)));
+          },
+          t('sync_overwrite_warn_btn'), () => doUploadNow(creds, true)
         );
         return;
       }
@@ -11495,23 +11456,13 @@ function applyRemotePayload(payload, creds, at) {
   if (!state.lists.some(l => l.id === state.currentId)) state.currentId = state.lists[0].id;
   save(true); render();
 }
-function syncDownload() {
-  const creds = readSyncCreds();
-  if (!creds) return;
-  confirmAction(t('sync_download_confirm_title'), t('sync_download_confirm_text'), () => {
-    const btn = document.getElementById('syncDownBtn');
-    btn.textContent = t('sync_downloading_btn'); btn.disabled = true;
-    syncCall(creds, 'load')
-      .then(res => {
-        const s = res.payload;
-        if (!s || !Array.isArray(s.lists) || !s.lists.length) { toast(t('sync_no_cloud_data')); return; }
-        applyRemotePayload(s, creds, res.at);
-        closeSheet('syncSheet');
-        toast(t('sync_downloaded_toast'));
-      })
-      .catch(err => toast(errToMsg(err)))
-      .finally(() => { btn.textContent = t('sync_download_btn'); btn.disabled = false; });
-  }, t('sync_download_confirm_btn'));
+// принять данные из облака вместо перезаписи — безопасная альтернатива, которую предлагаем
+// прямо в предупреждении «Опасно!», когда в облаке данных больше, чем на этом устройстве
+function useCloudPayload(payload, creds, at) {
+  if (!payload || !Array.isArray(payload.lists) || !payload.lists.length) { toast(t('sync_no_cloud_data')); return; }
+  applyRemotePayload(payload, creds, at);
+  closeSheet('syncSheet');
+  toast(t('sync_downloaded_toast'));
 }
 
 /* ---------- обнаружение новых данных с другого устройства ----------
