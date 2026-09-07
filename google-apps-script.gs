@@ -49,6 +49,9 @@ var SHARE_MAXCH = 12; // до ~540 КБ на одну передачу това�
 var ORDER_SHEET_NAME = 'orders';
 var ORDER_MAXCH = 12; // до ~540 КБ на один заказ поставщику
 
+var BACKUP_SHEET_NAME = 'backups';
+var BACKUP_WINDOW_MS = 24 * 60 * 60 * 1000; // сутки, как и просили — окно, пока предлагаем восстановить
+
 function doPost(e) {
   try {
     var req = JSON.parse(e.postData.contents);
@@ -79,13 +82,15 @@ function doPost(e) {
           // Самый частый сценарий потери: слетел логин на устройстве, его ввели заново
           // и нажали "Выгрузить" раньше, чем успели что-то скачать — без этой проверки
           // такое одним запросом стирает всё, что накопилось в облаке с других устройств.
-          if (!req.force) {
-            var existingVals = sh.getRange(row, 4, 1, MAXCH).getDisplayValues()[0];
-            var existingLen = existingVals.join('').length;
-            if (existingLen > 500 && json.length < existingLen * 0.3) {
-              return out({ ok: false, error: 'data_loss_risk', existingSize: existingLen, incomingSize: json.length });
-            }
+          var existingVals = sh.getRange(row, 4, 1, MAXCH).getDisplayValues()[0];
+          var existingLen = existingVals.join('').length;
+          var risky = existingLen > 500 && json.length < existingLen * 0.3;
+          if (risky && !req.force) {
+            return out({ ok: false, error: 'data_loss_risk', existingSize: existingLen, incomingSize: json.length });
           }
+          // риск подтверждён явно (или кто-то намеренно решил уничтожить данные) — то, что
+          // заменяется, кладём в резервную копию на сутки, чтобы это всегда можно было отменить
+          if (risky) saveBackup(login, existingVals);
           sh.getRange(row, 3).setValue(now);
           sh.getRange(row, 4, 1, MAXCH).setValues([chunks]);
         }
@@ -97,11 +102,33 @@ function doPost(e) {
         if (getPin(sh, row) !== pin) return out({ ok: false, error: 'wrong_pin' });
         var vals = sh.getRange(row, 4, 1, MAXCH).getDisplayValues()[0];
         var data = vals.join('');
+        var backupInfo = getBackupInfo(login);
         return out({
           ok: true,
           payload: data ? JSON.parse(data) : null,
-          at: String(sh.getRange(row, 3).getValue())
+          at: String(sh.getRange(row, 3).getValue()),
+          hasBackup: backupInfo.has,
+          backupAt: backupInfo.at
         });
+      }
+
+      // отменить недавнюю рискованную перезапись (см. saveBackup выше) — доступно сутки
+      // с момента замены, с любого устройства, вошедшего тем же логином+PIN
+      if (req.action === 'restore_backup') {
+        if (row === -1) return out({ ok: false, error: 'not_found' });
+        if (getPin(sh, row) !== pin) return out({ ok: false, error: 'wrong_pin' });
+        var bsh = getBackupSheet();
+        var brow = findRow(bsh, login);
+        if (brow === -1) return out({ ok: false, error: 'backup_not_found' });
+        var binfo = getBackupInfo(login);
+        if (!binfo.has) return out({ ok: false, error: 'backup_expired' });
+        var bvals = bsh.getRange(brow, 3, 1, MAXCH).getDisplayValues()[0];
+        var bdata = bvals.join('');
+        var restoredAt = new Date().toISOString();
+        sh.getRange(row, 3).setValue(restoredAt);
+        sh.getRange(row, 4, 1, MAXCH).setValues([bvals]);
+        bsh.deleteRow(brow); // восстановили — больше не предлагаем повторно
+        return out({ ok: true, at: restoredAt, payload: bdata ? JSON.parse(bdata) : null });
       }
 
       // печать с телефона на компьютер: задание кладётся в очередь и разбирается той же
@@ -360,6 +387,39 @@ function findOrderRowForRecipient(sh, id, toLogin) {
 
 function getPin(sh, row) {
   return String(sh.getRange(row, 2).getDisplayValue()).replace(/\D/g, '');
+}
+
+// резервная копия того, что было заменено рискованной выгрузкой — одна на логин
+// (новая замена перезаписывает предыдущую резервную копию, а не копится бесконечно)
+function getBackupSheet() {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sh = ss.getSheetByName(BACKUP_SHEET_NAME);
+  if (!sh) {
+    sh = ss.insertSheet(BACKUP_SHEET_NAME);
+    var head = ['login', 'createdAt'];
+    for (var i = 1; i <= MAXCH; i++) head.push('data' + i);
+    sh.appendRow(head);
+  }
+  return sh;
+}
+function saveBackup(login, chunksVals) {
+  var bsh = getBackupSheet();
+  var brow = findRow(bsh, login);
+  var now = new Date().toISOString();
+  if (brow === -1) {
+    bsh.appendRow([login, now].concat(chunksVals));
+  } else {
+    bsh.getRange(brow, 2).setValue(now);
+    bsh.getRange(brow, 3, 1, MAXCH).setValues([chunksVals]);
+  }
+}
+function getBackupInfo(login) {
+  var bsh = getBackupSheet();
+  var brow = findRow(bsh, login);
+  if (brow === -1) return { has: false };
+  var at = String(bsh.getRange(brow, 2).getDisplayValue());
+  var age = Date.now() - new Date(at).getTime();
+  return { has: age >= 0 && age < BACKUP_WINDOW_MS, at: at };
 }
 
 function out(obj) {

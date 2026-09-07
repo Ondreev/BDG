@@ -2634,9 +2634,13 @@ const I18N = {
     sync_err_bad_pin: 'PIN — 4 цифры',
     sync_err_too_big: 'Данные слишком большие для облака',
     sync_err_data_loss_risk: 'В облаке уже есть больше данных — загрузка отменена, чтобы их не потерять',
-    sync_overwrite_warn_title: 'В облаке уже есть данные',
-    sync_overwrite_warn_text: 'Похоже, вы ещё не видели, что сейчас в облаке. Списки: {rLists} → {lLists}, товары в каталоге: {rProducts} → {lProducts}. Если продолжить, данные в облаке заменятся тем, что на этом устройстве, а то, что было там, станет недоступно.',
+    sync_overwrite_warn_title: 'Опасно!',
+    sync_overwrite_warn_text: 'Обнаружен большой объём данных в облаке, которого нет на этом устройстве (списки: {rLists} → {lLists}, товары в каталоге: {rProducts} → {lProducts}). Это действие приведёт к потере данных!',
     sync_overwrite_warn_btn: 'Всё равно заменить',
+    sync_backup_available_text: 'Недавно на этом аккаунте были заменены большие данные. Резервная копия ещё доступна — восстановить её?',
+    sync_backup_restore_btn: 'Восстановить утерянные данные',
+    sync_backup_restored_toast: 'Данные восстановлены из резервной копии',
+    sync_backup_restore_fail: 'Не удалось восстановить резервную копию',
     sync_err_generic: 'Ошибка облака: {code}',
     sync_err_no_connection: 'Нет связи с облаком — проверьте интернет и адрес скрипта',
     sync_download_confirm_btn: 'Заменить и загрузить',
@@ -3210,9 +3214,13 @@ const I18N = {
     sync_err_bad_pin: 'PIN — 4 digits',
     sync_err_too_big: 'Data is too large for the cloud',
     sync_err_data_loss_risk: 'The cloud already has more data — upload cancelled to avoid losing it',
-    sync_overwrite_warn_title: 'The cloud already has data',
-    sync_overwrite_warn_text: 'Looks like you haven\'t seen what\'s currently in the cloud. Lists: {rLists} → {lLists}, catalog products: {rProducts} → {lProducts}. If you continue, the cloud data will be replaced with what\'s on this device, and what was there will become unavailable.',
+    sync_overwrite_warn_title: 'Danger!',
+    sync_overwrite_warn_text: 'A large amount of cloud data is missing from this device (lists: {rLists} → {lLists}, catalog products: {rProducts} → {lProducts}). This action will cause data loss!',
     sync_overwrite_warn_btn: 'Replace anyway',
+    sync_backup_available_text: 'This account recently had a large amount of data replaced. A backup is still available — restore it?',
+    sync_backup_restore_btn: 'Restore lost data',
+    sync_backup_restored_toast: 'Data restored from backup',
+    sync_backup_restore_fail: 'Failed to restore the backup',
     sync_err_generic: 'Cloud error: {code}',
     sync_err_no_connection: 'No connection to the cloud — check your internet and the script URL',
     sync_download_confirm_btn: 'Replace and download',
@@ -3786,9 +3794,13 @@ const I18N = {
     sync_err_bad_pin: 'PIN — 4 Ziffern',
     sync_err_too_big: 'Daten sind zu groß für die Cloud',
     sync_err_data_loss_risk: 'In der Cloud sind bereits mehr Daten vorhanden — Upload abgebrochen, um sie nicht zu verlieren',
-    sync_overwrite_warn_title: 'In der Cloud sind bereits Daten vorhanden',
-    sync_overwrite_warn_text: 'Es sieht so aus, als hätten Sie noch nicht gesehen, was sich derzeit in der Cloud befindet. Listen: {rLists} → {lLists}, Katalogartikel: {rProducts} → {lProducts}. Wenn Sie fortfahren, werden die Cloud-Daten durch die auf diesem Gerät ersetzt, und die vorherigen Daten sind nicht mehr verfügbar.',
+    sync_overwrite_warn_title: 'Gefahr!',
+    sync_overwrite_warn_text: 'Auf diesem Gerät fehlt ein großer Teil der Cloud-Daten (Listen: {rLists} → {lLists}, Katalogartikel: {rProducts} → {lProducts}). Diese Aktion führt zu Datenverlust!',
     sync_overwrite_warn_btn: 'Trotzdem ersetzen',
+    sync_backup_available_text: 'Für dieses Konto wurden kürzlich große Datenmengen ersetzt. Eine Sicherung ist noch verfügbar — wiederherstellen?',
+    sync_backup_restore_btn: 'Verlorene Daten wiederherstellen',
+    sync_backup_restored_toast: 'Daten aus der Sicherung wiederhergestellt',
+    sync_backup_restore_fail: 'Sicherung konnte nicht wiederhergestellt werden',
     sync_err_generic: 'Cloud-Fehler: {code}',
     sync_err_no_connection: 'Keine Verbindung zur Cloud — prüfe dein Internet und die Skript-URL',
     sync_download_confirm_btn: 'Ersetzen und herunterladen',
@@ -4360,9 +4372,13 @@ const I18N = {
     sync_err_bad_pin: 'PIN — 4 dígitos',
     sync_err_too_big: 'Los datos son demasiado grandes para la nube',
     sync_err_data_loss_risk: 'La nube ya tiene más datos — la subida se canceló para no perderlos',
-    sync_overwrite_warn_title: 'La nube ya tiene datos',
-    sync_overwrite_warn_text: 'Parece que aún no ha visto lo que hay actualmente en la nube. Listas: {rLists} → {lLists}, productos del catálogo: {rProducts} → {lProducts}. Si continúa, los datos de la nube se reemplazarán por los de este dispositivo, y lo que había allí dejará de estar disponible.',
+    sync_overwrite_warn_title: '¡Peligro!',
+    sync_overwrite_warn_text: 'Falta una gran cantidad de datos de la nube en este dispositivo (listas: {rLists} → {lLists}, productos del catálogo: {rProducts} → {lProducts}). ¡Esta acción provocará la pérdida de datos!',
     sync_overwrite_warn_btn: 'Reemplazar de todos modos',
+    sync_backup_available_text: 'Recientemente se reemplazaron grandes cantidades de datos en esta cuenta. Todavía hay una copia de seguridad disponible: ¿restaurarla?',
+    sync_backup_restore_btn: 'Restaurar datos perdidos',
+    sync_backup_restored_toast: 'Datos restaurados desde la copia de seguridad',
+    sync_backup_restore_fail: 'No se pudo restaurar la copia de seguridad',
     sync_err_generic: 'Error de la nube: {code}',
     sync_err_no_connection: 'Sin conexión con la nube — comprueba tu internet y la URL del script',
     sync_download_confirm_btn: 'Reemplazar y descargar',
@@ -4934,9 +4950,13 @@ const I18N = {
     sync_err_bad_pin: 'PIN — 4 chiffres',
     sync_err_too_big: 'Les données sont trop volumineuses pour le cloud',
     sync_err_data_loss_risk: 'Le cloud contient déjà plus de données — envoi annulé pour ne pas les perdre',
-    sync_overwrite_warn_title: 'Le cloud contient déjà des données',
-    sync_overwrite_warn_text: 'Il semble que vous n\'ayez pas encore vu ce qui se trouve actuellement dans le cloud. Listes : {rLists} → {lLists}, produits du catalogue : {rProducts} → {lProducts}. Si vous continuez, les données du cloud seront remplacées par celles de cet appareil, et ce qui s\'y trouvait ne sera plus disponible.',
+    sync_overwrite_warn_title: 'Danger !',
+    sync_overwrite_warn_text: 'Une grande quantité de données du cloud est absente de cet appareil (listes : {rLists} → {lLists}, produits du catalogue : {rProducts} → {lProducts}). Cette action entraînera une perte de données !',
     sync_overwrite_warn_btn: 'Remplacer quand même',
+    sync_backup_available_text: 'De grandes quantités de données ont récemment été remplacées sur ce compte. Une sauvegarde est encore disponible : la restaurer ?',
+    sync_backup_restore_btn: 'Restaurer les données perdues',
+    sync_backup_restored_toast: 'Données restaurées à partir de la sauvegarde',
+    sync_backup_restore_fail: 'Échec de la restauration de la sauvegarde',
     sync_err_generic: 'Erreur du cloud : {code}',
     sync_err_no_connection: 'Pas de connexion au cloud — vérifiez votre connexion internet et l’URL du script',
     sync_download_confirm_btn: 'Remplacer et télécharger',
@@ -5508,9 +5528,13 @@ const I18N = {
     sync_err_bad_pin: 'PIN — 4位数字',
     sync_err_too_big: '数据对云端来说太大了',
     sync_err_data_loss_risk: '云端已有更多数据 — 已取消上传，以免丢失',
-    sync_overwrite_warn_title: '云端已有数据',
-    sync_overwrite_warn_text: '您似乎还没有查看云端当前的数据。清单：{rLists} → {lLists}，目录商品：{rProducts} → {lProducts}。如果继续，云端数据将被此设备上的数据替换，原有数据将无法找回。',
+    sync_overwrite_warn_title: '危险！',
+    sync_overwrite_warn_text: '此设备上缺少云端的大量数据（清单：{rLists} → {lLists}，目录商品：{rProducts} → {lProducts}）。此操作将导致数据丢失！',
     sync_overwrite_warn_btn: '仍然替换',
+    sync_backup_available_text: '该账户最近有大量数据被替换。备份仍然可用 — 要恢复吗？',
+    sync_backup_restore_btn: '恢复丢失的数据',
+    sync_backup_restored_toast: '已从备份恢复数据',
+    sync_backup_restore_fail: '恢复备份失败',
     sync_err_generic: '云端错误：{code}',
     sync_err_no_connection: '无法连接云端 — 请检查网络和脚本地址',
     sync_download_confirm_btn: '替换并下载',
@@ -6082,9 +6106,13 @@ const I18N = {
     sync_err_bad_pin: 'PIN — 4 chữ số',
     sync_err_too_big: 'Dữ liệu quá lớn đối với đám mây',
     sync_err_data_loss_risk: 'Đám mây đã có nhiều dữ liệu hơn — đã hủy tải lên để tránh mất dữ liệu',
-    sync_overwrite_warn_title: 'Đám mây đã có dữ liệu',
-    sync_overwrite_warn_text: 'Có vẻ bạn chưa xem dữ liệu hiện có trên đám mây. Danh sách: {rLists} → {lLists}, sản phẩm trong danh mục: {rProducts} → {lProducts}. Nếu tiếp tục, dữ liệu trên đám mây sẽ bị thay thế bằng dữ liệu trên thiết bị này, và dữ liệu cũ sẽ không còn nữa.',
+    sync_overwrite_warn_title: 'Nguy hiểm!',
+    sync_overwrite_warn_text: 'Thiết bị này đang thiếu một lượng lớn dữ liệu trên đám mây (danh sách: {rLists} → {lLists}, sản phẩm trong danh mục: {rProducts} → {lProducts}). Hành động này sẽ gây mất dữ liệu!',
     sync_overwrite_warn_btn: 'Vẫn thay thế',
+    sync_backup_available_text: 'Tài khoản này gần đây đã bị thay thế một lượng lớn dữ liệu. Bản sao lưu vẫn còn — khôi phục chứ?',
+    sync_backup_restore_btn: 'Khôi phục dữ liệu đã mất',
+    sync_backup_restored_toast: 'Đã khôi phục dữ liệu từ bản sao lưu',
+    sync_backup_restore_fail: 'Không thể khôi phục bản sao lưu',
     sync_err_generic: 'Lỗi đám mây: {code}',
     sync_err_no_connection: 'Không có kết nối tới đám mây — kiểm tra internet và địa chỉ script',
     sync_download_confirm_btn: 'Thay thế và tải xuống',
@@ -6656,9 +6684,13 @@ const I18N = {
     sync_err_bad_pin: 'PIN — 4 raqam',
     sync_err_too_big: 'Ma’lumot bulut uchun juda katta',
     sync_err_data_loss_risk: 'Bulutda allaqachon ko‘proq ma’lumot bor — yuklash bekor qilindi, ularni yo‘qotmaslik uchun',
-    sync_overwrite_warn_title: 'Bulutda allaqachon ma’lumot bor',
-    sync_overwrite_warn_text: 'Siz hozircha bulutda nima borligini ko‘rmagandek. Ro‘yxatlar: {rLists} → {lLists}, katalogdagi mahsulotlar: {rProducts} → {lProducts}. Davom etsangiz, bulutdagi ma’lumotlar shu qurilmadagi bilan almashtiriladi, u yerda bo‘lgani esa yo‘qoladi.',
+    sync_overwrite_warn_title: 'Xavfli!',
+    sync_overwrite_warn_text: 'Bu qurilmada bulutdagi katta hajmdagi ma\'lumotlar yo\'q (ro\'yxatlar: {rLists} → {lLists}, katalogdagi mahsulotlar: {rProducts} → {lProducts}). Bu amal ma\'lumotlar yo\'qolishiga olib keladi!',
     sync_overwrite_warn_btn: 'Baribir almashtirish',
+    sync_backup_available_text: 'Ushbu hisobda yaqinda katta hajmdagi ma\'lumotlar almashtirilgan edi. Zaxira nusxa hali ham mavjud — tiklaymizmi?',
+    sync_backup_restore_btn: 'Yo\'qolgan ma\'lumotlarni tiklash',
+    sync_backup_restored_toast: 'Ma\'lumotlar zaxira nusxadan tiklandi',
+    sync_backup_restore_fail: 'Zaxira nusxani tiklab bo\'lmadi',
     sync_err_generic: 'Bulut xatosi: {code}',
     sync_err_no_connection: 'Bulutga ulanish yo‘q — internet va skript manzilini tekshiring',
     sync_download_confirm_btn: 'Almashtirish va yuklab olish',
@@ -7230,9 +7262,13 @@ const I18N = {
     sync_err_bad_pin: 'PIN — 4 сан',
     sync_err_too_big: 'Маалымат булут үчүн өтө чоң',
     sync_err_data_loss_risk: 'Булутта мурунтан эле көбүрөөк маалымат бар — жүктөө токтотулду, аларды жоготпош үчүн',
-    sync_overwrite_warn_title: 'Булутта мурунтан эле маалымат бар',
-    sync_overwrite_warn_text: 'Сиз азырынча булутта эмне бар экенин көрбөгөнсүз. Тизмелер: {rLists} → {lLists}, каталогдогу товарлар: {rProducts} → {lProducts}. Улантсаңыз, булуттагы маалыматтар ушул түзмөктөгү менен алмаштырылат, ал жактагысы жоголот.',
+    sync_overwrite_warn_title: 'Коркунучтуу!',
+    sync_overwrite_warn_text: 'Бул түзмөктө булуттагы чоң көлөмдөгү маалымат жок (тизмелер: {rLists} → {lLists}, каталогдогу товарлар: {rProducts} → {lProducts}). Бул аракет маалыматтардын жоголушуна алып келет!',
     sync_overwrite_warn_btn: 'Баары бир алмаштыруу',
+    sync_backup_available_text: 'Бул аккаунтта жакында чоң көлөмдөгү маалымат алмаштырылган. Резервдик көчүрмө дагы деле жеткиликтүү — калыбына келтиребизби?',
+    sync_backup_restore_btn: 'Жоголгон маалыматтарды калыбына келтирүү',
+    sync_backup_restored_toast: 'Маалыматтар резервдик көчүрмөдөн калыбына келтирилди',
+    sync_backup_restore_fail: 'Резервдик көчүрмөнү калыбына келтирүү мүмкүн болгон жок',
     sync_err_generic: 'Булут катасы: {code}',
     sync_err_no_connection: 'Булутка байланыш жок — интернетиңизди жана скрипт дарегин текшериңиз',
     sync_download_confirm_btn: 'Алмаштыруу жана жүктөп алуу',
@@ -7804,9 +7840,13 @@ const I18N = {
     sync_err_bad_pin: 'PIN — 4 рақам',
     sync_err_too_big: 'Маълумот барои абр хеле калон аст',
     sync_err_data_loss_risk: 'Дар абр аллакай маълумоти бештар ҳаст — боркунӣ бекор карда шуд, то онҳо гум нашаванд',
-    sync_overwrite_warn_title: 'Дар абр аллакай маълумот ҳаст',
-    sync_overwrite_warn_text: 'Чунин ба назар мерасад, ки шумо ҳанӯз надидаед, ки дар абр чӣ ҳаст. Рӯйхатҳо: {rLists} → {lLists}, маҳсулоти каталог: {rProducts} → {lProducts}. Агар идома диҳед, маълумоти абр бо маълумоти ин дастгоҳ иваз мешавад ва он чи дар он ҷо буд, дастнорас мешавад.',
+    sync_overwrite_warn_title: 'Хатарнок!',
+    sync_overwrite_warn_text: 'Дар ин дастгоҳ ҳаҷми калони маълумоти абр нест (рӯйхатҳо: {rLists} → {lLists}, маҳсулоти каталог: {rProducts} → {lProducts}). Ин амал боиси гум шудани маълумот мешавад!',
     sync_overwrite_warn_btn: 'Ба ҳар ҳол иваз кардан',
+    sync_backup_available_text: 'Дар ин ҳисоб ба наздикӣ ҳаҷми калони маълумот иваз карда шуд. Нусхаи эҳтиётӣ ҳанӯз дастрас аст — барқарор кунем?',
+    sync_backup_restore_btn: 'Барқарор кардани маълумоти гумшуда',
+    sync_backup_restored_toast: 'Маълумот аз нусхаи эҳтиётӣ барқарор карда шуд',
+    sync_backup_restore_fail: 'Барқарор кардани нусхаи эҳтиётӣ ноком шуд',
     sync_err_generic: 'Хатои абр: {code}',
     sync_err_no_connection: 'Пайваст ба абр нест — интернет ва суроғаи скриптро тафтиш кунед',
     sync_download_confirm_btn: 'Иваз ва боргирӣ кардан',
@@ -8378,9 +8418,13 @@ const I18N = {
     sync_err_bad_pin: 'PIN — 4 ციფრი',
     sync_err_too_big: 'მონაცემები ძალიან დიდია ღრუბლისთვის',
     sync_err_data_loss_risk: 'ღრუბელში უკვე მეტი მონაცემია — ატვირთვა გაუქმდა, რომ არ დაიკარგოს',
-    sync_overwrite_warn_title: 'ღრუბელში უკვე არის მონაცემები',
-    sync_overwrite_warn_text: 'როგორც ჩანს, ჯერ არ გინახავთ, რა არის ამჟამად ღრუბელში. სიები: {rLists} → {lLists}, კატალოგის პროდუქტები: {rProducts} → {lProducts}. თუ გააგრძელებთ, ღრუბლის მონაცემები ჩანაცვლდება ამ მოწყობილობაზე არსებულით და იქ არსებული აღარ იქნება ხელმისაწვდომი.',
+    sync_overwrite_warn_title: 'საშიშია!',
+    sync_overwrite_warn_text: 'ამ მოწყობილობას აკლია ღრუბელში არსებული დიდი მოცულობის მონაცემები (სიები: {rLists} → {lLists}, კატალოგის პროდუქტები: {rProducts} → {lProducts}). ეს მოქმედება გამოიწვევს მონაცემების დაკარგვას!',
     sync_overwrite_warn_btn: 'მაინც ჩანაცვლება',
+    sync_backup_available_text: 'ამ ანგარიშზე ცოტა ხნის წინ დიდი მოცულობის მონაცემები ჩანაცვლდა. სარეზერვო ასლი ჯერ კიდევ ხელმისაწვდომია — აღვადგინოთ?',
+    sync_backup_restore_btn: 'დაკარგული მონაცემების აღდგენა',
+    sync_backup_restored_toast: 'მონაცემები აღდგენილია სარეზერვო ასლიდან',
+    sync_backup_restore_fail: 'სარეზერვო ასლის აღდგენა ვერ მოხერხდა',
     sync_err_generic: 'ღრუბლის შეცდომა: {code}',
     sync_err_no_connection: 'კავშირი ღრუბელთან არ არის — შეამოწმეთ ინტერნეტი და სკრიპტის მისამართი',
     sync_download_confirm_btn: 'ჩანაცვლება და ჩამოტვირთვა',
@@ -8952,9 +8996,13 @@ const I18N = {
     sync_err_bad_pin: 'PIN — 4 թիվ',
     sync_err_too_big: 'Տվյալները չափազանց մեծ են ամպի համար',
     sync_err_data_loss_risk: 'Ամպում արդեն ավելի շատ տվյալներ կան․ վերբեռնումը չեղարկվեց, որպեսզի դրանք չկորչեն',
-    sync_overwrite_warn_title: 'Ամպում արդեն կան տվյալներ',
-    sync_overwrite_warn_text: 'Կարծես դեռ չեք տեսել, թե ինչ կա հիմա ամպում։ Ցանկեր՝ {rLists} → {lLists}, կատալոգի ապրանքներ՝ {rProducts} → {lProducts}։ Եթե շարունակեք, ամպի տվյալները կփոխարինվեն այս սարքի տվյալներով, և այնտեղ եղածն այլևս հասանելի չի լինի։',
+    sync_overwrite_warn_title: 'Վտանգավոր է!',
+    sync_overwrite_warn_text: 'Այս սարքում բացակայում են ամպի մեծ ծավալի տվյալները (ցանկեր՝ {rLists} → {lLists}, կատալոգի ապրանքներ՝ {rProducts} → {lProducts})։ Այս գործողությունը կհանգեցնի տվյալների կորստի!',
     sync_overwrite_warn_btn: 'Այնուամենայնիվ փոխարինել',
+    sync_backup_available_text: 'Այս հաշվում վերջերս մեծ ծավալի տվյալներ են փոխարինվել։ Պահուստային պատճենը դեռ հասանելի է․ վերականգնե՞լ։',
+    sync_backup_restore_btn: 'Վերականգնել կորած տվյալները',
+    sync_backup_restored_toast: 'Տվյալները վերականգնվել են պահուստային պատճենից',
+    sync_backup_restore_fail: 'Չհաջողվեց վերականգնել պահուստային պատճենը',
     sync_err_generic: 'Ամպի սխալ՝ {code}',
     sync_err_no_connection: 'Կապ չկա ամպի հետ — ստուգեք ինտերնետը և սկրիպտի հասցեն',
     sync_download_confirm_btn: 'Փոխարինել և ներբեռնել',
@@ -9526,9 +9574,13 @@ const I18N = {
     sync_err_bad_pin: 'PIN — 4',
     sync_err_too_big: 'Адыррақәа ду абԥша азы',
     sync_err_data_loss_risk: 'Абԥшаа хазы адыррақәа рацәоуп — аҭижьра аанкылоуп, дара мҩаԥысрам азы',
-    sync_overwrite_warn_title: 'Абԥшаа хазы адыррақәа ыҟоуп',
-    sync_overwrite_warn_text: 'Шәара ари абԥшаа хазы иҟоу ишәымбацт. Атизмаҩ: {rLists} → {lLists}, акаталог аҭыжьымҭақәа: {rProducts} → {lProducts}. Шәцхьаԥсазар, абԥшаа хазы адыррақәа ари аиашьара ирыдгалоу рыла ирыхьеит, убри аҟнытә иҟоу дара мап ацны иаанхеит.',
+    sync_overwrite_warn_title: 'Аҟынтәи!',
+    sync_overwrite_warn_text: 'Ари аиашьара абԥшаа хазы адыррақәа рацәоуп, избанзар ари аиашьарахьы дара мап ыҟаӡам (атизмаҩ: {rLists} → {lLists}, акаталог аҭыжьымҭақәа: {rProducts} → {lProducts}). Ари аус адыррақәа рымҩаԥысра иахҟьоит!',
     sync_overwrite_warn_btn: 'Ирыхьаны иҭижьра',
+    sync_backup_available_text: 'Ари аккаунт хь ҵыс ыҟоу иахьтәи адыррақәа ду ирыхьеит. Азеиԥш ажәабжь наӡа иахьазы ыҟоуп — ианыҵыхыр?',
+    sync_backup_restore_btn: 'Аҧсуа адыррақәа рыҵыхра',
+    sync_backup_restored_toast: 'Адыррақәа азеиԥш ажәабжь ианыҵыхуп',
+    sync_backup_restore_fail: 'Азеиԥш ажәабжь аныҵыхра мап ацны иаанхеит',
     sync_err_generic: 'Абԥша аԥсхара: {code}',
     sync_err_no_connection: 'Абԥша ду азхьаара ыҟаӡам — интернет насгьы аскрипт адрес шәрыхьчала',
     sync_download_confirm_btn: 'Аԥсахра насгьы аныргара',
@@ -11248,16 +11300,40 @@ function checkRemoteUpdates(showUi) {
   if (document.querySelector('.sheet-wrap.open')) return; // не мешаем работе
   window.__remoteCheckBusy = true;
   if (showUi) syncBootShow();
-  syncCall({ login: s.login, pin: s.pin, url: s.url || DEFAULT_SYNC_URL }, 'load')
+  const creds = { login: s.login, pin: s.pin, url: s.url || DEFAULT_SYNC_URL };
+  syncCall(creds, 'load')
     .then(res => {
+      maybeOfferBackupRestore(res, creds);
       if (!res.payload || !res.at) { if (showUi) syncBootHide(); return; }
       // строки ISO дат сравниваются лексикографически корректно
       if (s.last && res.at <= s.last) { if (showUi) syncBootSuccess(); return; } // уже актуально
-      applyRemotePayload(res.payload, { login: s.login, pin: s.pin, url: s.url }, res.at);
+      applyRemotePayload(res.payload, creds, res.at);
       if (showUi) syncBootSuccess(); else toast(t('remote_update_applied'));
     })
     .catch(() => { if (showUi) syncBootHide(); })
     .finally(() => { window.__remoteCheckBusy = false; });
+}
+// после рискованной подтверждённой замены сервер сутки хранит то, что было до неё —
+// предлагаем восстановить при каждой сверке с облаком (не только на устройстве, которое
+// сделало замену), пока не восстановят или пока не истекут сутки
+let backupOfferSnoozeUntil = 0;
+function maybeOfferBackupRestore(res, creds) {
+  if (!res.hasBackup) return;
+  if (Date.now() < backupOfferSnoozeUntil) return;
+  if (window.__tourActive || document.querySelector('.sheet-wrap.open') || document.getElementById('aiPanel').classList.contains('show')) return;
+  aiSay(t('sync_backup_available_text'), [
+    { label: t('sync_backup_restore_btn'), pri: true, fn: () => restoreBackup(creds) },
+    { label: t('ai_later_btn'), fn: () => { backupOfferSnoozeUntil = Date.now() + 30 * 60000; } }
+  ]);
+}
+function restoreBackup(creds) {
+  syncCall(creds, 'restore_backup')
+    .then(res => {
+      if (!res.payload) { toast(t('sync_backup_restore_fail')); return; }
+      applyRemotePayload(res.payload, creds, res.at);
+      toast(t('sync_backup_restored_toast'));
+    })
+    .catch(() => toast(t('sync_backup_restore_fail')));
 }
 function syncBootShow() {
   const el = document.getElementById('syncBoot');
