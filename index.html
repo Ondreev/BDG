@@ -11286,11 +11286,21 @@ function errToMsg(err) {
 function renderSyncStatusSafe() {
   if (document.getElementById('syncSheet').classList.contains('open')) renderSyncStatus();
 }
-// после паузы в изменениях ассистент сам предлагает сохранить в облако
+// после паузы в изменениях данные сами уходят в облако
 function scheduleAutoSync() {
   if (!window.__bdgReady) return;
   clearTimeout(autoSyncTimer);
   autoSyncTimer = setTimeout(autoSyncNow, 17000);
+}
+// если человек уходит со вкладки (переключился на другое приложение/устройство) раньше,
+// чем сработал таймер выше — не ждём оставшиеся секунды, отправляем правки немедленно.
+// Иначе можно успеть открыть приложение на другом устройстве быстрее, чем правки долетят
+// до облака, и там будет казаться, что они пропали
+function flushAutoSync() {
+  if (!autoSyncTimer) return;
+  clearTimeout(autoSyncTimer);
+  autoSyncTimer = null;
+  autoSyncNow();
 }
 // раньше здесь спрашивали через ассистента «сохранить в облако?» — если человек не заметил
 // подсказку и ушёл (закрыл ноутбук, отвлёкся на середине правки), изменения так и оставались
@@ -14375,10 +14385,11 @@ document.getElementById('listNameInput').addEventListener('keydown', e => { if (
   el.addEventListener('change', () => markEmptyFields(id));
 });
 
-// save on leaving the page, just in case
-window.addEventListener('pagehide', save);
+// save on leaving the page, just in case — and flush any pending cloud upload right away
+// instead of waiting out the debounce, since the user may open another device within seconds
+window.addEventListener('pagehide', () => { save(); flushAutoSync(); });
 document.addEventListener('visibilitychange', () => {
-  if (document.visibilityState === 'hidden') save();
+  if (document.visibilityState === 'hidden') { save(); flushAutoSync(); }
   else checkRemoteUpdates();
 });
 window.addEventListener('focus', () => checkRemoteUpdates());
