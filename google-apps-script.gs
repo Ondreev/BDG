@@ -75,6 +75,17 @@ function doPost(e) {
           sh.appendRow([login, "'" + pin, now].concat(chunks));
         } else {
           if (getPin(sh, row) !== pin) return out({ ok: false, error: 'wrong_pin' });
+          // защита от случайной перезаписи большого объёма данных почти пустыми.
+          // Самый частый сценарий потери: слетел логин на устройстве, его ввели заново
+          // и нажали "Выгрузить" раньше, чем успели что-то скачать — без этой проверки
+          // такое одним запросом стирает всё, что накопилось в облаке с других устройств.
+          if (!req.force) {
+            var existingVals = sh.getRange(row, 4, 1, MAXCH).getDisplayValues()[0];
+            var existingLen = existingVals.join('').length;
+            if (existingLen > 500 && json.length < existingLen * 0.3) {
+              return out({ ok: false, error: 'data_loss_risk', existingSize: existingLen, incomingSize: json.length });
+            }
+          }
           sh.getRange(row, 3).setValue(now);
           sh.getRange(row, 4, 1, MAXCH).setValues([chunks]);
         }
