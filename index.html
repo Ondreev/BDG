@@ -2491,6 +2491,17 @@ function blankList(name) {
     data: { budget: 0, stores: [], catalog: [] } };
 }
 
+// счётчик локальных правок, ещё не подтверждённых как отправленные в облако.
+// НЕ зависит от window.__bdgReady/autoSyncTimer — раньше проверки "не перетираем ли
+// мы несохранённую правку" (checkRemoteUpdates и др.) полагались на autoSyncTimer,
+// а scheduleAutoSync() первые 2.5с после загрузки страницы его не заводит (чтобы не
+// слать в облако собственные технические пересохранения при старте). Из-за этого
+// правка, сделанная человеком в эти первые секунды (например, сразу добавил товар
+// в список), была НЕВИДИМА для защиты от перезаписи — стартовая проверка облака
+// (в 400мс после загрузки) могла применить старые данные с сервера и стереть её,
+// даже без второго устройства. localEditSeq считает правки всегда, безусловно
+let localEditSeq = 0, lastConfirmedSyncedSeq = 0;
+function hasUnsyncedLocalEdit() { return localEditSeq !== lastConfirmedSyncedSeq; }
 function save(skipAutoSync) {
   try {
     const json = JSON.stringify(state);
@@ -2499,7 +2510,10 @@ function save(skipAutoSync) {
   } catch (e) {
     toast(t('save_failed_toast'));
   }
-  if (!skipAutoSync) { try { scheduleAutoSync(); } catch (e) {} }
+  if (!skipAutoSync) {
+    localEditSeq++;
+    try { scheduleAutoSync(); } catch (e) {}
+  }
 }
 
 function tryParse(raw) { try { return JSON.parse(raw); } catch (e) { return null; } }
@@ -11757,11 +11771,18 @@ function syncCall(creds, action, payload, force, skipMerge) {
 // это стало упираться в тайм-аут общей блокировки скрипта ("другой процесс слишком
 // долго удерживает блокировку")
 function performUpload(creds, force, skipCatalogMerge) {
+  const seqAtBuild = localEditSeq; // что именно из локальных правок уедет в этом запросе
   const payload = JSON.parse(JSON.stringify(state));
   delete payload.sync; // PIN не кладём в сами данные
   return syncCall(creds, 'save', payload, force, skipCatalogMerge).then(res => {
     syncState().last = res.at;
-    save(); renderSyncStatusSafe();
+    // save(true) — это только запись сервисной метки sync.last в localStorage, а не
+    // новая правка; save() без true засчитал бы это как ещё одну "несинхронизированную
+    // правку" и вечно держал бы hasUnsyncedLocalEdit() истинным сразу после успешной отправки
+    save(true); renderSyncStatusSafe();
+    // если пока шёл запрос не появилось новых правок сверх тех, что уже уехали —
+    // считаем локальную копию подтверждённо синхронизированной
+    if (seqAtBuild > lastConfirmedSyncedSeq) lastConfirmedSyncedSeq = seqAtBuild;
     return res;
   });
 }
@@ -11971,7 +11992,7 @@ function checkRemoteUpdates(showUi) {
       // функции этого не поймает (она была секунды назад), поэтому проверяем ещё раз
       // прямо перед перезаписью и, если сейчас есть что терять, лучше пропустить этот
       // цикл сверки, чем стереть только что сделанные правки
-      if (document.querySelector('.sheet-wrap.open') || document.getElementById('aiPanel').classList.contains('show') || autoSyncTimer) {
+      if (document.querySelector('.sheet-wrap.open') || document.getElementById('aiPanel').classList.contains('show') || autoSyncTimer || hasUnsyncedLocalEdit()) {
         if (showUi) syncBootHide();
         return;
       }
@@ -12041,7 +12062,10 @@ function scheduleAutoSync() {
 // Иначе можно успеть открыть приложение на другом устройстве быстрее, чем правки долетят
 // до облака, и там будет казаться, что они пропали
 function flushAutoSync() {
-  if (!autoSyncTimer) return;
+  // hasUnsyncedLocalEdit() ловит и случай, когда правка произошла в первые 2.5с
+  // после загрузки — scheduleAutoSync() в этот момент ещё не заводит таймер (см.
+  // комментарий у localEditSeq), но саму правку терять на скрытии вкладки нельзя
+  if (!autoSyncTimer && !hasUnsyncedLocalEdit()) return;
   clearTimeout(autoSyncTimer);
   autoSyncTimer = null;
   autoSyncNow();
@@ -12075,7 +12099,7 @@ function autoSyncNow() {
       if (remoteLooksStaleAndSmaller(res.payload)) return performUpload(creds, true).then(() => stampShow());
       // и ещё раз проверяем прямо перед перезаписью — за время сетевого запроса могли
       // открыть шторку или добавить что-то новое, это нельзя тихо стирать
-      if (document.querySelector('.sheet-wrap.open') || document.getElementById('aiPanel').classList.contains('show')) return;
+      if (document.querySelector('.sheet-wrap.open') || document.getElementById('aiPanel').classList.contains('show') || hasUnsyncedLocalEdit()) return;
       applyRemotePayload(res.payload, creds, res.at); // локальная база устарела — сначала подтягиваем актуальную
       return; // правки этого цикла не отправляем; следующая правка запустит цикл заново на свежей базе
     }
@@ -15534,7 +15558,13 @@ renderCurrTopBadge();
 loadCurrencyRates(false); // подтягиваем курс доллара в шапку сразу, без открытия шторки
 
 // ассистент включается после старта: первые сохранения при загрузке не считаются
-setTimeout(() => { window.__bdgReady = true; }, 2500);
+setTimeout(() => {
+  window.__bdgReady = true;
+  // если правка случилась ДО этого момента, scheduleAutoSync() тогда её проигнорировал
+  // (это и было целью грейс-периода — не путать её со служебными пересохранениями при
+  // старте) — но саму правку из-за этого нельзя было забыть отправить в облако
+  if (hasUnsyncedLocalEdit()) scheduleAutoSync();
+}, 2500);
 maybeOfferTour();
 // при каждом открытии сразу сверяемся с облаком — единый источник правды на всех устройствах
 setTimeout(() => checkRemoteUpdates(true), 400);
