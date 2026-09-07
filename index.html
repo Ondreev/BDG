@@ -314,10 +314,19 @@ input,select{font-family:inherit}
 #catalogSheet .sheet{
   position:fixed;inset:0;width:100%;max-width:100%;height:100%;max-height:100%;
   border-radius:0;transform:none;opacity:1;box-shadow:none;
-  display:flex;flex-direction:column;padding:12px 8px calc(8px + env(safe-area-inset-bottom));
+  padding:12px 8px calc(8px + env(safe-area-inset-bottom));
+  display:grid;grid-template-columns:1fr auto;align-items:center;column-gap:8px;
+  grid-template-areas:"title close" "search search" "chips chips" "locrow locrow" "list list" "bulkbar bulkbar" "actions actions";
+  grid-template-rows:auto auto auto auto 1fr auto auto;
 }
+.cat-title{grid-area:title;align-self:center}
+.cat-close{grid-area:close;align-self:center}
+.cat-searchrow{grid-area:search;align-self:start}
+.cat-chipsrow{grid-area:chips;align-self:start}
+.cat-locrow{grid-area:locrow;align-self:start}
+.cat-bulkbar{grid-area:bulkbar;align-self:start}
 .cat-list{
-  flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;margin-bottom:10px;
+  grid-area:list;align-self:stretch;min-height:0;overflow-y:auto;overscroll-behavior:contain;margin-bottom:10px;
   display:grid;grid-template-columns:repeat(2,1fr);grid-auto-rows:min-content;gap:8px;
   align-content:start;align-items:start;
 }
@@ -348,19 +357,19 @@ input,select{font-family:inherit}
 }
 .cat-card.picked .cat-card-pick{background:var(--green);border-color:var(--green)}
 .cat-card-body{padding:9px 10px 11px}
-.cat-card-price{font-size:15.5px;font-weight:800;display:flex;align-items:baseline;gap:6px;flex-wrap:wrap}
-.cat-card-pack{font-size:11px;font-weight:700;color:var(--muted)}
+.cat-card-price{font-size:17px;font-weight:900;display:flex;align-items:baseline;gap:6px;flex-wrap:wrap}
+.cat-card-pack{font-size:10.5px;font-weight:800;color:#fff;background:var(--amber);padding:2px 7px;border-radius:99px;white-space:nowrap}
 .cat-card-name{
   font-size:13px;font-weight:600;margin-top:2px;overflow:hidden;text-overflow:ellipsis;
   display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;line-height:1.3;
 }
-.cat-card-badges{display:flex;flex-wrap:wrap;gap:4px;margin-top:5px}
+.cat-card-badges{display:flex;flex-wrap:wrap;gap:4px;margin-top:0}
 .cc-badge{
-  font-size:10.5px;font-weight:700;padding:2px 7px;border-radius:99px;white-space:nowrap;
-  overflow:hidden;text-overflow:ellipsis;max-width:100%;
+  font-size:10.5px;font-weight:800;padding:2px 7px;border-radius:99px;white-space:nowrap;
+  overflow:hidden;text-overflow:ellipsis;max-width:100%;color:#fff;
 }
-.cc-badge-store{background:var(--accent-soft);color:var(--accent)}
-.cc-badge-loc{background:var(--green-soft);color:#047857}
+.cc-badge-store{background:var(--accent)}
+.cc-badge-loc{background:var(--green)}
 .cat-card-note{
   font-size:11px;color:var(--muted);margin-top:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
 }
@@ -649,7 +658,7 @@ label.sku-check{display:flex;align-items:center;gap:6px;font-size:11.5px;font-we
 .btn:disabled:active{transform:none}
 .btn-primary{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;box-shadow:0 6px 18px rgba(99,102,241,.35)}
 .btn-accent2{background:linear-gradient(135deg,#0EA5A5,var(--green));color:#fff;box-shadow:0 6px 18px rgba(16,185,129,.3)}
-.cat-actions{display:flex;flex-direction:column}
+.cat-actions{grid-area:actions;display:flex;flex-direction:column}
 .btn-ghost{background:var(--bg);color:var(--text)}
 a.btn-primary{color:#fff}
 a.btn-ghost{color:var(--text)}
@@ -1246,9 +1255,15 @@ input[type=file]{display:none}
   .item-row .item-edit-btn{display:none}
   /* на широком экране в ряд помещается больше карточек каталога, чем 2 */
   .cat-list{grid-template-columns:repeat(auto-fill,minmax(170px,1fr))}
-  /* компактные яркие кнопки в ряд, а не растянутые на всю ширину экрана */
-  .cat-actions{flex-direction:row;justify-content:flex-end;gap:10px}
-  .cat-actions .btn{width:auto;padding:0 22px;margin-top:0}
+  /* компактные яркие кнопки в ряд рядом с заголовком, а не растянутые на всю
+     ширину экрана снизу, где их не видно без прокрутки до конца списка */
+  #catalogSheet .sheet{
+    grid-template-columns:1fr auto auto;
+    grid-template-areas:"title actions close" "search search search" "chips chips chips" "locrow locrow locrow" "list list list" "bulkbar bulkbar bulkbar";
+    grid-template-rows:auto auto auto auto 1fr auto;
+  }
+  .cat-actions{grid-area:actions;flex-direction:row;justify-content:flex-end;align-items:center;gap:10px}
+  .cat-actions .btn{width:auto;padding:0 18px;height:38px;margin-top:0;font-size:13.5px}
 }
 </style>
 </head>
@@ -1755,11 +1770,9 @@ input[type=file]{display:none}
 
 <div class="sheet-wrap" id="catalogSheet"><div class="backdrop" onclick="closeSheet('catalogSheet')"></div>
   <div class="sheet">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
-      <h2 style="margin:0" data-i18n="cat_sheet_title">Каталог товаров</h2>
-      <button class="icon-btn" id="catalogCloseBtn" onclick="closeSheet('catalogSheet')" aria-label="Закрыть" data-i18n-aria="btn_close" style="width:42px;height:42px;border-radius:12px"><span class="ic" data-icon="close"></span></button>
-    </div>
-    <div style="display:flex;gap:8px;align-items:center;margin-bottom:12px">
+    <h2 class="cat-title" style="margin:0" data-i18n="cat_sheet_title">Каталог товаров</h2>
+    <button class="icon-btn cat-close" id="catalogCloseBtn" onclick="closeSheet('catalogSheet')" aria-label="Закрыть" data-i18n-aria="btn_close" style="width:42px;height:42px;border-radius:12px"><span class="ic" data-icon="close"></span></button>
+    <div class="cat-searchrow" style="display:flex;gap:8px;align-items:center;margin-bottom:12px">
       <div class="search-wrap" style="flex:1;margin-bottom:0">
         <span class="sic"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="6.5"/><path d="M20.2 20.2l-4.6-4.6"/></svg></span>
         <input id="catSearch" type="text" placeholder="Название, цена или категория" data-i18n-ph="cat_search_ph" autocomplete="off" oninput="renderCatalog()" onkeydown="if(event.key==='Enter')catSearchEnter()">
@@ -1771,15 +1784,15 @@ input[type=file]{display:none}
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#475569" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8V5.5A1.5 1.5 0 0 1 5.5 4H8M16 4h2.5A1.5 1.5 0 0 1 20 5.5V8M20 16v2.5a1.5 1.5 0 0 1-1.5 1.5H16M8 20H5.5A1.5 1.5 0 0 1 4 18.5V16"/><rect x="9" y="9" width="6" height="6" rx="1"/></svg>
       </button>
     </div>
-    <div class="chips" id="catChips"></div>
-    <div style="display:flex;align-items:center;gap:6px">
+    <div class="cat-chipsrow chips" id="catChips"></div>
+    <div class="cat-locrow" style="display:flex;align-items:center;gap:6px">
       <div class="chips" id="catLocChips" style="flex:1"></div>
       <button class="icon-btn" id="locManageBtn" onclick="openLocManageSheet()" style="width:36px;height:36px;border-radius:11px;flex:none;display:none" aria-label="Места и магазины" data-i18n-aria="loc_manage_aria">
         <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#475569" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9.5 5.5 4h13L20 9.5M5 10v10h14V10M9.5 20v-5.5h5V20"/></svg>
       </button>
     </div>
     <div class="cat-list" id="catList"></div>
-    <div id="catBulkBar" style="display:none;margin-bottom:12px">
+    <div class="cat-bulkbar" id="catBulkBar" style="display:none;margin-bottom:12px">
       <p style="color:var(--muted);font-size:13px;margin:0 0 8px" id="catBulkCount"></p>
       <div class="field-row">
         <div class="field" style="margin-bottom:0">
@@ -13273,19 +13286,26 @@ function photoDisplayUrl(id, size) {
 const photoPrefetched = new Set();
 function prefetchProductPhotos() {
   if (!('serviceWorker' in navigator)) return;
-  const ids = new Set();
-  (state.catalogDB.products || []).forEach(p => { if (p.photoId) ids.add(p.photoId); });
+  // важно прогревать кэш РОВНО той шириной, что реально показывается — иначе
+  // URL (и с ним ключ кэша) не совпадёт с тем, что запросит карточка каталога,
+  // и вся предзагрузка окажется бесполезной
+  const catIds = new Set();
+  (state.catalogDB.products || []).forEach(p => { if (p.photoId) catIds.add(p.photoId); });
+  const itemIds = new Set();
   (state.lists || []).forEach(l => ((l.data && l.data.stores) || []).forEach(s =>
-    s.items.forEach(it => { if (it.photoId) ids.add(it.photoId); })));
-  const todo = [...ids].filter(id => !photoPrefetched.has(id));
+    s.items.forEach(it => { if (it.photoId) itemIds.add(it.photoId); })));
+  const todo = [
+    ...[...catIds].filter(id => !photoPrefetched.has('c' + id)).map(id => ({ id, key: 'c' + id, size: CAT_CARD_PHOTO_SIZE })),
+    ...[...itemIds].filter(id => !photoPrefetched.has('i' + id)).map(id => ({ id, key: 'i' + id, size: 90 }))
+  ];
   if (!todo.length) return;
-  todo.forEach(id => photoPrefetched.add(id));
+  todo.forEach(x => photoPrefetched.add(x.key));
   const BATCH = 4;
   let i = 0;
   (function next() {
     const batch = todo.slice(i, i + BATCH); i += BATCH;
     if (!batch.length) return;
-    Promise.all(batch.map(id => fetch(photoDisplayUrl(id, 200), { mode: 'no-cors' }).catch(() => {}))).then(next);
+    Promise.all(batch.map(x => fetch(photoDisplayUrl(x.id, x.size), { mode: 'no-cors' }).catch(() => {}))).then(next);
   })();
 }
 const AVATAR_COLORS = ['#F97066', '#F79009', '#EAAA08', '#3CCB7F', '#4CC2C4', '#53B1FD', '#8098F9', '#9B8AFB', '#F670C7'];
@@ -13309,8 +13329,11 @@ function catCardBadgesHTML(p) {
   if (p.loc) badges.push(`<span class="cc-badge cc-badge-loc">${esc(p.loc)}</span>`);
   return badges.length ? `<div class="cat-card-badges">${badges.join('')}</div>` : '';
 }
+// карточки каталога в сетке узкие (2 в ряд на мобилке) — грузить 300px незачем,
+// это лишний вес; 220px хватает даже на широких десктопных карточках
+const CAT_CARD_PHOTO_SIZE = 220;
 function catCardImgHTML(p) {
-  const url = photoDisplayUrl(p.photoId, 300);
+  const url = photoDisplayUrl(p.photoId, CAT_CARD_PHOTO_SIZE);
   // в режиме массового выбора тап по фото должен так же выделять карточку, а не
   // открывать просмотр — поэтому увеличенный просмотр только вне этого режима
   const tap = catSelectMode ? '' : ` onclick="event.stopPropagation();openPhotoViewer('${p.photoId}')"`;
