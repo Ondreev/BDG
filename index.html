@@ -310,24 +310,48 @@ input,select{font-family:inherit}
 }
 .chip.on{background:var(--accent);color:#fff}
 .chip .chip-edit{display:flex;align-items:center;opacity:.85}
-.cat-list{max-height:42vh;overflow-y:auto;overscroll-behavior:contain;margin-bottom:14px}
-.cat-row{display:flex;align-items:center;gap:10px;padding:9px 2px;border-bottom:1px solid var(--line)}
-.cat-row:last-child{border-bottom:none}
-.cat-info{flex:1;min-width:0;cursor:pointer;padding:3px 0}
-.cat-name{font-size:15px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.cat-meta{font-size:12px;color:var(--muted);margin-top:2px}
-.cat-note{font-size:11.5px;color:var(--muted);margin-top:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.cat-price{font-size:14.5px;font-weight:800;white-space:nowrap;flex:none}
-.cat-add{
-  width:42px;height:42px;flex:none;border:none;border-radius:13px;background:var(--accent-soft);
-  color:var(--accent);cursor:pointer;display:flex;align-items:center;justify-content:center;
+/* ---------- каталог: полноэкранная страница со витриной карточек (фото вперёд) ---------- */
+#catalogSheet .sheet{
+  position:fixed;inset:0;width:100%;max-width:100%;height:100%;max-height:100%;
+  border-radius:0;transform:none;opacity:1;box-shadow:none;
+  display:flex;flex-direction:column;padding:14px 14px calc(14px + env(safe-area-inset-bottom));
 }
-.cat-add:active{background:#DDE0FD}
-.cat-fav{width:34px;height:42px;flex:none;border:none;background:none;cursor:pointer;display:flex;align-items:center;justify-content:center}
-.cat-empty{text-align:center;color:var(--muted);font-size:13.5px;padding:26px 0}
-.cat-row.picked{background:var(--accent-soft);border-radius:12px}
-.cat-row.picked .check .box{background:var(--green);border-color:var(--green)}
-.cat-row.picked .check .box svg{opacity:1;transform:scale(1)}
+.cat-list{
+  flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;margin:0 -2px 12px;padding:2px 2px 4px;
+  display:grid;grid-template-columns:repeat(2,1fr);gap:12px;align-content:start;
+}
+.cat-card{
+  display:flex;flex-direction:column;border-radius:16px;overflow:hidden;cursor:pointer;
+  background:#fff;border:1px solid var(--line);
+}
+.cat-card.picked{outline:2px solid var(--accent)}
+.cat-card-img{position:relative;aspect-ratio:1/1;background:var(--line);flex:none}
+.cat-card-img img{width:100%;height:100%;object-fit:cover;display:block}
+.cat-card-ph{width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:34px;font-weight:800;color:#fff}
+.cat-card-fav{
+  position:absolute;top:8px;right:8px;width:32px;height:32px;border-radius:50%;border:none;
+  background:rgba(255,255,255,.85);display:flex;align-items:center;justify-content:center;cursor:pointer;
+}
+.cat-card-add{
+  position:absolute;right:8px;bottom:8px;width:36px;height:36px;border-radius:50%;border:none;
+  background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;
+  box-shadow:0 4px 10px rgba(0,0,0,.2);
+}
+.cat-card-add:active{transform:scale(.92)}
+.cat-card-pick{
+  position:absolute;top:8px;right:8px;width:26px;height:26px;border-radius:50%;border:2px solid #fff;
+  background:rgba(15,23,42,.35);display:flex;align-items:center;justify-content:center;
+}
+.cat-card.picked .cat-card-pick{background:var(--green);border-color:var(--green)}
+.cat-card-body{padding:9px 10px 11px}
+.cat-card-price{font-size:15.5px;font-weight:800}
+.cat-card-name{
+  font-size:13px;font-weight:600;margin-top:2px;overflow:hidden;text-overflow:ellipsis;
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;line-height:1.3;
+}
+.cat-card-meta{font-size:11px;color:var(--muted);margin-top:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cat-empty{grid-column:1/-1;text-align:center;color:var(--muted);font-size:13.5px;padding:26px 0}
+#catalogSheet .grab{display:none}
 .fav-banner{
   display:flex;align-items:center;gap:9px;width:100%;margin-top:14px;padding:12px 14px;border:none;border-radius:16px;
   background:linear-gradient(90deg,#FFFBEB,#FEF3C7);color:#92400E;font-size:13.5px;font-weight:800;cursor:pointer;text-align:left;
@@ -341,10 +365,9 @@ input,select{font-family:inherit}
 .fav-pick-row.picked .check .box{background:var(--green);border-color:var(--green)}
 .fav-pick-row.picked .check .box svg{opacity:1;transform:scale(1)}
 @media(hover:hover){
-  .cat-add:hover{background:#DDE0FD}
   .chip:hover{color:var(--text)}
   .chip.on:hover{color:#fff}
-  .cat-info:hover .cat-name{color:var(--accent)}
+  .cat-card:hover .cat-card-name{color:var(--accent)}
 }
 
 /* ---------- store cards ---------- */
@@ -557,13 +580,6 @@ label.sku-check{display:flex;align-items:center;gap:6px;font-size:11.5px;font-we
 .photo-remove{
   position:absolute;top:5px;right:5px;width:24px;height:24px;border-radius:50%;border:none;
   background:rgba(15,23,42,.6);color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;
-}
-.cat-thumb{
-  width:44px;height:44px;border-radius:12px;flex:none;object-fit:cover;cursor:zoom-in;
-}
-.cat-thumb-ph{
-  width:44px;height:44px;border-radius:12px;flex:none;display:flex;align-items:center;justify-content:center;
-  font-size:16px;font-weight:800;color:#fff;
 }
 .item-thumb{width:34px;height:34px;border-radius:10px;flex:none;object-fit:cover;cursor:zoom-in;margin-right:2px}
 .photo-viewer{
@@ -1208,6 +1224,8 @@ input[type=file]{display:none}
   .item-row .drag-handle{display:flex}
   .item-row .check-thumb{display:none}
   .item-row .item-edit-btn{display:none}
+  /* на широком экране в ряд помещается больше карточек каталога, чем 2 */
+  .cat-list{grid-template-columns:repeat(auto-fill,minmax(170px,1fr))}
 }
 </style>
 </head>
@@ -1714,8 +1732,10 @@ input[type=file]{display:none}
 
 <div class="sheet-wrap" id="catalogSheet"><div class="backdrop" onclick="closeSheet('catalogSheet')"></div>
   <div class="sheet">
-    <div class="grab"></div>
-    <h2 data-i18n="cat_sheet_title">Каталог товаров</h2>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+      <h2 style="margin:0" data-i18n="cat_sheet_title">Каталог товаров</h2>
+      <button class="icon-btn" onclick="closeSheet('catalogSheet')" aria-label="Закрыть" data-i18n-aria="btn_close" style="width:38px;height:38px;border-radius:12px"><span class="ic" data-icon="close"></span></button>
+    </div>
     <div style="display:flex;gap:8px;align-items:center;margin-bottom:12px">
       <div class="search-wrap" style="flex:1;margin-bottom:0">
         <span class="sic"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="6.5"/><path d="M20.2 20.2l-4.6-4.6"/></svg></span>
@@ -13023,19 +13043,19 @@ function renderCatalog() {
     const cat = catById(p.categoryId);
     const picked = catSelectedIds.has(p.id);
     return `
-    <div class="cat-row ${catSelectMode && picked ? 'picked' : ''}" ${catSelectMode ? `onclick="toggleCatSelect('${p.id}')"` : ''}>
-      ${catThumbHTML(p)}
-      <div class="cat-info" ${catSelectMode ? '' : `onclick="openCatProductSheet('${p.id}')"`}>
-        <div class="cat-name">${esc(p.name)}</div>
-        <div class="cat-meta">${cat ? esc(cat.name) : t('shop_uncategorized')}${p.loc ? ' · ' + esc(p.loc) : ''}${p.sku ? ' · #' + esc(p.sku) : ''}${p.pack > 1 ? ' · ' + tf('field_pack_hint', { n: fmt(p.pack) }) : ''}</div>
-        ${p.note ? `<div class="cat-note">${esc(p.note)}</div>` : ''}
+    <div class="cat-card ${catSelectMode && picked ? 'picked' : ''}" onclick="${catSelectMode ? `toggleCatSelect('${p.id}')` : `openCatProductSheet('${p.id}')`}">
+      <div class="cat-card-img">
+        ${catCardImgHTML(p)}
+        ${catSelectMode ? `
+        <span class="cat-card-pick"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 12.5l5 5 10-11"/></svg></span>` : `
+        <button class="cat-card-fav" onclick="event.stopPropagation();toggleFavorite('${p.id}')" aria-label="${t('aria_favorite')}">${favStarSvg(p.favorite)}</button>
+        <button class="cat-card-add" onclick="event.stopPropagation();catAddClick('${p.id}')" aria-label="${t('btn_add')}">${ic('plus', 20)}</button>`}
       </div>
-      ${catSelectMode ? `
-      <span class="cat-price">${money(p.price)}</span>
-      <button class="check" tabindex="-1" aria-hidden="true"><span class="box"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 12.5l5 5 10-11"/></svg></span></button>` : `
-      <span class="cat-price">${money(p.price)}</span>
-      <button class="cat-fav" onclick="event.stopPropagation();toggleFavorite('${p.id}')" aria-label="${t('aria_favorite')}">${favStarSvg(p.favorite)}</button>
-      <button class="cat-add" onclick="catAddClick('${p.id}')" aria-label="${t('btn_add')}">${ic('plus', 18)}</button>`}
+      <div class="cat-card-body">
+        <div class="cat-card-price">${money(p.price)}</div>
+        <div class="cat-card-name">${esc(p.name)}</div>
+        <div class="cat-card-meta">${cat ? esc(cat.name) : t('shop_uncategorized')}${p.loc ? ' · ' + esc(p.loc) : ''}${p.sku ? ' · #' + esc(p.sku) : ''}${p.pack > 1 ? ' · ' + tf('field_pack_hint', { n: fmt(p.pack) }) : ''}</div>
+      </div>
     </div>`;
   }).join('') : `<div class="cat-empty">${db.products.length ? t('cat_not_found') : t('cat_empty')}</div>`;
   if (catSelectMode) renderCatBulkBar();
@@ -13183,11 +13203,11 @@ function avatarColorFor(name) {
   for (let i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) >>> 0;
   return AVATAR_COLORS[h % AVATAR_COLORS.length];
 }
-function catThumbHTML(p) {
-  const url = photoDisplayUrl(p.photoId, 100);
-  if (url) return `<img class="cat-thumb" src="${url}" alt="" onclick="event.stopPropagation();openPhotoViewer('${p.photoId}')">`;
+function catCardImgHTML(p) {
+  const url = photoDisplayUrl(p.photoId, 300);
+  if (url) return `<img src="${url}" alt="">`;
   const letter = (p.name || '?').trim().charAt(0).toUpperCase();
-  return `<div class="cat-thumb-ph" style="background:${avatarColorFor(p.name || '')}">${esc(letter)}</div>`;
+  return `<div class="cat-card-ph" style="background:${avatarColorFor(p.name || '')}">${esc(letter)}</div>`;
 }
 function itemThumbHTML(it) {
   if (!it.photoId) return '';
