@@ -816,6 +816,24 @@ input[type=file]{display:none}
 .d-sum{font-size:15px;font-weight:800;white-space:nowrap;flex:none;padding-right:10px}
 .d-sum.plus{color:var(--green)}
 .d-sum.minus{color:var(--red)}
+
+/* ---------- долг как история операций (пополнение/списание с датой и заметкой),
+   а не одно число — сумма ниже всегда пересчитывается из этой истории ---------- */
+.debt-balance-display{font-size:22px;font-weight:900;padding:10px 0 2px}
+.dtxn-header{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:14px 0 6px}
+.dtxn-header label{font-size:13px;font-weight:700;color:var(--muted)}
+.dtxn-add-btn{
+  display:flex;align-items:center;gap:5px;border:none;background:var(--accent-soft);color:var(--accent);
+  font-size:12.5px;font-weight:800;padding:7px 12px;border-radius:99px;cursor:pointer;
+}
+.dtxn-row{display:flex;align-items:center;gap:8px;padding:9px 4px;border-bottom:1px solid var(--line);cursor:pointer}
+.dtxn-row:last-child{border-bottom:none}
+.dtxn-body{flex:1;min-width:0}
+.dtxn-date{font-size:12px;font-weight:700;color:var(--muted)}
+.dtxn-note{font-size:14px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dtxn-amount{font-size:14.5px;font-weight:800;white-space:nowrap;flex:none}
+.dtxn-amount.plus{color:var(--green)}
+.dtxn-amount.minus{color:var(--red)}
 .day-badge.over{color:#fff;background:var(--red)}
 .stat .v.neg{color:var(--red)}
 .stat .v.pos{color:var(--green)}
@@ -2030,7 +2048,7 @@ input[type=file]{display:none}
       <input id="debtName" type="text" placeholder="Например: Иван / Ипотека" data-i18n-ph="debt_who_ph" autocomplete="off">
     </div>
     <div class="field-row">
-      <div class="field">
+      <div class="field" id="debtAmountField">
         <label data-i18n-cur="lbl_debt_amount">Сумма, ₽</label>
         <input id="debtAmount" type="number" inputmode="decimal" step="any" placeholder="0">
       </div>
@@ -2039,12 +2057,56 @@ input[type=file]{display:none}
         <input id="debtDate" type="date">
       </div>
     </div>
+    <!-- для новой записи сумма — просто число (станет первой операцией). Для уже существующей
+         сумма меняется только через историю операций ниже, а не напрямую, чтобы все изменения
+         оставались с датой и пояснением -->
+    <div id="debtLedgerSection" style="display:none">
+      <div class="field">
+        <label data-i18n="debt_balance_label">Текущая сумма</label>
+        <div class="debt-balance-display" id="debtBalanceDisplay">0 ₽</div>
+      </div>
+      <div class="dtxn-header">
+        <label data-i18n="debt_history_label">История операций</label>
+        <button class="dtxn-add-btn" onclick="openDebtTxnSheet()">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+          <span data-i18n="debt_txn_add_btn">Операция</span>
+        </button>
+      </div>
+      <div id="debtTxnRows"></div>
+    </div>
     <div class="field">
       <label data-i18n="debt_note_label">Заметка (необязательно)</label>
       <input id="debtNote" type="text" placeholder="Комментарий" data-i18n-ph="debt_note_ph" autocomplete="off">
     </div>
     <button class="btn btn-primary" id="debtSaveBtn" onclick="saveDebtSheet()" data-i18n="btn_add">Добавить</button>
     <button class="btn btn-danger-ghost" id="debtDeleteBtn" onclick="deleteDebtFromSheet()" style="display:none" data-i18n="debt_delete_btn">Удалить запись</button>
+  </div>
+</div>
+
+<div class="sheet-wrap" id="debtTxnSheet"><div class="backdrop" onclick="closeSheet('debtTxnSheet')"></div>
+  <div class="sheet">
+    <div class="grab"></div>
+    <h2 id="debtTxnTitle" data-i18n="debt_txn_new_title">Новая операция</h2>
+    <div class="seg seg-wide">
+      <button id="dtxnSegAdd" class="on" onclick="setDebtTxnKind('add')" data-i18n="debt_txn_add">Пополнение</button>
+      <button id="dtxnSegSub" onclick="setDebtTxnKind('sub')" data-i18n="debt_txn_sub">Списание</button>
+    </div>
+    <div class="field-row">
+      <div class="field">
+        <label data-i18n-cur="lbl_debt_amount">Сумма, ₽</label>
+        <input id="debtTxnAmount" type="number" inputmode="decimal" step="any" placeholder="0">
+      </div>
+      <div class="field">
+        <label data-i18n="debt_txn_date_label">Дата</label>
+        <input id="debtTxnDate" type="date">
+      </div>
+    </div>
+    <div class="field">
+      <label data-i18n="debt_note_label">Заметка (необязательно)</label>
+      <input id="debtTxnNote" type="text" placeholder="Например: занял ещё на бензин" data-i18n-ph="debt_txn_note_ph" autocomplete="off">
+    </div>
+    <button class="btn btn-primary" id="debtTxnSaveBtn" onclick="saveDebtTxn()" data-i18n="btn_add">Добавить</button>
+    <button class="btn btn-danger-ghost" id="debtTxnDeleteBtn" onclick="deleteDebtTxn()" style="display:none" data-i18n="debt_txn_delete_btn">Удалить операцию</button>
   </div>
 </div>
 
@@ -2376,7 +2438,16 @@ function sanitizeCatalogDB(s) {
   });
   // debts / staff / inventory modules
   s.debts = Array.isArray(s.debts) ? s.debts : [];
-  s.debts.forEach(d => { d.id = d.id || uid(); d.amount = +d.amount || 0; d.paid = !!d.paid; });
+  s.debts.forEach(d => {
+    d.id = d.id || uid(); d.paid = !!d.paid;
+    // старые записи хранили только одно число — превращаем его в первую операцию истории,
+    // дальше сумма всегда пересчитывается из операций, а не хранится отдельно от них
+    if (!Array.isArray(d.transactions) || !d.transactions.length) {
+      d.transactions = [{ id: uid(), amount: +d.amount || 0, note: d.note || '', date: d.date || today() }];
+    }
+    d.transactions.forEach(txn => { txn.id = txn.id || uid(); txn.amount = +txn.amount || 0; });
+    d.amount = d.transactions.reduce((sum, txn) => sum + txn.amount, 0);
+  });
   s.staff = s.staff || {};
   s.staff.employees = Array.isArray(s.staff.employees) ? s.staff.employees : [];
   s.staff.shifts = s.staff.shifts || {};
@@ -2895,6 +2966,18 @@ const I18N = {
     debt_empty: 'Пока нет записей — нажмите «Новая запись»',
     debt_payment_marked_snack: 'Платёж отмечен — следующий {date}',
     debt_deleted_snack: '«{name}» удалена',
+    debt_balance_label: 'Текущая сумма',
+    debt_history_label: 'История операций',
+    debt_txn_add_btn: 'Операция',
+    debt_txn_new_title: 'Новая операция',
+    debt_txn_edit_title: 'Изменить операцию',
+    debt_txn_add: 'Пополнение',
+    debt_txn_sub: 'Списание',
+    debt_txn_date_label: 'Дата',
+    debt_txn_note_ph: 'Например: занял ещё на бензин',
+    debt_txn_empty: 'Операций пока нет',
+    debt_txn_delete_btn: 'Удалить операцию',
+    debt_txn_deleted_snack: 'Операция удалена',
 
     sched_week: 'Неделя',
     sched_month: 'Месяц',
@@ -3475,6 +3558,18 @@ const I18N = {
     debt_empty: 'No entries yet — tap "New entry"',
     debt_payment_marked_snack: 'Payment marked — next on {date}',
     debt_deleted_snack: '"{name}" deleted',
+    debt_balance_label: 'Current amount',
+    debt_history_label: 'Transaction history',
+    debt_txn_add_btn: 'Transaction',
+    debt_txn_new_title: 'New transaction',
+    debt_txn_edit_title: 'Edit transaction',
+    debt_txn_add: 'Add',
+    debt_txn_sub: 'Subtract',
+    debt_txn_date_label: 'Date',
+    debt_txn_note_ph: 'E.g.: borrowed more for gas',
+    debt_txn_empty: 'No transactions yet',
+    debt_txn_delete_btn: 'Delete transaction',
+    debt_txn_deleted_snack: 'Transaction deleted',
 
     sched_week: 'Week',
     sched_month: 'Month',
@@ -4055,6 +4150,18 @@ const I18N = {
     debt_empty: 'Noch keine Einträge — tippe auf "Neuer Eintrag"',
     debt_payment_marked_snack: 'Zahlung markiert — nächste am {date}',
     debt_deleted_snack: '"{name}" gelöscht',
+    debt_balance_label: 'Aktueller Betrag',
+    debt_history_label: 'Verlauf der Buchungen',
+    debt_txn_add_btn: 'Buchung',
+    debt_txn_new_title: 'Neue Buchung',
+    debt_txn_edit_title: 'Buchung bearbeiten',
+    debt_txn_add: 'Zubuchung',
+    debt_txn_sub: 'Abbuchung',
+    debt_txn_date_label: 'Datum',
+    debt_txn_note_ph: 'Z. B.: hat sich noch Benzingeld geliehen',
+    debt_txn_empty: 'Noch keine Buchungen',
+    debt_txn_delete_btn: 'Buchung löschen',
+    debt_txn_deleted_snack: 'Buchung gelöscht',
 
     sched_week: 'Woche',
     sched_month: 'Monat',
@@ -4633,6 +4740,18 @@ const I18N = {
     debt_empty: 'Aún no hay registros — toca "Nuevo registro"',
     debt_payment_marked_snack: 'Pago marcado — próximo el {date}',
     debt_deleted_snack: '"{name}" eliminado',
+    debt_balance_label: 'Importe actual',
+    debt_history_label: 'Historial de movimientos',
+    debt_txn_add_btn: 'Movimiento',
+    debt_txn_new_title: 'Nuevo movimiento',
+    debt_txn_edit_title: 'Editar movimiento',
+    debt_txn_add: 'Aumento',
+    debt_txn_sub: 'Reducción',
+    debt_txn_date_label: 'Fecha',
+    debt_txn_note_ph: 'Ej.: pidió más para gasolina',
+    debt_txn_empty: 'Aún no hay movimientos',
+    debt_txn_delete_btn: 'Eliminar movimiento',
+    debt_txn_deleted_snack: 'Movimiento eliminado',
 
     sched_week: 'Semana',
     sched_month: 'Mes',
@@ -5211,6 +5330,18 @@ const I18N = {
     debt_empty: 'Aucune entrée pour l’instant — appuyez sur "Nouvelle entrée"',
     debt_payment_marked_snack: 'Paiement marqué — prochain le {date}',
     debt_deleted_snack: '"{name}" supprimé',
+    debt_balance_label: 'Montant actuel',
+    debt_history_label: 'Historique des opérations',
+    debt_txn_add_btn: 'Opération',
+    debt_txn_new_title: 'Nouvelle opération',
+    debt_txn_edit_title: 'Modifier l\'opération',
+    debt_txn_add: 'Ajout',
+    debt_txn_sub: 'Retrait',
+    debt_txn_date_label: 'Date',
+    debt_txn_note_ph: 'Ex. : a emprunté encore pour l\'essence',
+    debt_txn_empty: 'Aucune opération pour l\'instant',
+    debt_txn_delete_btn: 'Supprimer l\'opération',
+    debt_txn_deleted_snack: 'Opération supprimée',
 
     sched_week: 'Semaine',
     sched_month: 'Mois',
@@ -5789,6 +5920,18 @@ const I18N = {
     debt_empty: '还没有记录 — 点击"新记录"',
     debt_payment_marked_snack: '已标记付款 — 下次是{date}',
     debt_deleted_snack: '"{name}"已删除',
+    debt_balance_label: '当前金额',
+    debt_history_label: '操作记录',
+    debt_txn_add_btn: '操作',
+    debt_txn_new_title: '新增操作',
+    debt_txn_edit_title: '编辑操作',
+    debt_txn_add: '增加',
+    debt_txn_sub: '减少',
+    debt_txn_date_label: '日期',
+    debt_txn_note_ph: '例如：又借了些加油钱',
+    debt_txn_empty: '暂无操作记录',
+    debt_txn_delete_btn: '删除操作',
+    debt_txn_deleted_snack: '操作已删除',
 
     sched_week: '周',
     sched_month: '月',
@@ -6367,6 +6510,18 @@ const I18N = {
     debt_empty: 'Chưa có mục nào — chạm "Mục mới"',
     debt_payment_marked_snack: 'Đã đánh dấu thanh toán — lần tới vào {date}',
     debt_deleted_snack: 'Đã xóa "{name}"',
+    debt_balance_label: 'Số tiền hiện tại',
+    debt_history_label: 'Lịch sử giao dịch',
+    debt_txn_add_btn: 'Giao dịch',
+    debt_txn_new_title: 'Giao dịch mới',
+    debt_txn_edit_title: 'Sửa giao dịch',
+    debt_txn_add: 'Cộng thêm',
+    debt_txn_sub: 'Trừ bớt',
+    debt_txn_date_label: 'Ngày',
+    debt_txn_note_ph: 'Ví dụ: mượn thêm tiền xăng',
+    debt_txn_empty: 'Chưa có giao dịch nào',
+    debt_txn_delete_btn: 'Xóa giao dịch',
+    debt_txn_deleted_snack: 'Đã xóa giao dịch',
 
     sched_week: 'Tuần',
     sched_month: 'Tháng',
@@ -6945,6 +7100,18 @@ const I18N = {
     debt_empty: 'Hali yozuvlar yo‘q — "Yangi yozuv"ni bosing',
     debt_payment_marked_snack: 'To‘lov belgilandi — keyingisi {date}',
     debt_deleted_snack: '"{name}" o‘chirildi',
+    debt_balance_label: 'Joriy summa',
+    debt_history_label: 'Amallar tarixi',
+    debt_txn_add_btn: 'Amal',
+    debt_txn_new_title: 'Yangi amal',
+    debt_txn_edit_title: 'Amalni tahrirlash',
+    debt_txn_add: 'Qo\'shish',
+    debt_txn_sub: 'Ayirish',
+    debt_txn_date_label: 'Sana',
+    debt_txn_note_ph: 'Masalan: benzin uchun yana qarz oldi',
+    debt_txn_empty: 'Hozircha amallar yo\'q',
+    debt_txn_delete_btn: 'Amalni o\'chirish',
+    debt_txn_deleted_snack: 'Amal o\'chirildi',
 
     sched_week: 'Hafta',
     sched_month: 'Oy',
@@ -7523,6 +7690,18 @@ const I18N = {
     debt_empty: 'Азырынча жазуулар жок — "Жаңы жазуу" басыңыз',
     debt_payment_marked_snack: 'Төлөм белгиленди — кийинкиси {date}',
     debt_deleted_snack: '"{name}" өчүрүлдү',
+    debt_balance_label: 'Учурдагы сумма',
+    debt_history_label: 'Аракеттер тарыхы',
+    debt_txn_add_btn: 'Аракет',
+    debt_txn_new_title: 'Жаңы аракет',
+    debt_txn_edit_title: 'Аракетти түзөтүү',
+    debt_txn_add: 'Кошуу',
+    debt_txn_sub: 'Кемитүү',
+    debt_txn_date_label: 'Күнү',
+    debt_txn_note_ph: 'Мисалы: бензинге дагы карыз алды',
+    debt_txn_empty: 'Азырынча аракеттер жок',
+    debt_txn_delete_btn: 'Аракетти өчүрүү',
+    debt_txn_deleted_snack: 'Аракет өчүрүлдү',
 
     sched_week: 'Жума',
     sched_month: 'Ай',
@@ -8101,6 +8280,18 @@ const I18N = {
     debt_empty: 'Ҳанӯз сабт нест — "Сабти нав"-ро пахш кунед',
     debt_payment_marked_snack: 'Пардохт қайд шуд — навбатӣ {date}',
     debt_deleted_snack: '"{name}" нест карда шуд',
+    debt_balance_label: 'Маблағи ҷорӣ',
+    debt_history_label: 'Таърихи амалиётҳо',
+    debt_txn_add_btn: 'Амалиёт',
+    debt_txn_new_title: 'Амалиёти нав',
+    debt_txn_edit_title: 'Таҳрири амалиёт',
+    debt_txn_add: 'Илова кардан',
+    debt_txn_sub: 'Кам кардан',
+    debt_txn_date_label: 'Сана',
+    debt_txn_note_ph: 'Масалан: боз барои бензин қарз гирифт',
+    debt_txn_empty: 'Ҳанӯз амалиёт нест',
+    debt_txn_delete_btn: 'Нест кардани амалиёт',
+    debt_txn_deleted_snack: 'Амалиёт нест карда шуд',
 
     sched_week: 'Ҳафта',
     sched_month: 'Моҳ',
@@ -8679,6 +8870,18 @@ const I18N = {
     debt_empty: 'ჯერ ჩანაწერები არ არის — დააჭირეთ "ახალი ჩანაწერი"-ს',
     debt_payment_marked_snack: 'გადახდა მონიშნულია — შემდეგი {date}',
     debt_deleted_snack: '"{name}" წაიშალა',
+    debt_balance_label: 'მიმდინარე თანხა',
+    debt_history_label: 'ოპერაციების ისტორია',
+    debt_txn_add_btn: 'ოპერაცია',
+    debt_txn_new_title: 'ახალი ოპერაცია',
+    debt_txn_edit_title: 'ოპერაციის რედაქტირება',
+    debt_txn_add: 'დამატება',
+    debt_txn_sub: 'ჩამოწერა',
+    debt_txn_date_label: 'თარიღი',
+    debt_txn_note_ph: 'მაგ.: კიდევ ისესხა ბენზინზე',
+    debt_txn_empty: 'ჯერ არცერთი ოპერაცია',
+    debt_txn_delete_btn: 'ოპერაციის წაშლა',
+    debt_txn_deleted_snack: 'ოპერაცია წაიშალა',
 
     sched_week: 'კვირა',
     sched_month: 'თვე',
@@ -9257,6 +9460,18 @@ const I18N = {
     debt_empty: 'Դեռ գրառումներ չկան — սեղմեք «Նոր գրառում»',
     debt_payment_marked_snack: 'Վճարումը նշվեց — հաջորդը {date}',
     debt_deleted_snack: '«{name}»-ը ջնջվեց',
+    debt_balance_label: 'Ընթացիկ գումարը',
+    debt_history_label: 'Գործառնությունների պատմություն',
+    debt_txn_add_btn: 'Գործառնություն',
+    debt_txn_new_title: 'Նոր գործառնություն',
+    debt_txn_edit_title: 'Խմբագրել գործառնությունը',
+    debt_txn_add: 'Ավելացում',
+    debt_txn_sub: 'Նվազեցում',
+    debt_txn_date_label: 'Ամսաթիվ',
+    debt_txn_note_ph: 'Օր.՝ էլի պարտք վերցրեց բենզինի համար',
+    debt_txn_empty: 'Դեռ գործառնություններ չկան',
+    debt_txn_delete_btn: 'Ջնջել գործառնությունը',
+    debt_txn_deleted_snack: 'Գործառնությունը ջնջվեց',
 
     sched_week: 'Շաբաթ',
     sched_month: 'Ամիս',
@@ -9835,6 +10050,18 @@ const I18N = {
     debt_empty: 'Наӡа адыррақәа рыҟаӡам — "Ду адыррак" анажәал',
     debt_payment_marked_snack: 'Ахәԥсы иашьуп — иреиҳау {date}',
     debt_deleted_snack: '"{name}" ахкыз',
+    debt_balance_label: 'Иахьатәи асумма',
+    debt_history_label: 'Операциақәа рыхьӡынҵа',
+    debt_txn_add_btn: 'Операция',
+    debt_txn_new_title: 'Операция ҿыц',
+    debt_txn_edit_title: 'Операция ԥсахра',
+    debt_txn_add: 'Аҩаӡара',
+    debt_txn_sub: 'Ахкра',
+    debt_txn_date_label: 'Амш',
+    debt_txn_note_ph: 'Иакәыршаз: бензин азы имал ааигеит',
+    debt_txn_empty: 'Операциақәа гьама',
+    debt_txn_delete_btn: 'Операция аныхра',
+    debt_txn_deleted_snack: 'Операция ахкыз',
 
     sched_week: 'Амчыбжь',
     sched_month: 'Амз',
@@ -13179,6 +13406,12 @@ function toggleDebt(id) {
   d.paid = !d.paid;
   save(); renderDebts(); vibrate(15);
 }
+// сумма долга больше не хранится отдельно — это всегда сумма всех операций пополнения/
+// списания, с датой и заметкой к каждой. Так по истории видно, когда и почему сумма менялась
+let debtTxnEditId = null, debtTxnKind = 'add';
+function debtBalance(d) { return (d.transactions || []).reduce((s, t) => s + (+t.amount || 0), 0); }
+function debtRecalcAmount(d) { d.amount = debtBalance(d); }
+
 function openDebtSheet(id) {
   debtEditId = id || null;
   const d = id ? state.debts.find(x => x.id === id) : null;
@@ -13187,28 +13420,49 @@ function openDebtSheet(id) {
   document.getElementById('debtDeleteBtn').style.display = d ? 'flex' : 'none';
   document.getElementById('debtType').value = d ? d.type : debtTab;
   document.getElementById('debtName').value = d ? d.name : '';
-  document.getElementById('debtAmount').value = d ? d.amount : '';
+  document.getElementById('debtAmount').value = '';
   document.getElementById('debtDate').value = d && d.date ? d.date : '';
   document.getElementById('debtNote').value = d && d.note ? d.note : '';
+  // новую запись заводим одной суммой (она станет первой операцией); у существующей
+  // сумма меняется только через историю операций ниже
+  document.getElementById('debtAmountField').style.display = d ? 'none' : '';
+  document.getElementById('debtLedgerSection').style.display = d ? '' : 'none';
+  if (d) renderDebtLedger(d);
   openSheet('debtSheet');
   if (!d) setTimeout(() => document.getElementById('debtName').focus(), 320);
 }
+function renderDebtLedger(d) {
+  document.getElementById('debtBalanceDisplay').textContent = money(debtBalance(d));
+  const txns = (d.transactions || []).slice().sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+  document.getElementById('debtTxnRows').innerHTML = txns.length ? txns.map(txn => {
+    const dateTxt = txn.date ? new Date(txn.date + 'T00:00:00').toLocaleDateString(dateLocale(), { day: 'numeric', month: 'short' }) : '';
+    return `
+    <div class="dtxn-row" onclick="openDebtTxnSheet('${txn.id}')">
+      <div class="dtxn-body">
+        ${dateTxt ? `<div class="dtxn-date">${dateTxt}</div>` : ''}
+        ${txn.note ? `<div class="dtxn-note">${esc(txn.note)}</div>` : ''}
+      </div>
+      <span class="dtxn-amount ${txn.amount < 0 ? 'minus' : 'plus'}">${txn.amount < 0 ? '' : '+'}${money(txn.amount)}</span>
+    </div>`;
+  }).join('') : `<div class="empty-items">${t('debt_txn_empty')}</div>`;
+}
 function saveDebtSheet() {
   const name = document.getElementById('debtName').value.trim();
-  const amount = Math.abs(parseFloat(document.getElementById('debtAmount').value) || 0);
-  if (!name || !amount) {
-    document.getElementById(!name ? 'debtName' : 'debtAmount').focus();
-    return;
+  const type = document.getElementById('debtType').value;
+  const date = document.getElementById('debtDate').value || null;
+  const note = document.getElementById('debtNote').value.trim();
+  if (!name) { document.getElementById('debtName').focus(); return; }
+  if (debtEditId) {
+    Object.assign(state.debts.find(x => x.id === debtEditId), { type, name, date, note });
+  } else {
+    const amount = Math.abs(parseFloat(document.getElementById('debtAmount').value) || 0);
+    if (!amount) { document.getElementById('debtAmount').focus(); return; }
+    state.debts.push({
+      id: uid(), type, name, date, note, paid: false, paidCount: 0, amount,
+      transactions: [{ id: uid(), amount, note: '', date: date || today() }]
+    });
   }
-  const rec = {
-    type: document.getElementById('debtType').value,
-    name, amount,
-    date: document.getElementById('debtDate').value || null,
-    note: document.getElementById('debtNote').value.trim()
-  };
-  if (debtEditId) Object.assign(state.debts.find(x => x.id === debtEditId), rec);
-  else state.debts.push(Object.assign({ id: uid(), paid: false, paidCount: 0 }, rec));
-  debtTab = rec.type;
+  debtTab = type;
   setDebtTab(debtTab);
   save(); closeSheet('debtSheet'); vibrate(10);
 }
@@ -13220,6 +13474,54 @@ function deleteDebtFromSheet() {
   snackbar(tf('debt_deleted_snack', { name: removed.name }), () => {
     state.debts.splice(Math.min(idx, state.debts.length), 0, removed);
     save(); renderDebts();
+  });
+}
+
+/* ---------- операции по долгу: пополнение/списание с датой и заметкой ---------- */
+function openDebtTxnSheet(txnId) {
+  debtTxnEditId = txnId || null;
+  const d = state.debts.find(x => x.id === debtEditId);
+  const txn = txnId ? d.transactions.find(x => x.id === txnId) : null;
+  document.getElementById('debtTxnTitle').textContent = txn ? t('debt_txn_edit_title') : t('debt_txn_new_title');
+  document.getElementById('debtTxnSaveBtn').textContent = txn ? t('btn_save') : t('btn_add');
+  document.getElementById('debtTxnDeleteBtn').style.display = txn ? 'flex' : 'none';
+  setDebtTxnKind(txn && txn.amount < 0 ? 'sub' : 'add');
+  document.getElementById('debtTxnAmount').value = txn ? Math.abs(txn.amount) : '';
+  document.getElementById('debtTxnDate').value = txn && txn.date ? txn.date : today();
+  document.getElementById('debtTxnNote').value = txn && txn.note ? txn.note : '';
+  openSheet('debtTxnSheet');
+  setTimeout(() => document.getElementById('debtTxnAmount').focus(), 320);
+}
+function setDebtTxnKind(kind) {
+  debtTxnKind = kind;
+  document.getElementById('dtxnSegAdd').classList.toggle('on', kind === 'add');
+  document.getElementById('dtxnSegSub').classList.toggle('on', kind === 'sub');
+}
+function saveDebtTxn() {
+  const d = state.debts.find(x => x.id === debtEditId);
+  const amountAbs = Math.abs(parseFloat(document.getElementById('debtTxnAmount').value) || 0);
+  if (!amountAbs) { document.getElementById('debtTxnAmount').focus(); return; }
+  const amount = debtTxnKind === 'sub' ? -amountAbs : amountAbs;
+  const date = document.getElementById('debtTxnDate').value || today();
+  const note = document.getElementById('debtTxnNote').value.trim();
+  if (debtTxnEditId) {
+    Object.assign(d.transactions.find(x => x.id === debtTxnEditId), { amount, date, note });
+  } else {
+    d.transactions.push({ id: uid(), amount, date, note });
+  }
+  debtRecalcAmount(d);
+  save(); renderDebtLedger(d); renderDebts(); closeSheet('debtTxnSheet'); vibrate(10);
+}
+function deleteDebtTxn() {
+  const d = state.debts.find(x => x.id === debtEditId);
+  const idx = d.transactions.findIndex(x => x.id === debtTxnEditId);
+  if (idx === -1) { closeSheet('debtTxnSheet'); return; }
+  const removed = d.transactions.splice(idx, 1)[0];
+  debtRecalcAmount(d);
+  save(); renderDebtLedger(d); renderDebts(); closeSheet('debtTxnSheet');
+  snackbar(t('debt_txn_deleted_snack'), () => {
+    d.transactions.splice(Math.min(idx, d.transactions.length), 0, removed);
+    debtRecalcAmount(d); save(); renderDebtLedger(d); renderDebts();
   });
 }
 
