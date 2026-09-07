@@ -378,10 +378,11 @@ input,select{font-family:inherit}
 
 .item-row{
   display:flex;align-items:center;gap:4px;padding:4px 8px 4px 8px;
-  border-bottom:1px solid var(--line);transition:background .2s;
+  border-bottom:1px solid var(--line);transition:background .2s,opacity .2s;
 }
 .item-row:last-of-type{border-bottom:none}
 .item-row.dragging{opacity:.35}
+.item-row.done{opacity:.5}
 .check{
   width:48px;height:52px;border:none;background:none;cursor:pointer;flex:none;
   display:flex;align-items:center;justify-content:center;
@@ -1894,6 +1895,14 @@ input[type=file]{display:none}
       <label data-i18n="catprod_newcat_label">Название новой категории</label>
       <input id="catProdNewCat" type="text" placeholder="Например: Молочка" data-i18n-ph="catprod_newcat_ph" autocomplete="off">
     </div>
+    <div class="field" id="catProdListQtyField" style="display:none">
+      <label data-i18n="catprod_list_qty_label">Количество в этом списке</label>
+      <div class="stepper">
+        <button type="button" onclick="stepCatProdListQty(-1)">−</button>
+        <input id="catProdListQty" type="number" inputmode="decimal" min="0" step="any" value="1">
+        <button type="button" onclick="stepCatProdListQty(1)">+</button>
+      </div>
+    </div>
     <button type="button" class="cp-more-toggle" id="catProdMoreToggle" onclick="toggleCatProdMore()">
       <span data-i18n="catprod_more_toggle">Ещё параметры</span>
       <svg class="chev" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
@@ -1932,6 +1941,7 @@ input[type=file]{display:none}
       <span data-i18n="catprod_print_label_btn">Печать этикетки 40×30</span>
     </button>
     <button class="btn btn-danger-ghost" id="catProdDeleteBtn" onclick="deleteCatProduct()" style="display:none" data-i18n="catprod_delete_btn">Удалить из каталога</button>
+    <button class="btn btn-danger-ghost" id="catProdRemoveFromListBtn" onclick="removeItemFromListViaCatalog()" style="display:none" data-i18n="catprod_remove_from_list_btn">Убрать из списка</button>
   </div>
 </div>
 
@@ -2740,6 +2750,8 @@ const I18N = {
     field_id_ph: 'Например: 10234',
     field_id_dup_warn: 'Такой ID уже есть',
     catprod_more_toggle: 'Ещё параметры',
+    catprod_list_qty_label: 'Количество в этом списке',
+    catprod_remove_from_list_btn: 'Убрать из списка',
     field_store: 'Магазин',
     item_delete_btn: 'Удалить товар',
     item_deleted_snack: '«{name}» удалён',
@@ -3337,6 +3349,8 @@ const I18N = {
     field_id_ph: 'E.g.: 10234',
     field_id_dup_warn: 'This ID is already used',
     catprod_more_toggle: 'More options',
+    catprod_list_qty_label: 'Quantity in this list',
+    catprod_remove_from_list_btn: 'Remove from list',
     field_store: 'Store',
     item_delete_btn: 'Delete item',
     item_deleted_snack: '«{name}» deleted',
@@ -3934,6 +3948,8 @@ const I18N = {
     field_id_ph: 'Z. B.: 10234',
     field_id_dup_warn: 'Diese ID wird bereits verwendet',
     catprod_more_toggle: 'Weitere Optionen',
+    catprod_list_qty_label: 'Menge in dieser Liste',
+    catprod_remove_from_list_btn: 'Aus der Liste entfernen',
     field_store: 'Laden',
     item_delete_btn: 'Artikel löschen',
     item_deleted_snack: '"{name}" gelöscht',
@@ -4529,6 +4545,8 @@ const I18N = {
     field_id_ph: 'Ej.: 10234',
     field_id_dup_warn: 'Este ID ya está en uso',
     catprod_more_toggle: 'Más opciones',
+    catprod_list_qty_label: 'Cantidad en esta lista',
+    catprod_remove_from_list_btn: 'Quitar de la lista',
     field_store: 'Tienda',
     item_delete_btn: 'Eliminar artículo',
     item_deleted_snack: '"{name}" eliminado',
@@ -5124,6 +5142,8 @@ const I18N = {
     field_id_ph: 'Ex. : 10234',
     field_id_dup_warn: 'Cet ID est déjà utilisé',
     catprod_more_toggle: 'Plus d\'options',
+    catprod_list_qty_label: 'Quantité dans cette liste',
+    catprod_remove_from_list_btn: 'Retirer de la liste',
     field_store: 'Magasin',
     item_delete_btn: 'Supprimer l’article',
     item_deleted_snack: '"{name}" supprimé',
@@ -5719,6 +5739,8 @@ const I18N = {
     field_id_ph: '例如：10234',
     field_id_dup_warn: '此ID已被使用',
     catprod_more_toggle: '更多选项',
+    catprod_list_qty_label: '此清单中的数量',
+    catprod_remove_from_list_btn: '从清单中移除',
     field_store: '商店',
     item_delete_btn: '删除商品',
     item_deleted_snack: '"{name}"已删除',
@@ -6314,6 +6336,8 @@ const I18N = {
     field_id_ph: 'VD: 10234',
     field_id_dup_warn: 'ID này đã được sử dụng',
     catprod_more_toggle: 'Thêm tùy chọn',
+    catprod_list_qty_label: 'Số lượng trong danh sách này',
+    catprod_remove_from_list_btn: 'Xóa khỏi danh sách',
     field_store: 'Cửa hàng',
     item_delete_btn: 'Xóa sản phẩm',
     item_deleted_snack: 'Đã xóa "{name}"',
@@ -6909,6 +6933,8 @@ const I18N = {
     field_id_ph: 'Masalan: 10234',
     field_id_dup_warn: 'Bu ID allaqachon ishlatilgan',
     catprod_more_toggle: 'Yana parametrlar',
+    catprod_list_qty_label: 'Ushbu ro\'yxatdagi miqdor',
+    catprod_remove_from_list_btn: 'Ro\'yxatdan olib tashlash',
     field_store: 'Do‘kon',
     item_delete_btn: 'Mahsulotni o‘chirish',
     item_deleted_snack: '"{name}" o‘chirildi',
@@ -7504,6 +7530,8 @@ const I18N = {
     field_id_ph: 'Мисалы: 10234',
     field_id_dup_warn: 'Бул ID мурунтан эле колдонулган',
     catprod_more_toggle: 'Дагы параметрлер',
+    catprod_list_qty_label: 'Ушул тизмедеги саны',
+    catprod_remove_from_list_btn: 'Тизмеден алып салуу',
     field_store: 'Дүкөн',
     item_delete_btn: 'Товарды өчүрүү',
     item_deleted_snack: '"{name}" өчүрүлдү',
@@ -8099,6 +8127,8 @@ const I18N = {
     field_id_ph: 'Масалан: 10234',
     field_id_dup_warn: 'Ин ID аллакай истифода шудааст',
     catprod_more_toggle: 'Танзимоти иловагӣ',
+    catprod_list_qty_label: 'Миқдор дар ин рӯйхат',
+    catprod_remove_from_list_btn: 'Аз рӯйхат хориҷ кардан',
     field_store: 'Мағоза',
     item_delete_btn: 'Нест кардани маҳсулот',
     item_deleted_snack: '"{name}" нест карда шуд',
@@ -8694,6 +8724,8 @@ const I18N = {
     field_id_ph: 'მაგ.: 10234',
     field_id_dup_warn: 'ეს ID უკვე გამოყენებულია',
     catprod_more_toggle: 'მეტი პარამეტრი',
+    catprod_list_qty_label: 'რაოდენობა ამ სიაში',
+    catprod_remove_from_list_btn: 'სიიდან წაშლა',
     field_store: 'მაღაზია',
     item_delete_btn: 'პროდუქტის წაშლა',
     item_deleted_snack: '"{name}" წაიშალა',
@@ -9289,6 +9321,8 @@ const I18N = {
     field_id_ph: 'Օր.՝ 10234',
     field_id_dup_warn: 'Այս ID-ն արդեն օգտագործվում է',
     catprod_more_toggle: 'Ավելի շատ ընտրանքներ',
+    catprod_list_qty_label: 'Քանակը այս ցանկում',
+    catprod_remove_from_list_btn: 'Հեռացնել ցանկից',
     field_store: 'Խանութ',
     item_delete_btn: 'Ջնջել ապրանքը',
     item_deleted_snack: '«{name}»-ը ջնջվեց',
@@ -9884,6 +9918,8 @@ const I18N = {
     field_id_ph: 'Абра: 10234',
     field_id_dup_warn: 'Ари ID хазы иҟоуп',
     catprod_more_toggle: 'Аҵаира апараметрқәа',
+    catprod_list_qty_label: 'Ари ахыҧхьаӡара ари ахыҵа аҟны',
+    catprod_remove_from_list_btn: 'Ахыҵа аҟынтә иахкра',
     field_store: 'Амаркет',
     item_delete_btn: 'Апродукт ахкра',
     item_deleted_snack: '"{name}" ахкыз',
@@ -10930,7 +10966,7 @@ function itemRowHTML(sid, it) {
     <button class="check-thumb" onclick="event.stopPropagation();openPhotoViewer('${it.photoId}')" aria-label="${t('aria_view_photo')}">
       <img src="${photoDisplayUrl(it.photoId, 90)}" alt="">
     </button>` : ''}
-    <div class="item-body" onclick="toggleItem('${sid}','${it.id}')">
+    <div class="item-body" onclick="onItemRowTap('${sid}','${it.id}')">
       <div class="item-name">${esc(it.name)}</div>
       ${it.note ? `<div class="item-note">${esc(it.note)}</div>` : ''}
       <div class="item-meta"><span>${fmt(it.qty)} × ${fmt(it.price)} ${currSym()}</span>${it.loc ? `<span class="loc-badge ${groupMode === 'loc' ? 'active' : ''}" onclick="event.stopPropagation();toggleGroupMode()">${esc(it.loc)}</span>` : ''}${badge}</div>
@@ -10939,10 +10975,29 @@ function itemRowHTML(sid, it) {
     <button class="drag-handle" aria-label="${t('aria_drag')}">
       <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor"><circle cx="9" cy="6" r="1.7"/><circle cx="15" cy="6" r="1.7"/><circle cx="9" cy="12" r="1.7"/><circle cx="15" cy="12" r="1.7"/><circle cx="9" cy="18" r="1.7"/><circle cx="15" cy="18" r="1.7"/></svg>
     </button>
-    <button class="item-edit-btn" onclick="event.stopPropagation();openItemSheet('${sid}','${it.id}')" aria-label="${t('aria_edit_item')}">
+    <button class="item-edit-btn" onclick="event.stopPropagation();openItemEditor('${sid}','${it.id}')" aria-label="${t('aria_edit_item')}">
       ${ic('pencil', 15)}
     </button>
   </div>`;
+}
+// на десктопе клик по названию позиции по-прежнему открывает редактирование (там
+// есть отдельный чекбокс для купленности); на мобильном чекбокса нет — клик по
+// названию отмечает купленным, а редактирование только через карандаш
+const desktopLayoutMQ = window.matchMedia('(min-width:920px)');
+function onItemRowTap(sid, itemId) {
+  if (desktopLayoutMQ.matches) openItemEditor(sid, itemId);
+  else toggleItem(sid, itemId);
+}
+// единая точка входа в редактирование позиции: если она привязана к товару каталога —
+// редактируем сам товар каталога (название/цена/фото/... — общие для всех списков),
+// иначе (товар вписан вручную, без привязки) — как раньше, только эту позицию
+function openItemEditor(sid, itemId) {
+  const it = findStore(sid).items.find(i => i.id === itemId);
+  if (it && it.productId && prodById(it.productId)) {
+    openCatProductSheet(it.productId, { sid, itemId });
+  } else {
+    openItemSheet(sid, itemId);
+  }
 }
 
 /* ================= views / navigation ================= */
@@ -11676,6 +11731,7 @@ function applyRemotePayload(payload, creds, at) {
   state = payload;
   if (!state.lists.some(l => l.id === state.currentId)) state.currentId = state.lists[0].id;
   save(true); render();
+  prefetchProductPhotos();
 }
 // принять данные из облака вместо перезаписи — безопасная альтернатива, которую предлагаем
 // прямо в предупреждении «Опасно!», когда в облаке данных больше, чем на этом устройстве
@@ -13079,9 +13135,43 @@ function catSearchEnter() {
 let catProdPhotoId = null;      // значение для сохраняемой карточки
 let catProdPhotoPreview = null; // локальный dataURL для мгновенного превью до сохранения
 let catProdPhotoBusy = false;
+// когда карточка каталога открыта из позиции списка (см. openItemEditor) — сюда
+// кладём, какую позицию редактируем, чтобы сохранить в неё количество и знать,
+// что "удалить" здесь значит "убрать из списка", а не стереть товар из каталога
+let catProdListCtx = null;
+function stepCatProdListQty(dir) {
+  const inp = document.getElementById('catProdListQty');
+  const p = catEditProductId ? prodById(catEditProductId) : null;
+  const pack = p && p.pack > 1 ? p.pack : null;
+  let v = parseFloat(inp.value) || 0;
+  v = pack ? Math.max(pack, v + dir * pack) : Math.max(dir < 0 ? 0.01 : 1, v + dir);
+  inp.value = Math.round(v * 100) / 100;
+}
 
 function photoDisplayUrl(id, size) {
   return id ? 'https://lh3.googleusercontent.com/d/' + id + '=w' + (size || 200) : null;
+}
+// тихо прогреваем кэш сервис-воркера для всех фото товаров в фоне — иначе каждая
+// миниатюра грузится по отдельности только тогда, когда реально попадает на экран,
+// и в каталоге с десятками товаров это ощущается как "долго". Небольшими пачками,
+// чтобы не открывать разом кучу соединений; уже прогретые id второй раз не трогаем
+const photoPrefetched = new Set();
+function prefetchProductPhotos() {
+  if (!('serviceWorker' in navigator)) return;
+  const ids = new Set();
+  (state.catalogDB.products || []).forEach(p => { if (p.photoId) ids.add(p.photoId); });
+  (state.lists || []).forEach(l => ((l.data && l.data.stores) || []).forEach(s =>
+    s.items.forEach(it => { if (it.photoId) ids.add(it.photoId); })));
+  const todo = [...ids].filter(id => !photoPrefetched.has(id));
+  if (!todo.length) return;
+  todo.forEach(id => photoPrefetched.add(id));
+  const BATCH = 4;
+  let i = 0;
+  (function next() {
+    const batch = todo.slice(i, i + BATCH); i += BATCH;
+    if (!batch.length) return;
+    Promise.all(batch.map(id => fetch(photoDisplayUrl(id, 200), { mode: 'no-cors' }).catch(() => {}))).then(next);
+  })();
 }
 const AVATAR_COLORS = ['#F97066', '#F79009', '#EAAA08', '#3CCB7F', '#4CC2C4', '#53B1FD', '#8098F9', '#9B8AFB', '#F670C7'];
 function avatarColorFor(name) {
@@ -13192,8 +13282,9 @@ function deletePhotoRemote(id) {
   syncCall(creds, 'photo_delete', { id }).catch(() => {});
 }
 
-function openCatProductSheet(id) {
+function openCatProductSheet(id, listCtx) {
   catEditProductId = id || null;
+  catProdListCtx = listCtx || null;
   const p = id ? prodById(id) : null;
   catProdPhotoId = p ? (p.photoId || null) : null;
   catProdPhotoPreview = null;
@@ -13201,7 +13292,18 @@ function openCatProductSheet(id) {
   renderCatProdPhotoTile();
   document.getElementById('catProductTitle').textContent = p ? t('cat_product_edit_title') : t('cat_product_sheet_title');
   document.getElementById('catProdSaveBtn').textContent = p ? t('btn_save') : t('btn_add');
-  document.getElementById('catProdDeleteBtn').style.display = p ? 'flex' : 'none';
+  // открыта из позиции списка — удаление здесь означает "убрать из этого списка",
+  // а не стереть сам товар из каталога (он может быть ещё в других списках)
+  document.getElementById('catProdDeleteBtn').style.display = (p && !catProdListCtx) ? 'flex' : 'none';
+  document.getElementById('catProdRemoveFromListBtn').style.display = catProdListCtx ? 'flex' : 'none';
+  const qtyField = document.getElementById('catProdListQtyField');
+  if (catProdListCtx) {
+    const it = findStore(catProdListCtx.sid).items.find(i => i.id === catProdListCtx.itemId);
+    qtyField.style.display = 'block';
+    document.getElementById('catProdListQty').value = it ? it.qty : 1;
+  } else {
+    qtyField.style.display = 'none';
+  }
   document.getElementById('catProdPrintBtn').style.display = p ? 'flex' : 'none';
   const favBtn = document.getElementById('catProdFavBtn');
   favBtn.style.display = p ? 'flex' : 'none';
@@ -13386,10 +13488,30 @@ function saveCatProduct() {
     const prod = prodById(catEditProductId);
     if (prod.photoId && prod.photoId !== photoId) deletePhotoRemote(prod.photoId);
     Object.assign(prod, { name, price, categoryId, loc, sku, pack, note, photoId });
+    // карточка каталога — общий источник данных для всех позиций во всех списках,
+    // куда этот товар уже добавляли: имя/цена/фото должны быть одинаковыми везде,
+    // а не расходиться в зависимости от того, откуда в последний раз редактировали
+    syncProductToListItems(catEditProductId);
   } else {
     state.catalogDB.products.push({ id: uid(), name, price, categoryId, loc, sku, pack, note, photoId });
   }
-  save(); renderCatalog(); renderInv(); closeSheet('catProductSheet'); vibrate(10);
+  // открыли эту карточку из конкретной позиции списка — количество там своё, в
+  // каталоге такого понятия нет, сохраняем его прямо в позицию
+  if (catProdListCtx) {
+    const it = findStore(catProdListCtx.sid).items.find(i => i.id === catProdListCtx.itemId);
+    const qty = parseFloat(document.getElementById('catProdListQty').value);
+    if (it && !isNaN(qty) && qty > 0) it.qty = qty;
+  }
+  save(); renderCatalog(); renderInv(); render(); closeSheet('catProductSheet'); vibrate(10);
+}
+// приводим все позиции во всех списках, ссылающиеся на этот товар каталога, к
+// его текущим имени/цене/фото — именно это и просили: правка в одном месте
+// видна везде, а не живёт своей жизнью в каждой позиции по отдельности
+function syncProductToListItems(productId) {
+  const p = prodById(productId); if (!p) return;
+  state.lists.forEach(l => ((l.data && l.data.stores) || []).forEach(s => s.items.forEach(it => {
+    if (it.productId === productId) { it.name = p.name; it.price = p.price; it.photoId = p.photoId || null; }
+  })));
 }
 function deleteCatProduct() {
   const idx = state.catalogDB.products.findIndex(p => p.id === catEditProductId);
@@ -13404,6 +13526,20 @@ function deleteCatProduct() {
     undone = true;
     state.catalogDB.products.splice(Math.min(idx, state.catalogDB.products.length), 0, removed);
     save(); renderCatalog(); renderInv();
+  });
+}
+// карточка каталога открыта из позиции конкретного списка — "удалить" здесь значит
+// убрать эту позицию из списка, сам товар в каталоге и другие списки не трогаем
+function removeItemFromListViaCatalog() {
+  if (!catProdListCtx) return;
+  const store = findStore(catProdListCtx.sid);
+  const idx = store ? store.items.findIndex(i => i.id === catProdListCtx.itemId) : -1;
+  if (idx === -1) { closeSheet('catProductSheet'); return; }
+  const removed = store.items.splice(idx, 1)[0];
+  save(); render(); closeSheet('catProductSheet');
+  snackbar(tf('item_deleted_snack', { name: removed.name }), () => {
+    store.items.splice(Math.min(idx, store.items.length), 0, removed);
+    save(); render();
   });
 }
 
@@ -13456,8 +13592,9 @@ function saveCatAdd() {
     if (addLoc) merged.loc = addLoc;
     if (addNote) merged.note = addNote;
     if (!merged.photoId && p.photoId) merged.photoId = p.photoId;
+    if (!merged.productId) merged.productId = p.id;
   } else {
-    store.items.push({ id: uid(), name: p.name, qty, price, day: null, loc: addLoc, catId: p.categoryId || null, bought: false, note: addNote, photoId: p.photoId || null });
+    store.items.push({ id: uid(), name: p.name, qty, price, day: null, loc: addLoc, catId: p.categoryId || null, bought: false, note: addNote, photoId: p.photoId || null, productId: p.id });
   }
   if (addLoc && addLoc !== (p.loc || '')) { p.loc = addLoc; }
   if (addNote !== (p.note || '')) { p.note = addNote; }
@@ -15129,6 +15266,7 @@ desktopNavMQ.addEventListener('change', placeBottomNav);
 load();
 applyI18n();
 render();
+prefetchProductPhotos();
 enableStripDrag(document.getElementById('listsStrip'));
 if (printReceiverOn()) startPrintReceiver(); // приём переживает перезагрузку страницы на этом устройстве
 renderCurrTopBadge();
