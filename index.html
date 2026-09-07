@@ -382,7 +382,7 @@ input,select{font-family:inherit}
 }
 .item-row:last-of-type{border-bottom:none}
 .item-row.dragging{opacity:.35}
-.item-row.done{opacity:.5}
+.item-row.done{background:#0F172A}
 .check{
   width:48px;height:52px;border:none;background:none;cursor:pointer;flex:none;
   display:flex;align-items:center;justify-content:center;
@@ -433,8 +433,12 @@ input,select{font-family:inherit}
 }
 .cat-head:not(:first-child){border-top:1px solid var(--line)}
 .cat-head-sum{font-size:12px;font-weight:800;letter-spacing:0;text-transform:none;color:var(--text)}
-.item-row.done .item-name{color:var(--muted);text-decoration:line-through}
-.item-row.done .item-total{color:#CBD5E1;text-decoration:line-through}
+.item-row.done .item-name{color:#fff;text-decoration:line-through}
+.item-row.done .item-note{color:#94A3B8}
+.item-row.done .item-meta{color:#CBD5E1}
+.item-row.done .loc-badge{background:#334155;color:#fff}
+.item-row.done .item-total{color:#fff;text-decoration:line-through}
+.item-row.done .item-edit-btn{color:#94A3B8}
 .item-total{font-size:15px;font-weight:800;white-space:nowrap;flex:none}
 .item-total.neg{color:var(--red)}
 .drag-handle{
