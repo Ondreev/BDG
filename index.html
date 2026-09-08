@@ -341,7 +341,11 @@ input,select{font-family:inherit}
    так фотографии разных пропорций всё равно дают одинаковый размер плитки, без
    сплющивания. Скругление на всех четырёх углах — сама плитка с отступом внутри
    серой рамки-подложки, а не бесшовно от края до края карточки */
-.cat-card-img{position:relative;aspect-ratio:3/4;background:var(--line);flex:none;padding:10px}
+/* overflow:hidden обязателен именно на этом элементе (не только на .cat-card
+   выше) — иначе для очень высоких/узких фото flex-контейнер в столбик считает
+   "автоматический минимальный размер" по НЕОБРЕЗАННОЙ высоте содержимого и
+   раздувает плитку сверх aspect-ratio, несмотря на object-fit:cover */
+.cat-card-img{position:relative;aspect-ratio:3/4;background:var(--line);flex:none;padding:10px;overflow:hidden}
 .cat-card-img img{width:100%;height:100%;object-fit:cover;object-position:top;display:block;border-radius:14px;background:#fff}
 .cat-card-ph{
   width:100%;height:100%;display:flex;align-items:center;justify-content:center;
@@ -463,26 +467,19 @@ input,select{font-family:inherit}
 }
 .drag-handle:active{cursor:grabbing;color:var(--accent)}
 
-/* квадрат через классический приём padding-top:100% (а не aspect-ratio) — плитка
-   гарантированно одного размера у всех карточек независимо от пропорций фото,
-   без вопросов к поддержке aspect-ratio в конкретном браузере/вебвью. Сама рамка
-   всегда квадратная; фото/заглушка — абсолютно спозиционированный слой внутри неё
-   с отступом со всех сторон */
-.item-photo{position:relative;width:100%;height:0;padding-top:100%;background:var(--line);flex:none;overflow:hidden}
-/* object-position:top — если фото не квадратное и не заполняет всю плитку целиком
-   (contain), оно прижимается к верху, а не центрируется; свободное место остаётся
-   снизу как часть плитки, а не бьёт по глазам неровным зазором то сверху, то снизу
-   у разных карточек. width/height:100% обязательны: у абсолютно спозиционированного
-   img (заменяемый элемент) top+left+right+bottom без явных width/height не растягивают
-   картинку по контейнеру, а оставляют её в НАТУРАЛЬНОМ пиксельном размере — из-за
-   этого фото вылезало за пределы плитки и перекрывало текст под ней */
-.item-photo img{
-  position:absolute;top:10px;left:10px;right:10px;bottom:10px;width:calc(100% - 20px);height:calc(100% - 20px);
-  object-fit:contain;object-position:top;display:block;border-radius:14px;background:#fff;cursor:zoom-in;
-}
+/* та же прямоугольная капсула, что и в каталоге (см. .cat-card-img) — 3:4, не
+   квадрат: единый маркетплейсный стандарт формы карточки. Форма капсулы ФИКСИРОВАНА
+   и не зависит от пропорций загруженного фото — квадратное фото (или любое другое)
+   кадрируется под неё (cover), а не наоборот. Лишнее по высоте обрезается снизу
+   (object-position:top), а не сжимается и не создаёт пустых полей вокруг фото */
+/* overflow:hidden обязателен на самом элементе — иначе для очень вытянутых фото
+   flex-колонка (.item-row) считает "автоматический минимальный размер" по
+   НЕОБРЕЗАННОЙ высоте содержимого и раздувает плитку сверх aspect-ratio, несмотря
+   на object-fit:cover (та же причина, что и в .cat-card-img в каталоге) */
+.item-photo{position:relative;aspect-ratio:3/4;background:var(--line);flex:none;padding:10px;overflow:hidden}
+.item-photo img{width:100%;height:100%;object-fit:cover;object-position:top;display:block;border-radius:14px;background:#fff;cursor:zoom-in}
 .item-photo-ph{
-  position:absolute;top:10px;left:10px;right:10px;bottom:10px;
-  display:flex;align-items:center;justify-content:center;
+  width:100%;height:100%;display:flex;align-items:center;justify-content:center;
   border-radius:14px;background:#fff;color:#B6C0CE;
 }
 .item-row.done .item-photo img{filter:grayscale(.65) brightness(.8)}
