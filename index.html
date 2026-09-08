@@ -1934,7 +1934,10 @@ input[type=file]{display:none}
     <div class="grab"></div>
     <div class="sku-head">
       <h2 id="catProductTitle" style="margin:0" data-i18n="cat_product_sheet_title">Товар каталога</h2>
-      <button class="icon-btn" id="catProdFavBtn" onclick="toggleFavorite(catEditProductId)" aria-label="Избранное" data-i18n-aria="aria_favorite" style="width:38px;height:38px;border-radius:12px"></button>
+      <div style="display:flex;align-items:center;gap:8px;flex:none">
+        <button class="icon-btn" id="catProdDupBtn" onclick="duplicateCatProduct()" aria-label="Дублировать" data-i18n-aria="aria_duplicate" style="display:none;width:38px;height:38px;border-radius:12px"></button>
+        <button class="icon-btn" id="catProdFavBtn" onclick="toggleFavorite(catEditProductId)" aria-label="Избранное" data-i18n-aria="aria_favorite" style="width:38px;height:38px;border-radius:12px"></button>
+      </div>
     </div>
     <input type="file" id="catProdPhotoInput" accept="image/*" style="display:none" onchange="onCatProdPhotoSelected(event)">
     <input type="file" id="catProdPhotoInputCam" accept="image/*" capture="environment" style="display:none" onchange="onCatProdPhotoSelected(event)">
@@ -3268,6 +3271,7 @@ const I18N = {
     save_failed_toast: 'Не удалось сохранить данные',
     copy_suffix: ' (копия)',
     list_dup_toast: 'Копия создана — отметки покупок сброшены',
+    cat_dup_toast: 'Товар продублирован',
 
     role_sheet_title: 'Ваша роль',
     role_sheet_sub: 'Роль нужна, чтобы делиться карточками товаров с другим аккаунтом или принимать их',
@@ -3869,6 +3873,7 @@ const I18N = {
     save_failed_toast: 'Failed to save data',
     copy_suffix: ' (copy)',
     list_dup_toast: 'Copy created — purchase marks reset',
+    cat_dup_toast: 'Product duplicated',
 
     role_sheet_title: 'Your role',
     role_sheet_sub: 'A role lets you share product cards with another account or receive them',
@@ -4470,6 +4475,7 @@ const I18N = {
     save_failed_toast: 'Daten konnten nicht gespeichert werden',
     copy_suffix: ' (Kopie)',
     list_dup_toast: 'Kopie erstellt — Kaufmarkierungen zurückgesetzt',
+    cat_dup_toast: 'Produkt dupliziert',
 
     role_sheet_title: 'Deine Rolle',
     role_sheet_sub: 'Die Rolle ermöglicht es dir, Produktkarten mit einem anderen Konto zu teilen oder zu empfangen',
@@ -5069,6 +5075,7 @@ const I18N = {
     save_failed_toast: 'No se pudieron guardar los datos',
     copy_suffix: ' (copia)',
     list_dup_toast: 'Copia creada — marcas de compra reiniciadas',
+    cat_dup_toast: 'Producto duplicado',
 
     role_sheet_title: 'Tu rol',
     role_sheet_sub: 'El rol te permite compartir fichas de productos con otra cuenta o recibirlas',
@@ -5668,6 +5675,7 @@ const I18N = {
     save_failed_toast: 'Échec de l’enregistrement des données',
     copy_suffix: ' (copie)',
     list_dup_toast: 'Copie créée — marques d’achat réinitialisées',
+    cat_dup_toast: 'Produit dupliqué',
 
     role_sheet_title: 'Votre rôle',
     role_sheet_sub: 'Le rôle vous permet de partager des fiches produits avec un autre compte ou de les recevoir',
@@ -6267,6 +6275,7 @@ const I18N = {
     save_failed_toast: '数据保存失败',
     copy_suffix: '（副本）',
     list_dup_toast: '副本已创建 — 购买标记已重置',
+    cat_dup_toast: '商品已复制',
 
     role_sheet_title: '您的角色',
     role_sheet_sub: '角色决定您能否与其他账户分享商品卡片或接收它们',
@@ -6866,6 +6875,7 @@ const I18N = {
     save_failed_toast: 'Lưu dữ liệu thất bại',
     copy_suffix: ' (bản sao)',
     list_dup_toast: 'Đã tạo bản sao — đã đặt lại các dấu đã mua',
+    cat_dup_toast: 'Đã nhân bản sản phẩm',
 
     role_sheet_title: 'Vai trò của bạn',
     role_sheet_sub: 'Vai trò cho phép bạn chia sẻ thẻ sản phẩm với tài khoản khác hoặc nhận chúng',
@@ -7465,6 +7475,7 @@ const I18N = {
     save_failed_toast: 'Ma’lumotlarni saqlab bo‘lmadi',
     copy_suffix: ' (nusxa)',
     list_dup_toast: 'Nusxa yaratildi — xarid belgilari tozalandi',
+    cat_dup_toast: 'Mahsulot nusxalandi',
 
     role_sheet_title: 'Sizning rolingiz',
     role_sheet_sub: 'Rol boshqa hisob bilan mahsulot kartalarini almashish yoki qabul qilish imkonini beradi',
@@ -8064,6 +8075,7 @@ const I18N = {
     save_failed_toast: 'Маалыматты сактап болбоду',
     copy_suffix: ' (көчүрмө)',
     list_dup_toast: 'Көчүрмө түзүлдү — сатып алуу белгилери тазаланды',
+    cat_dup_toast: 'Товар көчүрмөлөндү',
 
     role_sheet_title: 'Сиздин ролуңуз',
     role_sheet_sub: 'Роль башка аккаунт менен товар карточкаларын бөлүшүүгө же кабыл алууга мүмкүндүк берет',
@@ -8663,6 +8675,7 @@ const I18N = {
     save_failed_toast: 'Захираи маълумот муваффақ нашуд',
     copy_suffix: ' (нусха)',
     list_dup_toast: 'Нусха эҷод шуд — қайдҳои харид тоза шуданд',
+    cat_dup_toast: 'Маҳсулот нусха бардошта шуд',
 
     role_sheet_title: 'Нақши шумо',
     role_sheet_sub: 'Нақш имкон медиҳад, ки шумо корти маҳсулотро бо ҳисоби дигар мубодила кунед ё қабул кунед',
@@ -9262,6 +9275,7 @@ const I18N = {
     save_failed_toast: 'მონაცემების შენახვა ვერ მოხერხდა',
     copy_suffix: ' (ასლი)',
     list_dup_toast: 'ასლი შეიქმნა — შესყიდვის ნიშნები გასუფთავდა',
+    cat_dup_toast: 'პროდუქტი დუბლირებულია',
 
     role_sheet_title: 'თქვენი როლი',
     role_sheet_sub: 'როლი გაძლევთ საშუალებას გაუზიაროთ პროდუქტის ბარათები სხვა ანგარიშს ან მიიღოთ ისინი',
@@ -9861,6 +9875,7 @@ const I18N = {
     save_failed_toast: 'Չհաջողվեց պահպանել տվյալները',
     copy_suffix: ' (պատճեն)',
     list_dup_toast: 'Պատճենը ստեղծվեց — գնումների նշումները զրոյացվեցին',
+    cat_dup_toast: 'Ապրանքը կրկնօրինակվեց',
 
     role_sheet_title: 'Ձեր դերը',
     role_sheet_sub: 'Դերը թույլ է տալիս կիսվել ապրանքի քարտերով այլ հաշվի հետ կամ ստանալ դրանք',
@@ -10460,6 +10475,7 @@ const I18N = {
     save_failed_toast: 'Адыррақәа рыхьчара ахымԥало',
     copy_suffix: ' (ахкыра)',
     list_dup_toast: 'Ахкыра иашьуп — аиура анышанақәа рыхкыз',
+    cat_dup_toast: 'Апродукт ахкыра иашьуп',
 
     role_sheet_title: 'Шәара шәроль',
     role_sheet_sub: 'Роль хазы аккаунт ду апродукт карточкақәа реиҭира ду рныргара алнаршоит',
@@ -13750,6 +13766,9 @@ function openCatProductSheet(id, listCtx) {
     qtyField.style.display = 'none';
   }
   document.getElementById('catProdPrintBtn').style.display = p ? 'flex' : 'none';
+  const dupBtn = document.getElementById('catProdDupBtn');
+  dupBtn.style.display = p ? 'flex' : 'none';
+  if (p) dupBtn.innerHTML = ic('copy', 18);
   const favBtn = document.getElementById('catProdFavBtn');
   favBtn.style.display = p ? 'flex' : 'none';
   favBtn.innerHTML = p ? favStarSvg(p.favorite) : '';
@@ -13957,6 +13976,21 @@ function syncProductToListItems(productId) {
   state.lists.forEach(l => ((l.data && l.data.stores) || []).forEach(s => s.items.forEach(it => {
     if (it.productId === productId) { it.name = p.name; it.price = p.price; it.photoId = p.photoId || null; it.updatedAt = Date.now(); }
   })));
+}
+// быстро завести похожий товар (тот же магазин/место/пачка/примечание, отличается,
+// например, только цвет) — не печатаем его заново с нуля, а копируем и правим
+// разницу. Артикул (ID в кассе) не копируем — он должен быть уникальным у каждого
+// товара, иначе при сохранении сразу сработает предупреждение о совпадении
+function duplicateCatProduct() {
+  const src = prodById(catEditProductId);
+  if (!src) return;
+  const copy = { ...src, id: uid(), name: src.name + t('copy_suffix'), sku: '', favorite: false, updatedAt: Date.now() };
+  state.catalogDB.products.push(copy);
+  save(); renderCatalog(); renderInv();
+  toast(t('cat_dup_toast'));
+  vibrate(10);
+  openCatProductSheet(copy.id);
+  setTimeout(() => { const inp = document.getElementById('catProdName'); inp.focus(); inp.select(); }, 320);
 }
 function deleteCatProduct() {
   const idx = state.catalogDB.products.findIndex(p => p.id === catEditProductId);
