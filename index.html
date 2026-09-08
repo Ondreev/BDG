@@ -463,14 +463,26 @@ input,select{font-family:inherit}
 }
 .drag-handle:active{cursor:grabbing;color:var(--accent)}
 
-.item-photo{position:relative;aspect-ratio:1/1;background:var(--line);flex:none;padding:10px}
+/* квадрат через классический приём padding-top:100% (а не aspect-ratio) — плитка
+   гарантированно одного размера у всех карточек независимо от пропорций фото,
+   без вопросов к поддержке aspect-ratio в конкретном браузере/вебвью. Сама рамка
+   всегда квадратная; фото/заглушка — абсолютно спозиционированный слой внутри неё
+   с отступом со всех сторон */
+.item-photo{position:relative;width:100%;height:0;padding-top:100%;background:var(--line);flex:none;overflow:hidden}
 /* object-position:top — если фото не квадратное и не заполняет всю плитку целиком
    (contain), оно прижимается к верху, а не центрируется; свободное место остаётся
    снизу как часть плитки, а не бьёт по глазам неровным зазором то сверху, то снизу
-   у разных карточек */
-.item-photo img{width:100%;height:100%;object-fit:contain;object-position:top;display:block;border-radius:14px;background:#fff;cursor:zoom-in}
+   у разных карточек. width/height:100% обязательны: у абсолютно спозиционированного
+   img (заменяемый элемент) top+left+right+bottom без явных width/height не растягивают
+   картинку по контейнеру, а оставляют её в НАТУРАЛЬНОМ пиксельном размере — из-за
+   этого фото вылезало за пределы плитки и перекрывало текст под ней */
+.item-photo img{
+  position:absolute;top:10px;left:10px;right:10px;bottom:10px;width:calc(100% - 20px);height:calc(100% - 20px);
+  object-fit:contain;object-position:top;display:block;border-radius:14px;background:#fff;cursor:zoom-in;
+}
 .item-photo-ph{
-  width:100%;height:100%;display:flex;align-items:center;justify-content:center;
+  position:absolute;top:10px;left:10px;right:10px;bottom:10px;
+  display:flex;align-items:center;justify-content:center;
   border-radius:14px;background:#fff;color:#B6C0CE;
 }
 .item-row.done .item-photo img{filter:grayscale(.65) brightness(.8)}
@@ -500,9 +512,13 @@ input,select{font-family:inherit}
   display:flex;align-items:center;justify-content:center;
 }
 .item-body{flex:1;min-width:0;padding:9px 11px 11px;cursor:pointer;display:flex;flex-direction:column;gap:3px}
-.item-row1{display:flex;align-items:center;justify-content:space-between;gap:6px}
-.item-row1-left{display:flex;align-items:center;gap:5px;min-width:0;flex-wrap:wrap}
-.item-unit-price{font-size:13.5px;font-weight:800;color:var(--muted)}
+/* строго одна строка: цена + плашка пачки не переносятся, а сжимаются/обрезаются
+   (плашка пачки — редкий и не критичный для точности текст, троеточие в крайнем
+   случае лучше, чем перенос карандаша на вторую строку и разъезжающиеся карточки) */
+.item-row1{display:flex;align-items:center;justify-content:space-between;gap:4px;flex-wrap:nowrap}
+.item-row1-left{display:flex;align-items:center;gap:4px;min-width:0;flex-wrap:nowrap;overflow:hidden}
+.item-unit-price{font-size:13.5px;font-weight:800;color:var(--muted);white-space:nowrap;flex:none}
+.item-row1-left .cat-card-pack{font-size:9.5px;padding:2px 5px;min-width:0;overflow:hidden;text-overflow:ellipsis}
 .item-name{
   font-size:14.5px;font-weight:700;overflow:hidden;text-overflow:ellipsis;transition:color .2s;
   display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;line-height:1.28;
