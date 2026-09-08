@@ -335,9 +335,18 @@ input,select{font-family:inherit}
   background:#fff;border:1px solid var(--line);
 }
 .cat-card.picked{outline:2px solid var(--accent)}
-.cat-card-img{position:relative;aspect-ratio:1/1;background:var(--line);flex:none}
-.cat-card-img img{width:100%;height:100%;object-fit:cover;display:block}
-.cat-card-ph{width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:34px;font-weight:800;color:#fff}
+/* фото занимает не весь квадрат «от края до края» (cover), а вписывается целиком
+   (contain) в паддинг — так карточки с разными пропорциями/обрезкой исходных фото
+   (тесный кадр вплотную к товару или широкий кадр с большим полем вокруг) выглядят
+   ОДИНАКОВО: одна и та же серая рамка-подложка и один и тот же размер фото-плитки
+   со скруглением на всех четырёх углах, а не только сверху (как было при cover
+   вплотную к краям карточки — низ фото оставался с прямыми углами) */
+.cat-card-img{position:relative;aspect-ratio:1/1;background:var(--line);flex:none;padding:10px}
+.cat-card-img img{width:100%;height:100%;object-fit:contain;display:block;border-radius:14px;background:#fff}
+.cat-card-ph{
+  width:100%;height:100%;display:flex;align-items:center;justify-content:center;
+  border-radius:14px;background:#fff;color:#B6C0CE;
+}
 .cat-card-fav{
   position:absolute;top:8px;right:8px;width:32px;height:32px;border-radius:50%;border:none;
   background:rgba(255,255,255,.85);display:flex;align-items:center;justify-content:center;cursor:pointer;
@@ -447,11 +456,15 @@ input,select{font-family:inherit}
    (см. медиа-запрос ниже) — классический чекбокс и перетаскивание, как было. */
 .item-row .check{display:none}
 .item-row .item-thumb{display:none}
+/* фото в строке списка увеличено (было 38px) — как и в каталоге, это заметная
+   часть карточки, а не мелкая иконка сбоку; сама строка растёт по высоте вслед
+   за этой кнопкой (flex align-items:center), qty/цена/остальной текст в
+   .item-body при этом не трогаются — просто получают больше воздуха по вертикали */
 .check-thumb{
-  width:44px;height:52px;border:none;background:none;cursor:zoom-in;flex:none;padding:0;
+  width:68px;height:68px;border:none;background:none;cursor:zoom-in;flex:none;padding:0;
   display:flex;align-items:center;justify-content:center;
 }
-.check-thumb img{width:38px;height:38px;border-radius:11px;object-fit:cover;display:block;transition:filter .18s}
+.check-thumb img{width:60px;height:60px;border-radius:14px;object-fit:cover;display:block;transition:filter .18s}
 .item-row.done .check-thumb img{filter:grayscale(.65) brightness(.8)}
 .item-edit-btn{
   width:34px;height:52px;border:none;background:none;cursor:pointer;flex:none;color:var(--muted);
@@ -608,7 +621,7 @@ label.sku-check{display:flex;align-items:center;gap:6px;font-size:11.5px;font-we
   position:absolute;bottom:5px;right:5px;width:24px;height:24px;border-radius:50%;border:none;
   background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;
 }
-.item-thumb{width:34px;height:34px;border-radius:10px;flex:none;object-fit:cover;cursor:zoom-in;margin-right:2px}
+.item-thumb{width:60px;height:60px;border-radius:14px;flex:none;object-fit:cover;cursor:zoom-in;margin-right:4px}
 .photo-viewer{
   position:fixed;inset:0;z-index:300;background:rgba(10,12,20,.92);display:none;
   align-items:center;justify-content:center;padding:24px;
@@ -1262,13 +1275,29 @@ input[type=file]{display:none}
   .cat-list{grid-template-columns:repeat(auto-fill,minmax(170px,1fr))}
   /* компактные яркие кнопки в ряд рядом с заголовком, а не растянутые на всю
      ширину экрана снизу, где их не видно без прокрутки до конца списка */
+  /* на десктопе категории выносятся в левую панель на всю высоту (см.
+     .cat-chipsrow ниже) — места достаточно, и постоянно видимый список категорий
+     удобнее для сортировки/фильтрации мышью, чем горизонтальная лента чипов */
   #catalogSheet .sheet{
-    grid-template-columns:1fr auto auto;
-    grid-template-areas:"title actions close" "search search search" "chips chips chips" "locrow locrow locrow" "list list list" "bulkbar bulkbar bulkbar";
-    grid-template-rows:auto auto auto auto 1fr auto;
+    grid-template-columns:190px 1fr auto auto;
+    grid-template-areas:
+      ".       title   actions close"
+      "sidebar search  search  search"
+      "sidebar locrow  locrow  locrow"
+      "sidebar list    list    list"
+      "sidebar bulkbar bulkbar bulkbar";
+    grid-template-rows:auto auto auto 1fr auto;
+    column-gap:14px;
   }
   .cat-actions{grid-area:actions;flex-direction:row;justify-content:flex-end;align-items:center;gap:10px}
   .cat-actions .btn{width:auto;flex:none;padding:0 18px;height:38px;margin-top:0;font-size:13.5px}
+  .cat-chipsrow{
+    grid-area:sidebar;align-self:stretch;min-height:0;
+    display:flex;flex-direction:column;flex-wrap:nowrap;gap:3px;
+    overflow-y:auto;overflow-x:hidden;padding:2px 10px 8px 0;margin-bottom:0;
+    border-right:1px solid var(--line);
+  }
+  .cat-chipsrow .chip{width:100%;justify-content:flex-start;border-radius:12px}
 }
 </style>
 </head>
@@ -11252,7 +11281,7 @@ function itemRowHTML(sid, it) {
     ${itemThumbHTML(it)}
     ${it.photoId ? `
     <button class="check-thumb" onclick="event.stopPropagation();openPhotoViewer('${it.photoId}')" aria-label="${t('aria_view_photo')}">
-      <img src="${photoDisplayUrl(it.photoId, 90)}" alt="">
+      <img src="${photoDisplayUrl(it.photoId, 130)}" alt="">
     </button>` : ''}
     <div class="item-body" onclick="onItemRowTap('${sid}','${it.id}')">
       <div class="item-name">${esc(it.name)}</div>
@@ -13834,12 +13863,6 @@ function prefetchProductPhotos() {
     Promise.all(batch.map(x => fetch(photoDisplayUrl(x.id, x.size), { mode: 'no-cors' }).catch(() => {}))).then(next);
   })();
 }
-const AVATAR_COLORS = ['#F97066', '#F79009', '#EAAA08', '#3CCB7F', '#4CC2C4', '#53B1FD', '#8098F9', '#9B8AFB', '#F670C7'];
-function avatarColorFor(name) {
-  let h = 0;
-  for (let i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) >>> 0;
-  return AVATAR_COLORS[h % AVATAR_COLORS.length];
-}
 // магазин товара определяется не напрямую, а через привязку "Место -> справочник
 // магазинов" — то же самое, что уже используется в карточке товара и в списках
 function catCardStoreLabel(p) {
@@ -13864,12 +13887,15 @@ function catCardImgHTML(p) {
   // открывать просмотр — поэтому увеличенный просмотр только вне этого режима
   const tap = catSelectMode ? '' : ` onclick="event.stopPropagation();openPhotoViewer('${p.photoId}')"`;
   if (url) return `<img src="${url}" alt=""${tap}>`;
-  const letter = (p.name || '?').trim().charAt(0).toUpperCase();
-  return `<div class="cat-card-ph" style="background:${avatarColorFor(p.name || '')}">${esc(letter)}</div>`;
+  // без фото — нейтральная одинаковая плашка для всех товаров (раньше был цветной
+  // кружок с буквой названия — из-за случайного цвета и разных пропорций реальных
+  // фото карточки выглядели вразнобой; теперь фото и плашка занимают ОДНО и то же
+  // место одного и того же размера с одинаковым скруглением на всех углах)
+  return `<div class="cat-card-ph">${ic('camera', 30)}</div>`;
 }
 function itemThumbHTML(it) {
   if (!it.photoId) return '';
-  const url = photoDisplayUrl(it.photoId, 90);
+  const url = photoDisplayUrl(it.photoId, 130);
   return `<img class="item-thumb" src="${url}" alt="" onclick="event.stopPropagation();openPhotoViewer('${it.photoId}')">`;
 }
 function openPhotoViewer(id, directUrl) {
@@ -15909,6 +15935,10 @@ document.addEventListener('pointerdown', e => {
   if (e.pointerType !== 'mouse') return;
   const strip = e.target.closest('.chips');
   if (!strip) return;
+  // на десктопе категории каталога — вертикальная боковая панель, а не
+  // горизонтальная лента чипов; горизонтальный пан-по-клику тут не нужен и только
+  // мешал бы (лёгкое дрожание мыши по X при клике отменяло бы сам клик по категории)
+  if (strip.id === 'catChips' && desktopLayoutMQ.matches) return;
   chipDrag = { strip, startX: e.clientX, startLeft: strip.scrollLeft };
 });
 document.addEventListener('pointermove', e => {
