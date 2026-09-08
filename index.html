@@ -2097,7 +2097,10 @@ input[type=file]{display:none}
 <div class="sheet-wrap" id="syncSheet"><div class="backdrop" onclick="closeSheet('syncSheet')"></div>
   <div class="sheet">
     <div class="grab"></div>
-    <h2 data-i18n="sync_sheet_title">Облако — копия данных</h2>
+    <div class="curr-head">
+      <h2 style="margin:0" data-i18n="sync_sheet_title">Облако — копия данных</h2>
+      <button class="icon-btn" onclick="openHistorySheet()" aria-label="История изменений" data-i18n-aria="sync_history_btn"><span class="ic" data-icon="undo"></span></button>
+    </div>
     <div class="about">
       <p data-i18n="sync_intro">Данные сохраняются в защищённое облако по вашему номеру и PIN — надёжно и видно только вам.</p>
       <button class="about-toggle" onclick="toggleAboutMore('syncAboutMore', this)">
@@ -2119,6 +2122,15 @@ input[type=file]{display:none}
     </div>
     <button class="btn btn-primary" id="syncUpBtn" onclick="syncUpload(false)" data-i18n="sync_upload_btn">Выгрузить в облако</button>
     <div class="pay-sub" id="syncStatus" style="margin:12px 2px 0"></div>
+  </div>
+</div>
+
+<div class="sheet-wrap" id="historySheet"><div class="backdrop" onclick="closeSheet('historySheet')"></div>
+  <div class="sheet">
+    <div class="grab"></div>
+    <h2 data-i18n="history_sheet_title">История изменений</h2>
+    <p style="color:var(--muted);font-size:13.5px;margin:0 0 12px" data-i18n="history_sheet_intro">Точки, к которым можно вернуться, если что-то случайно стёрлось. Общая для всех ваших устройств.</p>
+    <div id="historyRows"></div>
   </div>
 </div>
 
@@ -2931,6 +2943,15 @@ const I18N = {
     sync_backup_restore_btn: 'Восстановить утерянные данные',
     sync_backup_restored_toast: 'Данные восстановлены из резервной копии',
     sync_backup_restore_fail: 'Не удалось восстановить резервную копию',
+    sync_history_btn: 'История изменений',
+    history_sheet_title: 'История изменений',
+    history_sheet_intro: 'Точки, к которым можно вернуться, если что-то случайно стёрлось. Общая для всех ваших устройств.',
+    history_none: 'Пока нет точек истории',
+    history_confirm_text: 'Использовать эту версию как истину? Она станет актуальной на всех устройствах при следующей проверке с облаком.',
+    history_confirm_yes: 'Да, использовать',
+    history_restored_toast: 'Версия восстановлена',
+    history_restore_fail: 'Не удалось восстановить версию',
+    history_load_fail: 'Не удалось загрузить историю',
     sync_err_generic: 'Ошибка облака: {code}',
     sync_err_no_connection: 'Нет связи с облаком — проверьте интернет и адрес скрипта',
 
@@ -3533,6 +3554,15 @@ const I18N = {
     sync_backup_restore_btn: 'Restore lost data',
     sync_backup_restored_toast: 'Data restored from backup',
     sync_backup_restore_fail: 'Failed to restore the backup',
+    sync_history_btn: 'History',
+    history_sheet_title: 'Change history',
+    history_sheet_intro: 'Checkpoints you can return to if something was accidentally erased. Shared across all your devices.',
+    history_none: 'No checkpoints yet',
+    history_confirm_text: 'Use this version as the source of truth? It will become current on all devices on the next sync check.',
+    history_confirm_yes: 'Yes, use it',
+    history_restored_toast: 'Version restored',
+    history_restore_fail: 'Failed to restore version',
+    history_load_fail: 'Failed to load history',
     sync_err_generic: 'Cloud error: {code}',
     sync_err_no_connection: 'No connection to the cloud — check your internet and the script URL',
 
@@ -4135,6 +4165,15 @@ const I18N = {
     sync_backup_restore_btn: 'Verlorene Daten wiederherstellen',
     sync_backup_restored_toast: 'Daten aus der Sicherung wiederhergestellt',
     sync_backup_restore_fail: 'Sicherung konnte nicht wiederhergestellt werden',
+    sync_history_btn: 'Verlauf',
+    history_sheet_title: 'Änderungsverlauf',
+    history_sheet_intro: 'Punkte, zu denen Sie zurückkehren können, falls versehentlich etwas gelöscht wurde. Gemeinsam für alle Ihre Geräte.',
+    history_none: 'Noch keine Verlaufspunkte',
+    history_confirm_text: 'Diese Version als verbindlich verwenden? Sie wird bei der nächsten Synchronisierung auf allen Geräten aktuell.',
+    history_confirm_yes: 'Ja, verwenden',
+    history_restored_toast: 'Version wiederhergestellt',
+    history_restore_fail: 'Version konnte nicht wiederhergestellt werden',
+    history_load_fail: 'Verlauf konnte nicht geladen werden',
     sync_err_generic: 'Cloud-Fehler: {code}',
     sync_err_no_connection: 'Keine Verbindung zur Cloud — prüfe dein Internet und die Skript-URL',
 
@@ -4735,6 +4774,15 @@ const I18N = {
     sync_backup_restore_btn: 'Restaurar datos perdidos',
     sync_backup_restored_toast: 'Datos restaurados desde la copia de seguridad',
     sync_backup_restore_fail: 'No se pudo restaurar la copia de seguridad',
+    sync_history_btn: 'Historial',
+    history_sheet_title: 'Historial de cambios',
+    history_sheet_intro: 'Puntos a los que puedes volver si algo se borró por accidente. Compartido en todos tus dispositivos.',
+    history_none: 'Aún no hay puntos de historial',
+    history_confirm_text: '¿Usar esta versión como la verdadera? Se volverá actual en todos los dispositivos en la próxima sincronización.',
+    history_confirm_yes: 'Sí, usar',
+    history_restored_toast: 'Versión restaurada',
+    history_restore_fail: 'No se pudo restaurar la versión',
+    history_load_fail: 'No se pudo cargar el historial',
     sync_err_generic: 'Error de la nube: {code}',
     sync_err_no_connection: 'Sin conexión con la nube — comprueba tu internet y la URL del script',
 
@@ -5335,6 +5383,15 @@ const I18N = {
     sync_backup_restore_btn: 'Restaurer les données perdues',
     sync_backup_restored_toast: 'Données restaurées à partir de la sauvegarde',
     sync_backup_restore_fail: 'Échec de la restauration de la sauvegarde',
+    sync_history_btn: 'Historique',
+    history_sheet_title: 'Historique des modifications',
+    history_sheet_intro: 'Points auxquels revenir si quelque chose a été effacé par erreur. Partagé sur tous vos appareils.',
+    history_none: 'Pas encore de points d’historique',
+    history_confirm_text: 'Utiliser cette version comme référence ? Elle deviendra actuelle sur tous les appareils à la prochaine synchronisation.',
+    history_confirm_yes: 'Oui, utiliser',
+    history_restored_toast: 'Version restaurée',
+    history_restore_fail: 'Échec de la restauration de la version',
+    history_load_fail: 'Échec du chargement de l’historique',
     sync_err_generic: 'Erreur du cloud : {code}',
     sync_err_no_connection: 'Pas de connexion au cloud — vérifiez votre connexion internet et l’URL du script',
 
@@ -5935,6 +5992,15 @@ const I18N = {
     sync_backup_restore_btn: '恢复丢失的数据',
     sync_backup_restored_toast: '已从备份恢复数据',
     sync_backup_restore_fail: '恢复备份失败',
+    sync_history_btn: '历史记录',
+    history_sheet_title: '更改历史',
+    history_sheet_intro: '如果不小心删除了什么，可以返回到这些检查点。所有设备共用。',
+    history_none: '暂无历史记录点',
+    history_confirm_text: '将此版本用作最终版本？下次与云端同步时，它将成为所有设备上的当前版本。',
+    history_confirm_yes: '是，使用它',
+    history_restored_toast: '版本已恢复',
+    history_restore_fail: '恢复版本失败',
+    history_load_fail: '加载历史记录失败',
     sync_err_generic: '云端错误：{code}',
     sync_err_no_connection: '无法连接云端 — 请检查网络和脚本地址',
 
@@ -6535,6 +6601,15 @@ const I18N = {
     sync_backup_restore_btn: 'Khôi phục dữ liệu đã mất',
     sync_backup_restored_toast: 'Đã khôi phục dữ liệu từ bản sao lưu',
     sync_backup_restore_fail: 'Không thể khôi phục bản sao lưu',
+    sync_history_btn: 'Lịch sử',
+    history_sheet_title: 'Lịch sử thay đổi',
+    history_sheet_intro: 'Các điểm mốc bạn có thể quay lại nếu vô tình xóa mất gì đó. Dùng chung cho mọi thiết bị của bạn.',
+    history_none: 'Chưa có điểm mốc nào',
+    history_confirm_text: 'Dùng phiên bản này làm bản chính? Nó sẽ trở thành bản hiện tại trên mọi thiết bị ở lần đồng bộ tiếp theo.',
+    history_confirm_yes: 'Có, sử dụng',
+    history_restored_toast: 'Đã khôi phục phiên bản',
+    history_restore_fail: 'Khôi phục phiên bản thất bại',
+    history_load_fail: 'Tải lịch sử thất bại',
     sync_err_generic: 'Lỗi đám mây: {code}',
     sync_err_no_connection: 'Không có kết nối tới đám mây — kiểm tra internet và địa chỉ script',
 
@@ -7135,6 +7210,15 @@ const I18N = {
     sync_backup_restore_btn: 'Yo\'qolgan ma\'lumotlarni tiklash',
     sync_backup_restored_toast: 'Ma\'lumotlar zaxira nusxadan tiklandi',
     sync_backup_restore_fail: 'Zaxira nusxani tiklab bo\'lmadi',
+    sync_history_btn: 'Tarix',
+    history_sheet_title: 'O\'zgarishlar tarixi',
+    history_sheet_intro: 'Agar biror narsa tasodifan o\'chirilsa, qaytishingiz mumkin bo\'lgan nuqtalar. Barcha qurilmalaringiz uchun umumiy.',
+    history_none: 'Hozircha tarix nuqtalari yo\'q',
+    history_confirm_text: 'Ushbu versiya haqiqiy deb ishlatilsinmi? Keyingi sinxronlashda barcha qurilmalarda joriy bo\'ladi.',
+    history_confirm_yes: 'Ha, ishlatish',
+    history_restored_toast: 'Versiya tiklandi',
+    history_restore_fail: 'Versiyani tiklab bo\'lmadi',
+    history_load_fail: 'Tarixni yuklab bo\'lmadi',
     sync_err_generic: 'Bulut xatosi: {code}',
     sync_err_no_connection: 'Bulutga ulanish yo‘q — internet va skript manzilini tekshiring',
 
@@ -7735,6 +7819,15 @@ const I18N = {
     sync_backup_restore_btn: 'Жоголгон маалыматтарды калыбына келтирүү',
     sync_backup_restored_toast: 'Маалыматтар резервдик көчүрмөдөн калыбына келтирилди',
     sync_backup_restore_fail: 'Резервдик көчүрмөнү калыбына келтирүү мүмкүн болгон жок',
+    sync_history_btn: 'Тарых',
+    history_sheet_title: 'Өзгөртүүлөр тарыхы',
+    history_sheet_intro: 'Бир нерсе капысынан өчүрүлүп калса, кайра кайтууга болгон чекиттер. Бардык түзмөктөрүңүз үчүн жалпы.',
+    history_none: 'Азырынча тарых чекиттери жок',
+    history_confirm_text: 'Бул версияны чындык катары колдоносузбу? Ал кийинки текшерүүдө бардык түзмөктөрдө учурдагы болот.',
+    history_confirm_yes: 'Ооба, колдонуу',
+    history_restored_toast: 'Версия калыбына келтирилди',
+    history_restore_fail: 'Версияны калыбына келтирүү мүмкүн болгон жок',
+    history_load_fail: 'Тарыхты жүктөө мүмкүн болгон жок',
     sync_err_generic: 'Булут катасы: {code}',
     sync_err_no_connection: 'Булутка байланыш жок — интернетиңизди жана скрипт дарегин текшериңиз',
 
@@ -8335,6 +8428,15 @@ const I18N = {
     sync_backup_restore_btn: 'Барқарор кардани маълумоти гумшуда',
     sync_backup_restored_toast: 'Маълумот аз нусхаи эҳтиётӣ барқарор карда шуд',
     sync_backup_restore_fail: 'Барқарор кардани нусхаи эҳтиётӣ ноком шуд',
+    sync_history_btn: 'Таърих',
+    history_sheet_title: 'Таърихи тағйирот',
+    history_sheet_intro: 'Нуқтаҳое, ки метавонед ба онҳо баргардед, агар чизе тасодуфан пок шуда бошад. Барои ҳамаи дастгоҳҳои шумо умумист.',
+    history_none: 'Ҳанӯз нуқтаҳои таърих нест',
+    history_confirm_text: 'Ин версияро ҳамчун ҳақиқат истифода барем? Он дар санҷиши навбатӣ дар ҳамаи дастгоҳҳо ҷорӣ мешавад.',
+    history_confirm_yes: 'Ҳа, истифода бурдан',
+    history_restored_toast: 'Версия барқарор шуд',
+    history_restore_fail: 'Барқарор кардани версия ноком шуд',
+    history_load_fail: 'Боргирии таърих ноком шуд',
     sync_err_generic: 'Хатои абр: {code}',
     sync_err_no_connection: 'Пайваст ба абр нест — интернет ва суроғаи скриптро тафтиш кунед',
 
@@ -8935,6 +9037,15 @@ const I18N = {
     sync_backup_restore_btn: 'დაკარგული მონაცემების აღდგენა',
     sync_backup_restored_toast: 'მონაცემები აღდგენილია სარეზერვო ასლიდან',
     sync_backup_restore_fail: 'სარეზერვო ასლის აღდგენა ვერ მოხერხდა',
+    sync_history_btn: 'ისტორია',
+    history_sheet_title: 'ცვლილებების ისტორია',
+    history_sheet_intro: 'წერტილები, რომლებზეც შეგიძლიათ დაბრუნდეთ, თუ რამე შემთხვევით წაიშალა. საერთოა თქვენი ყველა მოწყობილობისთვის.',
+    history_none: 'ისტორიის წერტილები ჯერ არ არის',
+    history_confirm_text: 'გამოვიყენოთ ეს ვერსია, როგორც ჭეშმარიტი? ის გახდება მიმდინარე ყველა მოწყობილობაზე შემდეგი სინქრონიზაციისას.',
+    history_confirm_yes: 'დიახ, გამოყენება',
+    history_restored_toast: 'ვერსია აღდგენილია',
+    history_restore_fail: 'ვერსიის აღდგენა ვერ მოხერხდა',
+    history_load_fail: 'ისტორიის ჩატვირთვა ვერ მოხერხდა',
     sync_err_generic: 'ღრუბლის შეცდომა: {code}',
     sync_err_no_connection: 'კავშირი ღრუბელთან არ არის — შეამოწმეთ ინტერნეტი და სკრიპტის მისამართი',
 
@@ -9535,6 +9646,15 @@ const I18N = {
     sync_backup_restore_btn: 'Վերականգնել կորած տվյալները',
     sync_backup_restored_toast: 'Տվյալները վերականգնվել են պահուստային պատճենից',
     sync_backup_restore_fail: 'Չհաջողվեց վերականգնել պահուստային պատճենը',
+    sync_history_btn: 'Պատմություն',
+    history_sheet_title: 'Փոփոխությունների պատմություն',
+    history_sheet_intro: 'Կետեր, որոնց կարող եք վերադառնալ, եթե պատահաբար ինչ-որ բան ջնջվել է։ Ընդհանուր է ձեր բոլոր սարքերի համար։',
+    history_none: 'Դեռ պատմության կետեր չկան',
+    history_confirm_text: 'Օգտագործե՞լ այս տարբերակը որպես ճշմարիտ։ Այն կդառնա ընթացիկ բոլոր սարքերում հաջորդ համաժամացման ժամանակ։',
+    history_confirm_yes: 'Այո, օգտագործել',
+    history_restored_toast: 'Տարբերակը վերականգնվեց',
+    history_restore_fail: 'Չհաջողվեց վերականգնել տարբերակը',
+    history_load_fail: 'Չհաջողվեց բեռնել պատմությունը',
     sync_err_generic: 'Ամպի սխալ՝ {code}',
     sync_err_no_connection: 'Կապ չկա ամպի հետ — ստուգեք ինտերնետը և սկրիպտի հասցեն',
 
@@ -10135,6 +10255,15 @@ const I18N = {
     sync_backup_restore_btn: 'Аҧсуа адыррақәа рыҵыхра',
     sync_backup_restored_toast: 'Адыррақәа азеиԥш ажәабжь ианыҵыхуп',
     sync_backup_restore_fail: 'Азеиԥш ажәабжь аныҵыхра мап ацны иаанхеит',
+    sync_history_btn: 'Аҭоурых',
+    history_sheet_title: 'Аԥсахрақәа рҭоурых',
+    history_sheet_intro: 'Иахьынлеиуа акы аныгеит ианыҵыхыр залшо аҭыхқәа. Ари адыррақәа зегьы ажәытәреи азы еиднакылоуп.',
+    history_none: 'Аҭоурых аҭыхқәа ыҟаӡам',
+    history_confirm_text: 'Ари авариант шәара иашоу ишьҭаны ахархәара? Иаанарԥшуа асинхронизациа аан адыррақәа зегьы рҟны актуалра ргоит.',
+    history_confirm_yes: 'Аиа, ахархәара',
+    history_restored_toast: 'Авариант ианыҵыхуп',
+    history_restore_fail: 'Авариант аныҵыхра мап ацны иаанхеит',
+    history_load_fail: 'Аҭоурых аҭижьра мап ацны иаанхеит',
     sync_err_generic: 'Абԥша аԥсхара: {code}',
     sync_err_no_connection: 'Абԥша ду азхьаара ыҟаӡам — интернет насгьы аскрипт адрес шәрыхьчала',
 
@@ -12100,13 +12229,37 @@ function applyRemotePayload(payload, creds, at) {
   const mergedPlans = mergePlans(state.plans, state.deletedPlanIds, payload.plans, payload.deletedPlanIds);
   payload.plans = mergedPlans.plans;
   payload.deletedPlanIds = mergedPlans.deletedPlanIds;
-  payload.sync = { login: creds.login, pin: creds.pin, url: creds.url, last: at };
+  finishApplyingPayload(payload, creds, at);
+}
+// хвост, общий для обычной сверки (слияние выше) и для "жёсткой" замены без слияния
+// (см. applyReplacedPayload) — переносит sync-метки, чинит currentId/currentPlanId,
+// если они указывали на что-то, чего в новом payload больше нет, и сохраняет+рисует
+function finishApplyingPayload(payload, creds, at) {
+  // editSeq/syncedSeq нельзя терять: если на этом устройстве есть ещё не отправленная
+  // правка (editSeq !== syncedSeq), саму метку "правка не отправлена" нужно перенести
+  // из старого state.sync вручную — иначе значение обнулилось бы вместе с остальными
+  // полями sync, hasUnsyncedLocalEdit() тут же стала бы ложной, и эта правка так и
+  // осталась бы только здесь, никогда не уйдя в облако
+  const prevSync = state.sync || {};
+  payload.sync = { login: creds.login, pin: creds.pin, url: creds.url, last: at, editSeq: prevSync.editSeq || 0, syncedSeq: prevSync.syncedSeq || 0 };
   state = payload;
   if (!state.lists.some(l => l.id === state.currentId)) state.currentId = state.lists[0].id;
+  if (!state.plans) state.plans = [];
   if (!state.plans.length) state.plans.push({ id: uid(), name: 'Мой план', date: today(), items: [], deletedItemIds: [] });
   if (!state.plans.some(p => p.id === state.currentPlanId)) state.currentPlanId = state.plans[0].id;
   save(true); render();
   prefetchProductPhotos();
+}
+// "жёсткая" замена БЕЗ слияния — в отличие от applyRemotePayload (используется для
+// обычной сверки с облаком и намеренно СЛИВАЕТ входящее с локальным, чтобы никогда не
+// потерять то, что другое устройство ещё не видело), это для по-настоящему осознанных
+// действий типа "Использовать как истину" из Истории изменений: там весь смысл в том,
+// чтобы получить ИМЕННО выбранный старый снимок, а не объединение с текущим локальным
+// состоянием — слияние по union-правилу иначе просто сохранило бы все локальные товары,
+// которых в восстанавливаемом снимке уже не было, и откат ничего бы не откатил
+function applyReplacedPayload(payload, creds, at) {
+  sanitizeCatalogDB(payload);
+  finishApplyingPayload(payload, creds, at);
 }
 // принять данные из облака вместо перезаписи — безопасная альтернатива, которую предлагаем
 // прямо в предупреждении «Опасно!», когда в облаке данных больше, чем на этом устройстве
@@ -12158,10 +12311,25 @@ function checkRemoteUpdates(showUi) {
       // этот запрос улетел ДО текущего момента — пока ждали ответ, человек мог успеть
       // открыть карточку, добавить фото, добавить товар в список. Проверка в начале
       // функции этого не поймает (она была секунды назад), поэтому проверяем ещё раз
-      // прямо перед перезаписью и, если сейчас есть что терять, лучше пропустить этот
-      // цикл сверки, чем стереть только что сделанные правки
-      if (document.querySelector('.sheet-wrap.open') || document.getElementById('aiPanel').classList.contains('show') || autoSyncTimer || hasUnsyncedLocalEdit()) {
+      // прямо перед перезаписью — открытую шторку/ассистента трогать нельзя (это
+      // разрушило бы то, что человек редактирует прямо сейчас на экране)
+      if (document.querySelector('.sheet-wrap.open') || document.getElementById('aiPanel').classList.contains('show')) {
         if (showUi) syncBootHide();
+        return;
+      }
+      // showUi=true — это явное «дай мне всё актуальное»: холодный старт приложения,
+      // ручное обновление странице (потянули вниз на телефоне, F5 на компьютере).
+      // Раньше и здесь эта сверка тоже пропускалась, если на этом устройстве была
+      // ещё не отправленная правка (autoSyncTimer/hasUnsyncedLocalEdit) — из лучших
+      // побуждений (не перезаписать то, что ещё не ушло), но именно это раньше и
+      // читалось как "обновление показывается, а данные не меняются": слияние по
+      // записям (mergeLists/mergeCatalogDB/mergePlans/...) и так не теряет локальную
+      // правку при таком слиянии — она просто останется в объединённом состоянии и
+      // всё равно уйдёт в облако следом (см. applyRemotePayload, который сохраняет
+      // editSeq/syncedSeq). Поэтому для явного ручного обновления применяем облако
+      // без раздумий; фоновые тихие проверки (переключение вкладок, интервал) по-прежнему
+      // осторожничают, чтобы не дёргать экран посреди работы
+      if (!showUi && (autoSyncTimer || hasUnsyncedLocalEdit())) {
         return;
       }
       applyRemotePayload(res.payload, creds, res.at);
@@ -12192,6 +12360,57 @@ function restoreBackup(creds) {
     })
     .catch(() => toast(t('sync_backup_restore_fail')));
 }
+
+/* ================= История изменений — точки возврата =================
+   В отличие от единственной аварийной резервной копии выше (только для
+   рискованных замен, на сутки), это регулярный журнал снимков с описанием
+   того, что изменилось — на сервере пишется при каждом сохранении (с
+   троттлингом, см. appendHistoryEntry в google-apps-script.gs). Выбор точки
+   и подтверждение "Использовать как истину" откатывает облако к ней сразу
+   на этом устройстве; остальные подтянут её при следующей сверке с облаком */
+let historyEntries = [];
+function openHistorySheet() {
+  const s = syncState();
+  if (!s.login || !s.pin) { toast(t('sync_err_no_connection')); return; }
+  document.getElementById('historyRows').innerHTML = '';
+  openSheet('historySheet');
+  const creds = { login: s.login, pin: s.pin, url: s.url || DEFAULT_SYNC_URL };
+  syncCall(creds, 'history_list')
+    .then(res => { historyEntries = res.history || []; renderHistoryRows(); })
+    .catch(() => { document.getElementById('historyRows').innerHTML = `<div class="cat-empty">${t('history_load_fail')}</div>`; });
+}
+function renderHistoryRows() {
+  const loc = dateLocale();
+  document.getElementById('historyRows').innerHTML = historyEntries.length ? historyEntries.map((h, i) => `
+    <div class="list-row" style="cursor:pointer" onclick="confirmRestoreHistory(${i})">
+      <div class="info">
+        <div class="nm">${esc(new Date(h.at).toLocaleDateString(loc, { day: 'numeric', month: 'short' }))} · ${esc(new Date(h.at).toLocaleTimeString(loc, { hour: '2-digit', minute: '2-digit' }))}</div>
+        <div class="mt">${esc(h.summary || '')}</div>
+      </div>
+      <span class="ic" data-icon="undo" style="flex:none;color:var(--muted)"></span>
+    </div>`).join('') : `<div class="cat-empty">${t('history_none')}</div>`;
+  document.querySelectorAll('#historyRows .ic[data-icon]').forEach(el => { el.innerHTML = ic(el.dataset.icon, 17); });
+}
+function confirmRestoreHistory(i) {
+  const h = historyEntries[i];
+  if (!h) return;
+  closeSheet('historySheet');
+  aiSay(t('history_confirm_text'), [
+    { label: t('history_confirm_yes'), pri: true, fn: () => restoreHistoryVersion(h.at) },
+    { label: t('btn_cancel'), fn: () => {} }
+  ]);
+}
+function restoreHistoryVersion(at) {
+  const s = syncState();
+  const creds = { login: s.login, pin: s.pin, url: s.url || DEFAULT_SYNC_URL };
+  syncCall(creds, 'history_restore', { at })
+    .then(res => {
+      if (!res.payload) { toast(t('history_restore_fail')); return; }
+      applyReplacedPayload(res.payload, creds, res.at);
+      toast(t('history_restored_toast'));
+    })
+    .catch(() => toast(t('history_restore_fail')));
+}
 function syncBootShow() {
   const el = document.getElementById('syncBoot');
   el.classList.remove('success');
@@ -12219,11 +12438,14 @@ function errToMsg(err) {
 function renderSyncStatusSafe() {
   if (document.getElementById('syncSheet').classList.contains('open')) renderSyncStatus();
 }
-// после паузы в изменениях данные сами уходят в облако
+// после паузы в изменениях данные сами уходят в облако — пауза короткая (не ждём
+// человека 17-30с как раньше), чтобы правка долетала до облака почти сразу, но не
+// прямо на каждое нажатие клавиши (иначе набор текста в поле бомбил бы сервер
+// запросами и упирался в общую блокировку LockService)
 function scheduleAutoSync() {
   if (!window.__bdgReady) return;
   clearTimeout(autoSyncTimer);
-  autoSyncTimer = setTimeout(autoSyncNow, 17000);
+  autoSyncTimer = setTimeout(autoSyncNow, 2000);
 }
 // если человек уходит со вкладки (переключился на другое приложение/устройство) раньше,
 // чем сработал таймер выше — не ждём оставшиеся секунды, отправляем правки немедленно.
@@ -12249,9 +12471,16 @@ function autoSyncNow() {
   if (window.__tourActive) return;
   if (document.querySelector('.sheet-wrap.open') || document.getElementById('aiPanel').classList.contains('show')) {
     clearTimeout(autoSyncTimer);
-    autoSyncTimer = setTimeout(autoSyncNow, 8000);
+    autoSyncTimer = setTimeout(autoSyncNow, 3000);
     return;
   }
+  // защита от гонки с периодическим опросом (теперь каждые 15с, а не 30): если этот
+  // цикл уже в процессе (например, ждём медленный ответ сервера из-за общей блокировки
+  // LockService), не запускаем второй параллельный — иначе оба сделают отдельный save
+  // одной и той же правки. Сама правка от этого не пострадала бы (сервер сольёт любой
+  // из двух запросов безопасно), но это лишняя нагрузка на общую блокировку
+  if (window.__autoSyncBusy) return;
+  window.__autoSyncBusy = true;
   const creds = { login: s.login, pin: s.pin, url: s.url || DEFAULT_SYNC_URL };
   // прежде чем тихо отправить свои правки, проверяем — не появилось ли в облаке более
   // новой версии с другого устройства. Без этой проверки устройство с устаревшими
@@ -12285,7 +12514,8 @@ function autoSyncNow() {
       return; // правки этого цикла не отправляем; следующая правка запустит цикл заново на свежей базе
     }
     return performUpload(creds).then(() => stampShow());
-  }).catch(() => {}); // тихая попытка в фоне — при следующей правке или следующем цикле попробуем снова
+  }).catch(() => {}) // тихая попытка в фоне — при следующей правке или следующем цикле попробуем снова
+    .finally(() => { window.__autoSyncBusy = false; });
 }
 
 /* ================= печать с телефона на компьютер (через то же облако) ================= */
@@ -15804,7 +16034,7 @@ setInterval(() => {
   // ждём следующей ручной правки человека, которая могла бы больше и не случиться
   if (hasUnsyncedLocalEdit()) { autoSyncNow(); return; }
   checkRemoteUpdates(false);
-}, 30000);
+}, 15000);
 </script>
 </body>
 </html>

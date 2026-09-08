@@ -58,6 +58,13 @@ var ORDER_MAXCH = 12; // до ~540 КБ на один заказ поставщ�
 var BACKUP_SHEET_NAME = 'backups';
 var BACKUP_WINDOW_MS = 24 * 60 * 60 * 1000; // сутки, как и просили — окно, пока предлагаем восстановить
 
+var HISTORY_SHEET_NAME = 'history';
+var HISTORY_MAX_VERSIONS = 30;          // сколько последних точек возврата хранить на аккаунт
+var HISTORY_MIN_GAP_MS = 3 * 60 * 1000; // не чаще одной точки в 3 минуты — иначе частые
+                                         // автосохранения при активной работе быстро
+                                         // замусорили бы историю почти одинаковыми снимками
+var HISTORY_NO_CHANGES = 'Без изменений';
+
 var PHOTO_ROOT_FOLDER_NAME = 'BDG_photos';
 var PHOTO_MAX_BASE64_LEN = 2000000; // с запасом достаточно для сжатого фото с телефона
 
@@ -86,12 +93,17 @@ function doPost(e) {
           for (var i0 = 0; i0 < json0.length; i0 += CHUNK) chunks0.push(json0.slice(i0, i0 + CHUNK));
           while (chunks0.length < MAXCH) chunks0.push('');
           sh.appendRow([login, "'" + pin, now].concat(chunks0));
+          appendHistoryEntry(login, payload, json0);
           return out({ ok: true, at: now });
         }
         if (getPin(sh, row) !== pin) return out({ ok: false, error: 'wrong_pin' });
         var existingVals = sh.getRange(row, 4, 1, MAXCH).getDisplayValues()[0];
         var existingJson = existingVals.join('');
         var existingLen = existingJson.length;
+        // существующее состояние нужно и для слияния (ниже), и для дневника изменений
+        // (appendHistoryEntry) — разбираем один раз, чтобы не парсить JSON дважды
+        var existingPayload = null;
+        if (existingJson) { try { existingPayload = JSON.parse(existingJson); } catch (eParse) {} }
         // каталог товаров сливаем с уже сохранённым на сервере по каждой карточке
         // отдельно (см. mergeCatalogDBServer), а не заменяем целиком — иначе устройство
         // с чуть более старой локальной копией могло вслепую затереть чужую свежую
@@ -99,9 +111,8 @@ function doPost(e) {
         // req.skipMerge — единственное исключение: человек явно нажал "Всё равно
         // заменить" в диалоге предупреждения о потере данных, и этот диалог прямым
         // текстом обещает полную замену, поэтому в этом случае делаем ровно её
-        if (!req.skipMerge && existingJson) {
+        if (!req.skipMerge && existingPayload) {
           try {
-            var existingPayload = JSON.parse(existingJson);
             payload.catalogDB = mergeCatalogDBServer(existingPayload.catalogDB, payload.catalogDB);
             // то же самое для списков закупок (см. mergeListsServer) — без этого
             // список с чуть более старой локальной копией на другом устройстве мог
@@ -138,6 +149,10 @@ function doPost(e) {
         if (risky) saveBackup(login, existingVals);
         sh.getRange(row, 3).setValue(now);
         sh.getRange(row, 4, 1, MAXCH).setValues([chunks]);
+        // точка возврата в "Историю изменений" — независимо от бэкапа выше (тот
+        // хранит только одну последнюю рискованную замену на сутки), эта пишет
+        // регулярные снимки с коротким описанием, что изменилось с прошлого снимка
+        appendHistoryEntry(login, payload, json);
         return out({ ok: true, at: now });
       }
 
@@ -173,6 +188,63 @@ function doPost(e) {
         sh.getRange(row, 4, 1, MAXCH).setValues([bvals]);
         bsh.deleteRow(brow); // восстановили — больше не предлагаем повторно
         return out({ ok: true, at: restoredAt, payload: bdata ? JSON.parse(bdata) : null });
+      }
+
+      // список точек возврата ("История изменений") — только дата и короткое описание,
+      // без самих данных (тяжёлые колонки не читаем, чтобы не гонять зря лишний объём)
+      if (req.action === 'history_list') {
+        if (row === -1) return out({ ok: false, error: 'not_found' });
+        if (getPin(sh, row) !== pin) return out({ ok: false, error: 'wrong_pin' });
+        var hsh2 = getHistorySheet();
+        var hlast = hsh2.getLastRow();
+        var history = [];
+        if (hlast >= 2) {
+          var hrows = hsh2.getRange(2, 1, hlast - 1, 3).getDisplayValues();
+          for (var hi = 0; hi < hrows.length; hi++) {
+            if (String(hrows[hi][0]).replace(/\D/g, '') === login) {
+              history.push({ at: hrows[hi][1], summary: hrows[hi][2] || '' });
+            }
+          }
+        }
+        history.reverse(); // новые сверху
+        return out({ ok: true, history: history });
+      }
+
+      // "Использовать как истину" — явный откат к выбранному снимку из истории.
+      // Текущее состояние перед заменой само кладётся в историю (как обычный снимок),
+      // поэтому сам откат тоже можно отменить, выбрав снимок "до отката"
+      if (req.action === 'history_restore') {
+        if (row === -1) return out({ ok: false, error: 'not_found' });
+        if (getPin(sh, row) !== pin) return out({ ok: false, error: 'wrong_pin' });
+        var targetAt = String((req.payload && req.payload.at) || '');
+        var hsh3 = getHistorySheet();
+        var hRows = findHistoryRows(hsh3, login);
+        var targetRow = -1;
+        for (var tr = 0; tr < hRows.length; tr++) {
+          if (String(hsh3.getRange(hRows[tr], 2).getDisplayValue()) === targetAt) { targetRow = hRows[tr]; break; }
+        }
+        if (targetRow === -1) return out({ ok: false, error: 'history_not_found' });
+        var targetVals = hsh3.getRange(targetRow, 4, 1, MAXCH).getDisplayValues()[0];
+        var targetJson = targetVals.join('');
+        var targetPayload = targetJson ? JSON.parse(targetJson) : {};
+
+        var curVals = sh.getRange(row, 4, 1, MAXCH).getDisplayValues()[0];
+        var curJson = curVals.join('');
+        if (curJson) {
+          try { appendHistoryEntry(login, JSON.parse(curJson), curJson); } catch (eSnap) {}
+        }
+
+        var restoredAt2 = new Date(Date.now() + 1).toISOString();
+        sh.getRange(row, 3).setValue(restoredAt2);
+        sh.getRange(row, 4, 1, MAXCH).setValues([targetVals]);
+        // отдельная точка "после отката" — записываем её ВСЕГДА, а не через обычный
+        // appendHistoryEntry: иначе следующее обычное сохранение искало бы описание
+        // изменений относительно последней ЗАПИСАННОЙ точки, которой оказался бы снимок
+        // "перед откатом" (то есть состояние ДО отката) — и текст истории стал бы неверным
+        var hsh4 = getHistorySheet();
+        hsh4.appendRow([login, restoredAt2, 'Откат к более ранней версии'].concat(targetVals));
+        pruneHistory(hsh4, login);
+        return out({ ok: true, at: restoredAt2, payload: targetPayload });
       }
 
       // печать с телефона на компьютер: задание кладётся в очередь и разбирается той же
@@ -502,6 +574,161 @@ function getBackupInfo(login) {
   var at = String(bsh.getRange(brow, 2).getDisplayValue());
   var age = Date.now() - new Date(at).getTime();
   return { has: age >= 0 && age < BACKUP_WINDOW_MS, at: at };
+}
+
+/* ================= История изменений (точки возврата) =================
+   В отличие от "backups" выше (одна аварийная копия на сутки, только для
+   рискованных замен), это регулярный журнал: на каждое сохранение — с
+   троттлингом по времени — добавляется снимок ПОСЛЕ этого сохранения плюс
+   короткое описание того, что изменилось с предыдущего снимка. Список этих
+   точек показывается на клиенте под "стрелкой назад"; выбор точки и
+   подтверждение "Использовать как истину" откатывает облако к ней (see
+   history_restore в doPost) — сам откат тоже становится снимком, поэтому
+   ошибку выбора можно исправить тем же способом. */
+function getHistorySheet() {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sh = ss.getSheetByName(HISTORY_SHEET_NAME);
+  if (!sh) {
+    sh = ss.insertSheet(HISTORY_SHEET_NAME);
+    var head = ['login', 'createdAt', 'summary'];
+    for (var i = 1; i <= MAXCH; i++) head.push('data' + i);
+    sh.appendRow(head);
+  }
+  return sh;
+}
+// строки данного логина в порядке добавления (сверху вниз = от старых к новым,
+// поскольку новые точки всегда дописываются в конец через appendRow)
+function findHistoryRows(hsh, login) {
+  var last = hsh.getLastRow();
+  if (last < 2) return [];
+  var logins = hsh.getRange(2, 1, last - 1, 1).getDisplayValues();
+  var rows = [];
+  for (var i = 0; i < logins.length; i++) {
+    if (String(logins[i][0]).replace(/\D/g, '') === login) rows.push(i + 2);
+  }
+  return rows;
+}
+// не даём истории расти бесконечно — оставляем только последние HISTORY_MAX_VERSIONS
+// точек на логин, удаляя лишние старые (снизу вверх по номеру строки, чтобы удаление
+// одной строки не сбивало номера ещё не обработанных)
+function pruneHistory(hsh, login) {
+  var rows = findHistoryRows(hsh, login);
+  var excess = rows.length - HISTORY_MAX_VERSIONS;
+  if (excess <= 0) return;
+  var toDelete = rows.slice(0, excess).sort(function (a, b) { return b - a; });
+  for (var i = 0; i < toDelete.length; i++) hsh.deleteRow(toDelete[i]);
+}
+// добавляет точку возврата, если есть что фиксировать. Сравнивает не с "существующими
+// перед этим save данными" (existingPayload передавать сюда не нужно), а с ПРЕДЫДУЩЕЙ
+// уже записанной точкой истории — так описание точки корректно отражает всё, что
+// накопилось с прошлой точки, даже если несколько сохранений подряд попали в окно
+// троттлинга и не получили собственных точек
+function appendHistoryEntry(login, newPayload, newJson) {
+  var hsh = getHistorySheet();
+  var rows = findHistoryRows(hsh, login);
+  var now = Date.now();
+  var basePayload = null;
+  if (rows.length) {
+    var lastRow = rows[rows.length - 1];
+    var lastAt = new Date(hsh.getRange(lastRow, 2).getDisplayValue()).getTime();
+    if (!isNaN(lastAt) && now - lastAt < HISTORY_MIN_GAP_MS) return; // слишком рано для новой точки
+    try {
+      var lastVals = hsh.getRange(lastRow, 4, 1, MAXCH).getDisplayValues()[0];
+      var lastJson = lastVals.join('');
+      if (lastJson) basePayload = JSON.parse(lastJson);
+    } catch (eBase) {}
+  }
+  var summary = rows.length ? buildHistorySummary(basePayload, newPayload) : 'Начальный снимок';
+  if (summary === HISTORY_NO_CHANGES) return; // нечего фиксировать
+  var chunks = [];
+  for (var i = 0; i < newJson.length; i += CHUNK) chunks.push(newJson.slice(i, i + CHUNK));
+  while (chunks.length < MAXCH) chunks.push('');
+  hsh.appendRow([login, new Date(now).toISOString(), summary].concat(chunks));
+  pruneHistory(hsh, login);
+}
+// сравнение двух плоских массивов записей по id — сколько добавлено/убрано/изменено.
+// "изменено" — грубое сравнение по JSON.stringify всей записи (для короткой сводки в
+// истории точности достаточно, здесь не нужна логика полноценного слияния)
+function diffRecordsById(prevArr, newArr) {
+  prevArr = prevArr || []; newArr = newArr || [];
+  var prevMap = {}, i, it;
+  for (i = 0; i < prevArr.length; i++) prevMap[prevArr[i].id] = prevArr[i];
+  var seen = {}, added = 0, changed = 0;
+  for (i = 0; i < newArr.length; i++) {
+    it = newArr[i]; seen[it.id] = true;
+    var prev = prevMap[it.id];
+    if (!prev) added++;
+    else if (JSON.stringify(prev) !== JSON.stringify(it)) changed++;
+  }
+  var removed = 0;
+  for (i = 0; i < prevArr.length; i++) { if (!seen[prevArr[i].id]) removed++; }
+  return { added: added, removed: removed, changed: changed };
+}
+function historyPartLabel(name, d) {
+  if (!d.added && !d.removed && !d.changed) return null;
+  var bits = [];
+  if (d.added) bits.push('+' + d.added);
+  if (d.removed) bits.push('-' + d.removed);
+  if (d.changed) bits.push('изм. ' + d.changed);
+  return name + ': ' + bits.join(', ');
+}
+// короткое, человекочитаемое описание того, что изменилось между двумя полными
+// снимками состояния — используется как подпись точки в "Истории изменений"
+function buildHistorySummary(prevPayload, newPayload) {
+  prevPayload = prevPayload || {};
+  newPayload = newPayload || {};
+  var parts = [], i, j;
+
+  var dProducts = diffRecordsById(
+    (prevPayload.catalogDB && prevPayload.catalogDB.products) || [],
+    (newPayload.catalogDB && newPayload.catalogDB.products) || []
+  );
+  var pLabel = historyPartLabel('Каталог', dProducts);
+  if (pLabel) parts.push(pLabel);
+
+  var prevItems = [], newItems = [];
+  var pLists = prevPayload.lists || [], nLists = newPayload.lists || [];
+  for (i = 0; i < pLists.length; i++) {
+    var pStores = (pLists[i].data && pLists[i].data.stores) || [];
+    for (j = 0; j < pStores.length; j++) prevItems = prevItems.concat(pStores[j].items || []);
+  }
+  for (i = 0; i < nLists.length; i++) {
+    var nStores = (nLists[i].data && nLists[i].data.stores) || [];
+    for (j = 0; j < nStores.length; j++) newItems = newItems.concat(nStores[j].items || []);
+  }
+  var dItems = diffRecordsById(prevItems, newItems);
+  var prevItemMap = {};
+  for (i = 0; i < prevItems.length; i++) prevItemMap[prevItems[i].id] = prevItems[i];
+  var boughtOn = 0, boughtOff = 0;
+  for (i = 0; i < newItems.length; i++) {
+    var ni = newItems[i], pi = prevItemMap[ni.id];
+    if (pi && !pi.bought && ni.bought) boughtOn++;
+    if (pi && pi.bought && !ni.bought) boughtOff++;
+  }
+  if (dItems.added || dItems.removed || dItems.changed || boughtOn || boughtOff) {
+    var ip = [];
+    if (dItems.added) ip.push('+' + dItems.added);
+    if (dItems.removed) ip.push('-' + dItems.removed);
+    if (boughtOn) ip.push('куплено ' + boughtOn);
+    if (boughtOff) ip.push('возврат ' + boughtOff);
+    var otherChanged = dItems.changed - boughtOn - boughtOff;
+    if (otherChanged > 0) ip.push('изм. ' + otherChanged);
+    parts.push('Списки: ' + ip.join(', '));
+  }
+
+  var dDebts = diffRecordsById(prevPayload.debts || [], newPayload.debts || []);
+  var debtLabel = historyPartLabel('Долги', dDebts);
+  if (debtLabel) parts.push(debtLabel);
+
+  var prevTasks = [], newTasks = [];
+  var pPlans = prevPayload.plans || [], nPlans = newPayload.plans || [];
+  for (i = 0; i < pPlans.length; i++) prevTasks = prevTasks.concat(pPlans[i].items || []);
+  for (i = 0; i < nPlans.length; i++) newTasks = newTasks.concat(nPlans[i].items || []);
+  var dTasks = diffRecordsById(prevTasks, newTasks);
+  var tasksLabel = historyPartLabel('Планы', dTasks);
+  if (tasksLabel) parts.push(tasksLabel);
+
+  return parts.length ? parts.join('; ') : HISTORY_NO_CHANGES;
 }
 
 // у каждого логина своя подпапка внутри общей "BDG_photos" — так фото разных аккаунтов
