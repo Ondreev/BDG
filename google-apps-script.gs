@@ -76,12 +76,51 @@ function doPost(e) {
     if (!/^\d{10,15}$/.test(login)) return out({ ok: false, error: 'bad_login' });
     if (!/^\d{4}$/.test(pin)) return out({ ok: false, error: 'bad_pin' });
 
+    var sh = getSheet();
+    var row = findRow(sh, login);
+
+    // фото — отдельный, не связанный с общей блокировкой путь: файл кладётся на
+    // Диск, а не в саму таблицу, так что ждать общую блокировку (которую держат
+    // ВСЕ сохранения/загрузки данных ВСЕХ пользователей скрипта) незачем. Раньше
+    // photo_upload вставал в ту же очередь, что и save/load — а именно они стали
+    // намного чаще (автосохранение теперь раз в 2-15с вместо 17-30с), из-за чего
+    // фото с телефона (само по себе более тяжёлое и медленное, чем обычное
+    // сохранение) стало заметно чаще упираться в чужую блокировку и не укладываться
+    // в таймаут запроса — отсюда "то идёт, то не идёт, нет связи с облаком"
+    if (req.action === 'photo_upload') {
+      if (row === -1) return out({ ok: false, error: 'not_found' });
+      if (getPin(sh, row) !== pin) return out({ ok: false, error: 'wrong_pin' });
+      var b64 = String((req.payload && req.payload.data) || '');
+      if (!b64) return out({ ok: false, error: 'no_data' });
+      if (b64.length > PHOTO_MAX_BASE64_LEN) return out({ ok: false, error: 'too_big' });
+      var mime = String((req.payload && req.payload.mime) || 'image/jpeg');
+      var bytes = Utilities.base64Decode(b64);
+      var blob = Utilities.newBlob(bytes, mime, login + '_' + Date.now() + '.jpg');
+      var folder = getUserPhotoFolder(login);
+      var file = folder.createFile(blob);
+      file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+      return out({ ok: true, id: file.getId() });
+    }
+    if (req.action === 'photo_delete') {
+      if (row === -1) return out({ ok: false, error: 'not_found' });
+      if (getPin(sh, row) !== pin) return out({ ok: false, error: 'wrong_pin' });
+      var pid0 = String((req.payload && req.payload.id) || '');
+      if (pid0) {
+        try {
+          var ownFolder0 = getUserPhotoFolder(login);
+          var pfile0 = DriveApp.getFileById(pid0);
+          var parents0 = pfile0.getParents();
+          var owns0 = false;
+          while (parents0.hasNext()) { if (parents0.next().getId() === ownFolder0.getId()) owns0 = true; }
+          if (owns0) pfile0.setTrashed(true);
+        } catch (ignored0) {} // файла уже нет/недоступен — удалять нечего
+      }
+      return out({ ok: true });
+    }
+
     var lock = LockService.getScriptLock();
     lock.waitLock(10000);
     try {
-      var sh = getSheet();
-      var row = findRow(sh, login);
-
       if (req.action === 'save') {
         var payload = req.payload || {};
         var now = new Date().toISOString();
@@ -405,43 +444,8 @@ function doPost(e) {
         return out({ ok: true });
       }
 
-      // фото товара: сохраняется в Google Диске, а не в самой таблице (там текстовые
-      // ячейки) — в данных товара хранится только id файла. Ссылка на просмотр строится
-      // на клиенте (lh3.googleusercontent.com/d/{id}), доступ открыт "всем, у кого есть
-      // ссылка" — иначе браузеру нечем было бы её показать в <img>.
-      if (req.action === 'photo_upload') {
-        if (row === -1) return out({ ok: false, error: 'not_found' });
-        if (getPin(sh, row) !== pin) return out({ ok: false, error: 'wrong_pin' });
-        var b64 = String((req.payload && req.payload.data) || '');
-        if (!b64) return out({ ok: false, error: 'no_data' });
-        if (b64.length > PHOTO_MAX_BASE64_LEN) return out({ ok: false, error: 'too_big' });
-        var mime = String((req.payload && req.payload.mime) || 'image/jpeg');
-        var bytes = Utilities.base64Decode(b64);
-        var blob = Utilities.newBlob(bytes, mime, login + '_' + Date.now() + '.jpg');
-        var folder = getUserPhotoFolder(login);
-        var file = folder.createFile(blob);
-        file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
-        return out({ ok: true, id: file.getId() });
-      }
-
-      // удаление фото (заменили на другое или убрали) — чистим Диск, чтобы файлы не
-      // копились без дела; проверяем, что файл лежит в папке именно этого логина
-      if (req.action === 'photo_delete') {
-        if (row === -1) return out({ ok: false, error: 'not_found' });
-        if (getPin(sh, row) !== pin) return out({ ok: false, error: 'wrong_pin' });
-        var pid = String((req.payload && req.payload.id) || '');
-        if (pid) {
-          try {
-            var ownFolder = getUserPhotoFolder(login);
-            var pfile = DriveApp.getFileById(pid);
-            var parents = pfile.getParents();
-            var owns = false;
-            while (parents.hasNext()) { if (parents.next().getId() === ownFolder.getId()) owns = true; }
-            if (owns) pfile.setTrashed(true);
-          } catch (ignored) {} // файла уже нет/недоступен — удалять нечего
-        }
-        return out({ ok: true });
-      }
+      // photo_upload/photo_delete обрабатываются выше, ДО захвата этой блокировки —
+      // они не трогают лист "users" и не должны стоять в очереди за save/load
 
       return out({ ok: false, error: 'bad_action' });
     } finally {

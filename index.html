@@ -12015,9 +12015,9 @@ function syncErrMsg(code) {
   }[code] || tf('sync_err_generic', { code });
 }
 
-function syncCall(creds, action, payload, force, skipMerge) {
+function syncCall(creds, action, payload, force, skipMerge, timeoutMs) {
   const ctrl = new AbortController();
-  const kill = setTimeout(() => ctrl.abort(), 25000); // подвисший запрос не должен блокировать интерфейс
+  const kill = setTimeout(() => ctrl.abort(), timeoutMs || 25000); // подвисший запрос не должен блокировать интерфейс
   return fetch(creds.url, {
     method: 'POST',
     signal: ctrl.signal,
@@ -12028,6 +12028,21 @@ function syncCall(creds, action, payload, force, skipMerge) {
   }).then(res => {
     if (!res.ok) throw new Error('#' + res.error);
     return res;
+  });
+}
+// та же отправка, но с автоматическим повтором при обрыве связи — фото с телефона
+// (особенно по мобильному интернету на бегу по складу) весит больше обычного
+// сохранения и попадает под таймаут/разрыв заметно чаще, а раньше единственная
+// неудачная попытка сразу показывала "Нет связи с облаком" и заставляла переснимать
+// заново. Повторяем только ПРИ ОБРЫВЕ СВЯЗИ (сетевая ошибка/таймаут/HTTP-код) — если
+// сервер ответил осмысленной ошибкой (неверный PIN, файл слишком большой и т.п.,
+// они приходят с префиксом "#"), это не почини'тся повтором, отдаём как есть сразу
+function syncCallRetry(creds, action, payload, attempts, timeoutMs) {
+  return syncCall(creds, action, payload, false, false, timeoutMs).catch(err => {
+    const isServerError = String(err && err.message || err).startsWith('#');
+    if (isServerError || attempts <= 1) throw err;
+    return new Promise(res => setTimeout(res, 1500))
+      .then(() => syncCallRetry(creds, action, payload, attempts - 1, timeoutMs));
   });
 }
 
@@ -14009,7 +14024,9 @@ function onCatProdPhotoSelected(evt) {
   resizeImageForUpload(file).then(({ base64, mime, dataUrl }) => {
     const s = syncState();
     const creds = { login: s.login, pin: s.pin, url: s.url || DEFAULT_SYNC_URL };
-    return syncCall(creds, 'photo_upload', { data: base64, mime }).then(res => {
+    // до 3 попыток и таймаут подольше обычного (40с вместо 25с) — фото тяжелее
+    // обычного сохранения и на мобильном интернете чаще упирается в разрыв связи
+    return syncCallRetry(creds, 'photo_upload', { data: base64, mime }, 3, 40000).then(res => {
       catProdPhotoId = res.id;
       catProdPhotoPreview = dataUrl;
       catProdPhotoBusy = false;
