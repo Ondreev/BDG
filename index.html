@@ -335,14 +335,14 @@ input,select{font-family:inherit}
   background:#fff;border:1px solid var(--line);
 }
 .cat-card.picked{outline:2px solid var(--accent)}
-/* фото занимает не весь квадрат «от края до края» (cover), а вписывается целиком
-   (contain) в паддинг — так карточки с разными пропорциями/обрезкой исходных фото
-   (тесный кадр вплотную к товару или широкий кадр с большим полем вокруг) выглядят
-   ОДИНАКОВО: одна и та же серая рамка-подложка и один и тот же размер фото-плитки
-   со скруглением на всех четырёх углах, а не только сверху (как было при cover
-   вплотную к краям карточки — низ фото оставался с прямыми углами) */
-.cat-card-img{position:relative;aspect-ratio:1/1;background:var(--line);flex:none;padding:10px}
-.cat-card-img img{width:100%;height:100%;object-fit:contain;display:block;border-radius:14px;background:#fff}
+/* прямоугольная плитка фото фиксированной пропорции (как на маркетплейсах), а не
+   квадрат — единая форма для ВСЕХ карточек, с фото или без. Фото кадрируется
+   (cover) по ширине, лишнее по высоте обрезается СНИЗУ (object-position:top) —
+   так фотографии разных пропорций всё равно дают одинаковый размер плитки, без
+   сплющивания. Скругление на всех четырёх углах — сама плитка с отступом внутри
+   серой рамки-подложки, а не бесшовно от края до края карточки */
+.cat-card-img{position:relative;aspect-ratio:3/4;background:var(--line);flex:none;padding:10px}
+.cat-card-img img{width:100%;height:100%;object-fit:cover;object-position:top;display:block;border-radius:14px;background:#fff}
 .cat-card-ph{
   width:100%;height:100%;display:flex;align-items:center;justify-content:center;
   border-radius:14px;background:#fff;color:#B6C0CE;
