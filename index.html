@@ -464,7 +464,11 @@ input,select{font-family:inherit}
 .drag-handle:active{cursor:grabbing;color:var(--accent)}
 
 .item-photo{position:relative;aspect-ratio:1/1;background:var(--line);flex:none;padding:10px}
-.item-photo img{width:100%;height:100%;object-fit:contain;display:block;border-radius:14px;background:#fff;cursor:zoom-in}
+/* object-position:top — если фото не квадратное и не заполняет всю плитку целиком
+   (contain), оно прижимается к верху, а не центрируется; свободное место остаётся
+   снизу как часть плитки, а не бьёт по глазам неровным зазором то сверху, то снизу
+   у разных карточек */
+.item-photo img{width:100%;height:100%;object-fit:contain;object-position:top;display:block;border-radius:14px;background:#fff;cursor:zoom-in}
 .item-photo-ph{
   width:100%;height:100%;display:flex;align-items:center;justify-content:center;
   border-radius:14px;background:#fff;color:#B6C0CE;
@@ -497,6 +501,7 @@ input,select{font-family:inherit}
 }
 .item-body{flex:1;min-width:0;padding:9px 11px 11px;cursor:pointer;display:flex;flex-direction:column;gap:3px}
 .item-row1{display:flex;align-items:center;justify-content:space-between;gap:6px}
+.item-row1-left{display:flex;align-items:center;gap:5px;min-width:0;flex-wrap:wrap}
 .item-unit-price{font-size:13.5px;font-weight:800;color:var(--muted)}
 .item-name{
   font-size:14.5px;font-weight:700;overflow:hidden;text-overflow:ellipsis;transition:color .2s;
@@ -531,10 +536,10 @@ input,select{font-family:inherit}
 .item-row.done .item-total{background:#1E293B;color:#fff;text-decoration:line-through}
 .item-row.done .item-edit-btn{color:#94A3B8}
 .item-total{
-  font-size:16px;font-weight:900;text-align:center;white-space:nowrap;
-  background:var(--line);border-radius:12px;padding:7px;margin-top:2px;
+  font-size:16px;font-weight:900;text-align:center;white-space:nowrap;color:#fff;
+  background:var(--accent);border-radius:12px;padding:7px;margin-top:2px;
 }
-.item-total.neg{color:var(--red);background:var(--red-soft)}
+.item-total.neg{background:var(--red)}
 .add-item-row{
   grid-column:1/-1;
   display:flex;align-items:center;justify-content:center;gap:8px;width:100%;
@@ -11307,6 +11312,11 @@ function itemRowHTML(sid, it) {
   const metaRow = (it.loc || badge)
     ? `<div class="item-meta">${it.loc ? `<span class="loc-badge ${groupMode === 'loc' ? 'active' : ''}" onclick="event.stopPropagation();toggleGroupMode()">${esc(it.loc)}</span>` : ''}${badge}</div>`
     : '';
+  // "От N шт" — та же плашка, что и в каталоге (см. catCardBadgesHTML), только у
+  // позиции списка pack не хранится напрямую — берём у привязанного товара каталога
+  const linkedProd = it.productId ? prodById(it.productId) : null;
+  const packHint = linkedProd && linkedProd.pack > 1
+    ? `<span class="cat-card-pack">${tf('catprod_from_pack_hint', { n: fmt(linkedProd.pack) })}</span>` : '';
   return `
   <div class="item-row ${it.bought ? 'done' : ''}" data-id="${it.id}" onclick="onItemRowTap('${sid}','${it.id}')">
     <div class="item-photo">
@@ -11320,7 +11330,7 @@ function itemRowHTML(sid, it) {
     </div>
     <div class="item-body">
       <div class="item-row1">
-        <span class="item-unit-price">${money(it.price)}</span>
+        <div class="item-row1-left"><span class="item-unit-price">${money(it.price)}</span>${packHint}</div>
         <button class="item-edit-btn" onclick="event.stopPropagation();openItemEditor('${sid}','${it.id}')" aria-label="${t('aria_edit_item')}">${ic('pencil', 15)}</button>
       </div>
       <div class="item-name">${esc(it.name)}</div>
