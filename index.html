@@ -498,11 +498,12 @@ input,select{font-family:inherit}
 /* количество — крупно и заметно поверх фото, в одном и том же месте что на
    мобиле, что на десктопе (плитка фото теперь одинаковая на обоих) */
 .item-qty-badge{
-  position:absolute;bottom:8px;right:8px;min-width:28px;height:26px;padding:0 8px;
-  border-radius:13px;background:var(--accent);color:#fff;font-weight:900;font-size:13.5px;
-  display:flex;align-items:center;justify-content:center;box-shadow:0 2px 6px rgba(15,23,42,.3);
+  position:absolute;bottom:8px;right:8px;min-width:42px;height:39px;padding:0 12px;
+  border-radius:19.5px;background:var(--accent);color:#fff;font-weight:900;font-size:20px;
+  display:flex;align-items:baseline;justify-content:center;gap:2px;box-shadow:0 2px 6px rgba(15,23,42,.3);
   line-height:1;
 }
+.item-qty-unit{font-size:.55em;font-weight:800}
 .item-row.done .check .box{background:var(--green);border-color:var(--green)}
 .item-row.done .check .box svg{opacity:1;transform:scale(1)}
 /* мобильный вариант: чекбокса и ручки перетаскивания нет, тап по карточке (кроме
@@ -2993,6 +2994,7 @@ const I18N = {
     btn_undo: 'Отменить',
     cat_add_to_list_btn: 'Добавить в список',
     item_qty_now: '«{name}» — теперь {qty} шт.',
+    qty_badge_unit: 'шт.',
     item_in_list: '«{name}» — в списке',
 
     sync_upload_btn: 'Выгрузить в облако',
@@ -3604,6 +3606,7 @@ const I18N = {
     btn_undo: 'Undo',
     cat_add_to_list_btn: 'Add to list',
     item_qty_now: '«{name}» — now {qty} pcs.',
+    qty_badge_unit: 'pcs.',
     item_in_list: '«{name}» — added to the list',
 
     sync_upload_btn: 'Upload to cloud',
@@ -4215,6 +4218,7 @@ const I18N = {
     btn_undo: 'Rückgängig',
     cat_add_to_list_btn: 'Zur Liste hinzufügen',
     item_qty_now: '"{name}" — jetzt {qty} Stk.',
+    qty_badge_unit: 'Stk.',
     item_in_list: '"{name}" — zur Liste hinzugefügt',
 
     sync_upload_btn: 'In die Cloud hochladen',
@@ -4824,6 +4828,7 @@ const I18N = {
     btn_undo: 'Deshacer',
     cat_add_to_list_btn: 'Añadir a la lista',
     item_qty_now: '"{name}" — ahora {qty} uds.',
+    qty_badge_unit: 'uds.',
     item_in_list: '"{name}" — añadido a la lista',
 
     sync_upload_btn: 'Subir a la nube',
@@ -5433,6 +5438,7 @@ const I18N = {
     btn_undo: 'Annuler l’action',
     cat_add_to_list_btn: 'Ajouter à la liste',
     item_qty_now: '"{name}" — maintenant {qty} pièce(s)',
+    qty_badge_unit: 'pcs',
     item_in_list: '"{name}" — ajouté à la liste',
 
     sync_upload_btn: 'Envoyer vers le cloud',
@@ -6042,6 +6048,7 @@ const I18N = {
     btn_undo: '撤销',
     cat_add_to_list_btn: '添加到清单',
     item_qty_now: '"{name}" — 现在{qty}件',
+    qty_badge_unit: '件',
     item_in_list: '"{name}" — 已添加到清单',
 
     sync_upload_btn: '上传到云端',
@@ -6651,6 +6658,7 @@ const I18N = {
     btn_undo: 'Hoàn tác',
     cat_add_to_list_btn: 'Thêm vào danh sách',
     item_qty_now: '"{name}" — hiện {qty} cái',
+    qty_badge_unit: 'cái',
     item_in_list: '"{name}" — đã thêm vào danh sách',
 
     sync_upload_btn: 'Tải lên đám mây',
@@ -7260,6 +7268,7 @@ const I18N = {
     btn_undo: 'Bekor qilish',
     cat_add_to_list_btn: 'Ro‘yxatga qo‘shish',
     item_qty_now: '"{name}" — endi {qty} dona',
+    qty_badge_unit: 'dona',
     item_in_list: '"{name}" — ro‘yxatga qo‘shildi',
 
     sync_upload_btn: 'Bulutga yuklash',
@@ -7869,6 +7878,7 @@ const I18N = {
     btn_undo: 'Артка кайтаруу',
     cat_add_to_list_btn: 'Тизмеге кошуу',
     item_qty_now: '"{name}" — азыр {qty} даана',
+    qty_badge_unit: 'даана',
     item_in_list: '"{name}" — тизмеге кошулду',
 
     sync_upload_btn: 'Булутка жүктөө',
@@ -8478,6 +8488,7 @@ const I18N = {
     btn_undo: 'Бозгашт',
     cat_add_to_list_btn: 'Илова ба рӯйхат',
     item_qty_now: '"{name}" — ҳоло {qty} дона',
+    qty_badge_unit: 'дона',
     item_in_list: '"{name}" — ба рӯйхат илова карда шуд',
 
     sync_upload_btn: 'Боркунӣ ба абр',
@@ -9087,6 +9098,7 @@ const I18N = {
     btn_undo: 'გაუქმება',
     cat_add_to_list_btn: 'სიაში დამატება',
     item_qty_now: '"{name}" — ახლა {qty} ცალი',
+    qty_badge_unit: 'ცალი',
     item_in_list: '"{name}" — დაემატა სიას',
 
     sync_upload_btn: 'ღრუბელში ატვირთვა',
@@ -9696,6 +9708,7 @@ const I18N = {
     btn_undo: 'Հետարկել',
     cat_add_to_list_btn: 'Ավելացնել ցանկում',
     item_qty_now: '«{name}» — այժմ {qty} հատ',
+    qty_badge_unit: 'հատ',
     item_in_list: '«{name}» — ավելացվեց ցանկում',
 
     sync_upload_btn: 'Վերբեռնել ամպ',
@@ -10305,6 +10318,7 @@ const I18N = {
     btn_undo: 'Иаанхарц',
     cat_add_to_list_btn: 'Ахьӡынҵа алышәх',
     item_qty_now: '"{name}" — ари аамҭазы {qty}',
+    qty_badge_unit: '',
     item_in_list: '"{name}" — ахьӡынҵа алышәхуп',
 
     sync_upload_btn: 'Абԥша анагара',
@@ -11348,7 +11362,7 @@ function itemRowHTML(sid, it) {
       <button class="drag-handle" aria-label="${t('aria_drag')}">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><circle cx="9" cy="6" r="1.7"/><circle cx="15" cy="6" r="1.7"/><circle cx="9" cy="12" r="1.7"/><circle cx="15" cy="12" r="1.7"/><circle cx="9" cy="18" r="1.7"/><circle cx="15" cy="18" r="1.7"/></svg>
       </button>
-      <span class="item-qty-badge">${fmt(it.qty)}</span>
+      <span class="item-qty-badge">${fmt(it.qty)}${t('qty_badge_unit') ? `<span class="item-qty-unit">${esc(t('qty_badge_unit'))}</span>` : ''}</span>
     </div>
     <div class="item-body">
       <div class="item-row1">
