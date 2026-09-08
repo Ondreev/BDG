@@ -1,4 +1,4 @@
-const CACHE = 'bdg-v4-101';
+const CACHE = 'bdg-v4-102';
 const PHOTO_CACHE = 'bdg-photos-v1';
 const ASSETS = ['./', './index.html', './manifest.webmanifest', './icon.svg', './qrcode.min.js', './jsqr.min.js'];
 const PHOTO_HOSTS = ['lh3.googleusercontent.com'];

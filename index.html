@@ -12714,11 +12714,16 @@ function pollPrintJob() {
 /* ================= обмен карточками товаров между аккаунтами (через тот же облачный скрипт) ================= */
 // у получателя аутентификации не спрашиваем — отправитель знает только его номер телефона;
 // получатель сам решает Принять/Отклонить своей парой логин+PIN (см. share_push/list/fetch/remove в .gs)
-let shareMode = 'manual', sharePicked = new Set(), shareCatPicked = null;
+// «Вручную» по умолчанию выбраны ВСЕ товары — быстрее пальцем убрать несколько
+// лишних, чем добавлять по одному, когда делишься почти всем каталогом. «По
+// категории» — набор из НЕСКОЛЬКИХ категорий сразу (не одна), поэтому тоже Set
+let shareMode = 'manual', sharePicked = new Set(), shareCatPicked = new Set();
 let shareDest = 'one';
 function openShareCatalogSheet() {
   closeSheet('catalogSheet');
-  shareMode = 'manual'; sharePicked = new Set(); shareCatPicked = null;
+  shareMode = 'manual';
+  sharePicked = new Set(state.catalogDB.products.map(p => p.id));
+  shareCatPicked = new Set();
   document.getElementById('shmManual').classList.add('on');
   document.getElementById('shmCat').classList.remove('on');
   document.getElementById('shmAll').classList.remove('on');
@@ -12728,7 +12733,8 @@ function openShareCatalogSheet() {
 }
 function setShareMode(m) {
   shareMode = m;
-  sharePicked = new Set(); shareCatPicked = null;
+  sharePicked = m === 'manual' ? new Set(state.catalogDB.products.map(p => p.id)) : new Set();
+  shareCatPicked = new Set();
   document.getElementById('shmAll').classList.toggle('on', m === 'all');
   document.getElementById('shmCat').classList.toggle('on', m === 'cat');
   document.getElementById('shmManual').classList.toggle('on', m === 'manual');
@@ -12743,7 +12749,7 @@ function renderShareCatalogSheet() {
   document.getElementById('shareSearchWrap').style.display = shareMode === 'manual' ? 'block' : 'none';
   if (shareMode === 'cat') {
     chips.innerHTML = db.categories.length
-      ? db.categories.map(c => `<button class="chip ${shareCatPicked === c.id ? 'on' : ''}" onclick="pickShareCat('${c.id}')">${esc(c.name)}</button>`).join('')
+      ? db.categories.map(c => `<button class="chip ${shareCatPicked.has(c.id) ? 'on' : ''}" onclick="pickShareCat('${c.id}')">${esc(c.name)}</button>`).join('')
       : `<span style="color:var(--muted);font-size:13px">${t('cat_empty')}</span>`;
     rows.innerHTML = '';
   } else if (shareMode === 'manual') {
@@ -12765,7 +12771,7 @@ function renderShareCatalogSheet() {
   updateShareCount();
 }
 function pickShareCat(id) {
-  shareCatPicked = shareCatPicked === id ? null : id;
+  if (shareCatPicked.has(id)) shareCatPicked.delete(id); else shareCatPicked.add(id);
   renderShareCatalogSheet();
 }
 function toggleSharePick(id) {
@@ -12777,7 +12783,7 @@ function toggleSharePick(id) {
 function shareSelectedProducts() {
   const db = state.catalogDB;
   if (shareMode === 'all') return db.products.slice();
-  if (shareMode === 'cat') return shareCatPicked ? db.products.filter(p => p.categoryId === shareCatPicked) : [];
+  if (shareMode === 'cat') return shareCatPicked.size ? db.products.filter(p => p.categoryId && shareCatPicked.has(p.categoryId)) : [];
   return db.products.filter(p => sharePicked.has(p.id));
 }
 function updateShareCount() {
