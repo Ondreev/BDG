@@ -1978,6 +1978,14 @@ input[type=file]{display:none}
   <div class="sheet">
     <div class="grab"></div>
     <h2 data-i18n="share_review_title">Выберите нужные товары</h2>
+    <div class="field" style="margin:0 0 14px">
+      <label data-i18n="share_use_supplier_cats_label">Использовать категории поставщика?</label>
+      <div class="seg seg-wide">
+        <button type="button" id="shrevCatYes" onclick="setShareUseSupplierCats(true)" data-i18n="btn_yes">Да</button>
+        <button type="button" id="shrevCatNo" class="on" onclick="setShareUseSupplierCats(false)" data-i18n="btn_no">Нет</button>
+      </div>
+      <div style="font-size:12px;color:var(--muted);margin-top:6px" data-i18n="share_use_supplier_cats_hint">Да — новые товары разложатся по категориям поставщика. Нет — попадут в «Принятые», как раньше. На уже принятые товары не влияет.</div>
+    </div>
     <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin:0 0 10px">
       <p style="color:var(--muted);font-size:13.5px;margin:0" id="shareReviewCount"></p>
       <div style="display:flex;gap:14px;flex:none">
@@ -2712,6 +2720,19 @@ function sanitizeCatalogDB(s) {
     // может понять, чья версия карточки свежее, и вынуждена гадать по объёму данных
     p.updatedAt = +p.updatedAt || 0;
   });
+  // артикул нужен для обновления цен при повторной передаче через "Поделиться товарами" —
+  // без него нет способа опознать тот же товар при повторной отправке. Разово доформировываем
+  // его у всех старых товаров, у кого он ещё не проставлен (вручную искать сотни карточек нереально)
+  {
+    const usedSkus = new Set(s.catalogDB.products.map(p => p.sku).filter(Boolean));
+    s.catalogDB.products.forEach(p => {
+      if (p.sku) return;
+      let code;
+      do { code = String(Math.floor(10000 + Math.random() * 90000)); } while (usedSkus.has(code));
+      usedSkus.add(code);
+      p.sku = code;
+    });
+  }
   // отметки времени удаления товаров — чтобы устаревшая копия с другого устройства
   // не «воскрешала» то, что уже удалили в другом месте
   s.catalogDB.deletedProducts = (s.catalogDB.deletedProducts && typeof s.catalogDB.deletedProducts === 'object' && !Array.isArray(s.catalogDB.deletedProducts))
@@ -3413,6 +3434,8 @@ const I18N = {
     share_accept_aria: 'Принять',
     share_decline_aria: 'Отклонить',
     share_review_title: 'Выберите нужные товары',
+    share_use_supplier_cats_label: 'Использовать категории поставщика?',
+    share_use_supplier_cats_hint: 'Да — новые товары разложатся по категориям поставщика. Нет — попадут в «Принятые», как раньше. На уже принятые товары не влияет.',
     share_review_count: '{n} из {total} выбрано',
     share_review_all_btn: 'Все',
     share_review_none_btn: 'Ничего',
@@ -4027,6 +4050,8 @@ const I18N = {
     share_accept_aria: 'Accept',
     share_decline_aria: 'Decline',
     share_review_title: 'Choose the products you need',
+    share_use_supplier_cats_label: 'Use the supplier’s categories?',
+    share_use_supplier_cats_hint: 'Yes — new products will be sorted into the supplier’s categories. No — they’ll go to "Accepted", as before. Already accepted products aren’t affected.',
     share_review_count: '{n} of {total} selected',
     share_review_all_btn: 'All',
     share_review_none_btn: 'None',
@@ -4640,6 +4665,8 @@ const I18N = {
     share_accept_aria: 'Annehmen',
     share_decline_aria: 'Ablehnen',
     share_review_title: 'Gewünschte Produkte auswählen',
+    share_use_supplier_cats_label: 'Lieferantenkategorien verwenden?',
+    share_use_supplier_cats_hint: 'Ja – neue Produkte werden in die Kategorien des Lieferanten einsortiert. Nein – sie landen wie bisher in „Angenommen“. Bereits angenommene Produkte sind davon nicht betroffen.',
     share_review_count: '{n} von {total} ausgewählt',
     share_review_all_btn: 'Alle',
     share_review_none_btn: 'Keine',
@@ -5252,6 +5279,8 @@ const I18N = {
     share_accept_aria: 'Aceptar',
     share_decline_aria: 'Rechazar',
     share_review_title: 'Elige los productos que necesitas',
+    share_use_supplier_cats_label: '¿Usar las categorías del proveedor?',
+    share_use_supplier_cats_hint: 'Sí: los productos nuevos se organizarán en las categorías del proveedor. No: irán a "Aceptados", como antes. No afecta a los productos ya aceptados.',
     share_review_count: '{n} de {total} seleccionados',
     share_review_all_btn: 'Todos',
     share_review_none_btn: 'Ninguno',
@@ -5864,6 +5893,8 @@ const I18N = {
     share_accept_aria: 'Accepter',
     share_decline_aria: 'Refuser',
     share_review_title: 'Choisissez les produits dont vous avez besoin',
+    share_use_supplier_cats_label: 'Utiliser les catégories du fournisseur ?',
+    share_use_supplier_cats_hint: 'Oui : les nouveaux produits seront classés dans les catégories du fournisseur. Non : ils iront dans « Acceptés », comme avant. Cela n’affecte pas les produits déjà acceptés.',
     share_review_count: '{n} sur {total} sélectionné(s)',
     share_review_all_btn: 'Tous',
     share_review_none_btn: 'Aucun',
@@ -6476,6 +6507,8 @@ const I18N = {
     share_accept_aria: '接受',
     share_decline_aria: '拒绝',
     share_review_title: '选择需要的商品',
+    share_use_supplier_cats_label: '使用供应商的分类？',
+    share_use_supplier_cats_hint: '是——新商品将按供应商的分类归类。否——像以前一样归入"已接受"。不影响已接受的商品。',
     share_review_count: '已选 {n}/{total}',
     share_review_all_btn: '全选',
     share_review_none_btn: '不选',
@@ -7088,6 +7121,8 @@ const I18N = {
     share_accept_aria: 'Chấp nhận',
     share_decline_aria: 'Từ chối',
     share_review_title: 'Chọn các sản phẩm bạn cần',
+    share_use_supplier_cats_label: 'Dùng danh mục của nhà cung cấp?',
+    share_use_supplier_cats_hint: 'Có — sản phẩm mới sẽ được xếp vào danh mục của nhà cung cấp. Không — sẽ vào mục "Đã nhận" như trước. Không ảnh hưởng đến sản phẩm đã nhận trước đó.',
     share_review_count: 'Đã chọn {n}/{total}',
     share_review_all_btn: 'Tất cả',
     share_review_none_btn: 'Không chọn',
@@ -7700,6 +7735,8 @@ const I18N = {
     share_accept_aria: 'Qabul qilish',
     share_decline_aria: 'Rad etish',
     share_review_title: 'Kerakli mahsulotlarni tanlang',
+    share_use_supplier_cats_label: 'Yetkazib beruvchi toifalaridan foydalanilsinmi?',
+    share_use_supplier_cats_hint: 'Ha — yangi mahsulotlar yetkazib beruvchi toifalariga taqsimlanadi. Yo‘q — avvalgidek "Qabul qilinganlar"ga tushadi. Allaqachon qabul qilingan mahsulotlarga ta’sir qilmaydi.',
     share_review_count: '{total} tadan {n} tasi tanlandi',
     share_review_all_btn: 'Barchasi',
     share_review_none_btn: 'Hech biri',
@@ -8312,6 +8349,8 @@ const I18N = {
     share_accept_aria: 'Кабыл алуу',
     share_decline_aria: 'Четке кагуу',
     share_review_title: 'Керектүү товарларды тандаңыз',
+    share_use_supplier_cats_label: 'Жеткирүүчүнүн категориялары колдонулсунбу?',
+    share_use_supplier_cats_hint: 'Ооба — жаңы товарлар жеткирүүчүнүн категорияларына бөлүштүрүлөт. Жок — мурункудай эле "Кабыл алынгандар" бөлүмүнө түшөт. Мурда кабыл алынган товарларга таасир этпейт.',
     share_review_count: '{total}дөн {n} тандалды',
     share_review_all_btn: 'Баары',
     share_review_none_btn: 'Эч бири',
@@ -8924,6 +8963,8 @@ const I18N = {
     share_accept_aria: 'Қабул кардан',
     share_decline_aria: 'Рад кардан',
     share_review_title: 'Маҳсулоти лозимаро интихоб кунед',
+    share_use_supplier_cats_label: 'Категорияҳои таъминкунанда истифода шаванд?',
+    share_use_supplier_cats_hint: 'Ҳа — молҳои нав ба категорияҳои таъминкунанда тақсим мешаванд. Не — мисли пештара ба "Қабулшуда" мераванд. Ба молҳои аллакай қабулшуда таъсир намерасонад.',
     share_review_count: '{n} аз {total} интихоб шуд',
     share_review_all_btn: 'Ҳама',
     share_review_none_btn: 'Ҳеҷ кадом',
@@ -9536,6 +9577,8 @@ const I18N = {
     share_accept_aria: 'მიღება',
     share_decline_aria: 'უარყოფა',
     share_review_title: 'აირჩიეთ საჭირო პროდუქტები',
+    share_use_supplier_cats_label: 'გამოვიყენოთ მომწოდებლის კატეგორიები?',
+    share_use_supplier_cats_hint: 'დიახ — ახალი პროდუქტები განაწილდება მომწოდებლის კატეგორიების მიხედვით. არა — მოხვდება „მიღებულში", როგორც ადრე. უკვე მიღებულ პროდუქტებზე გავლენას არ ახდენს.',
     share_review_count: 'არჩეულია {n}/{total}',
     share_review_all_btn: 'ყველა',
     share_review_none_btn: 'არცერთი',
@@ -10148,6 +10191,8 @@ const I18N = {
     share_accept_aria: 'Ընդունել',
     share_decline_aria: 'Մերժել',
     share_review_title: 'Ընտրեք անհրաժեշտ ապրանքները',
+    share_use_supplier_cats_label: 'Օգտագործե՞լ մատակարարի կատեգորիաները',
+    share_use_supplier_cats_hint: 'Այո՝ նոր ապրանքները կբաշխվեն մատակարարի կատեգորիաներով։ Ոչ՝ կընկնեն «Ընդունված»-ի մեջ, ինչպես նախկինում։ Արդեն ընդունված ապրանքների վրա չի ազդում։',
     share_review_count: 'Ընտրված է՝ {n}/{total}',
     share_review_all_btn: 'Բոլորը',
     share_review_none_btn: 'Ոչ մեկը',
@@ -10760,6 +10805,8 @@ const I18N = {
     share_accept_aria: 'Адырхра',
     share_decline_aria: 'Аҟаҵаӡом',
     share_review_title: 'Иаанагоу апродуктқәа алышәх',
+    share_use_supplier_cats_label: 'Аҭыжьҩы акатегориақәа рхы иузуп?',
+    share_use_supplier_cats_hint: 'Ааи — ҿыц апродуктқәа аҭыжьҩы акатегориақәа рахь еихшоуп. Мап — "Ирыдыркит" аҟны иааиуеит, ишыҟаз еиԥш. Ирыдыркыз апродуктқәа рахь иазымхиоуп.',
     share_review_count: '{total} рҟынтә {n} алху',
     share_review_all_btn: 'Зегьы',
     share_review_none_btn: 'Акгьы мап',
@@ -12905,10 +12952,12 @@ function doShareSend() {
   const payloadItems = items.map(p => {
     const loc = p.loc ? locByName(p.loc) : null;
     const dir = loc ? storeDirById(loc.storeId) : null;
+    const cat = p.categoryId ? catById(p.categoryId) : null;
     return {
       name: p.name, price: +p.price || 0, loc: p.loc || '', sku: p.sku || '',
       storeCode: dir ? dir.code : '', storeFullName: dir ? dir.fullName : '',
-      pack: p.pack > 1 ? p.pack : 1, note: p.note || '', photoId: p.photoId || null
+      pack: p.pack > 1 ? p.pack : 1, note: p.note || '', photoId: p.photoId || null,
+      catName: cat ? cat.name : ''
     };
   });
   const btn = document.getElementById('shareSendBtn');
@@ -13006,20 +13055,28 @@ function acceptShare(id) {
   syncCall(creds, 'share_fetch', { id })
     .then(res => {
       const items = (res.payload && res.payload.items) || [];
-      // если товаров несколько — дадим отметить нужные, а не тащить все в каталог не глядя;
-      // одну позицию выбирать не из чего, принимаем сразу как раньше
-      if (items.length > 1) { openShareReviewSheet(id, share, creds, items); return; }
-      finalizeShareAccept(id, share, creds, items);
+      // всегда показываем экран проверки — там же выбор "раскидать по категориям
+      // поставщика или нет", а не только отметка нужных товаров
+      openShareReviewSheet(id, share, creds, items);
     })
     .catch(err => toast(errToMsg(err)));
 }
 let shareReviewId = null, shareReviewShare = null, shareReviewCreds = null, shareReviewItems = [], shareReviewPicked = new Set();
+let shareUseSupplierCats = false;
 function openShareReviewSheet(id, share, creds, items) {
   shareReviewId = id; shareReviewShare = share; shareReviewCreds = creds;
   shareReviewItems = items;
   shareReviewPicked = new Set(items.map((_, i) => i));
+  // по умолчанию "Нет" — поведение как раньше (всё в "Принятые"), чтобы для тех,
+  // кто уже сам разложил принятые товары по своим категориям, ничего не менялось само собой
+  setShareUseSupplierCats(false);
   renderShareReviewRows();
   openSheet('shareReviewSheet');
+}
+function setShareUseSupplierCats(v) {
+  shareUseSupplierCats = !!v;
+  document.getElementById('shrevCatYes').classList.toggle('on', shareUseSupplierCats);
+  document.getElementById('shrevCatNo').classList.toggle('on', !shareUseSupplierCats);
 }
 function renderShareReviewRows() {
   document.getElementById('shareReviewRows').innerHTML = shareReviewItems.map((it, i) => `
@@ -13051,11 +13108,19 @@ function setShareReviewAll(on) {
 function confirmShareReview() {
   const items = shareReviewItems.filter((_, i) => shareReviewPicked.has(i));
   closeSheet('shareReviewSheet');
-  finalizeShareAccept(shareReviewId, shareReviewShare, shareReviewCreds, items);
+  finalizeShareAccept(shareReviewId, shareReviewShare, shareReviewCreds, items, shareUseSupplierCats);
 }
-function finalizeShareAccept(id, share, creds, items) {
+// категория поставщика — при первом приёме товара заводим (или находим) у себя категорию
+// с тем же названием; при обновлении уже принятого товара категорию НЕ трогаем — получатель
+// мог сам переразложить товары по-своему, и это не должно слетать при каждом обновлении цен
+function findOrCreateCategoryByName(name) {
+  let c = state.catalogDB.categories.find(x => x.name.toLowerCase() === name.toLowerCase());
+  if (!c) { c = { id: uid(), name }; state.catalogDB.categories.push(c); }
+  return c.id;
+}
+function finalizeShareAccept(id, share, creds, items, useSupplierCats) {
   const fromLogin = share ? share.fromLogin : '';
-  const catId = ensureAcceptedCategory();
+  const defaultCatId = ensureAcceptedCategory();
   let added = 0, updated = 0;
   items.forEach(it => {
     const sku = it.sku || '';
@@ -13083,8 +13148,9 @@ function finalizeShareAccept(id, share, creds, items) {
       existing.updatedAt = Date.now();
       updated++;
     } else {
+      const categoryId = (useSupplierCats && it.catName) ? findOrCreateCategoryByName(it.catName) : defaultCatId;
       state.catalogDB.products.push({
-        id: uid(), name: it.name || '', price: +it.price || 0, categoryId: catId,
+        id: uid(), name: it.name || '', price: +it.price || 0, categoryId,
         loc: it.loc || '', sku, favorite: false, shareFrom: fromLogin,
         pack: it.pack > 1 ? it.pack : 1, note: it.note || '', photoId: it.photoId || null, updatedAt: Date.now()
       });
@@ -13657,7 +13723,7 @@ function upsertCatalogProduct(name, price, categoryId, loc, sku, pack, note) {
     p.updatedAt = Date.now();
   } else {
     state.catalogDB.products.push({
-      id: uid(), name, price: +price || 0, categoryId: categoryId || null, loc: loc || '', sku: sku || '',
+      id: uid(), name, price: +price || 0, categoryId: categoryId || null, loc: loc || '', sku: sku || genUniqueSku(null),
       pack: pack > 1 ? pack : 1, note: note || '', updatedAt: Date.now()
     });
   }
@@ -14183,7 +14249,9 @@ function openCatProductSheet(id, listCtx) {
   document.getElementById('catProdName').value = p ? p.name : '';
   document.getElementById('catProdPrice').value = p ? (p.price || '') : '';
   document.getElementById('catProdLoc').value = p && p.loc ? p.loc : '';
-  document.getElementById('catProdSku').value = p && p.sku ? p.sku : '';
+  // ID (артикул) теперь формируется автоматически у каждого товара — карточка открывается
+  // уже с готовым уникальным кодом; при желании его можно стереть/поменять галочкой "Использовать"
+  document.getElementById('catProdSku').value = (p && p.sku) ? p.sku : genUniqueSku(catEditProductId);
   document.getElementById('catProdPack').value = p && p.pack > 1 ? p.pack : '';
   document.getElementById('catProdNote').value = p && p.note ? p.note : '';
   renderCatProdLocChips();
