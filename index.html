@@ -645,6 +645,11 @@ label.sku-check{display:flex;align-items:center;gap:6px;font-size:11.5px;font-we
 }
 .sku-warn{display:none;color:var(--red);font-size:12px;font-weight:700;margin-top:6px}
 .sku-warn.show{display:block}
+.info-toggle{width:24px;height:24px;border-radius:50%;border:none;background:var(--line);color:var(--muted);flex:none;display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0}
+.info-toggle svg{width:14px;height:14px}
+.info-toggle:active{transform:scale(.9)}
+.store-type-hint{display:none;font-size:12px;color:var(--muted);margin-top:8px;line-height:1.4;background:var(--bg);border-radius:12px;padding:9px 11px}
+.store-type-hint.show{display:block}
 .cat-hint{
   display:none;align-items:center;gap:8px;margin-top:9px;padding:8px 8px 8px 12px;border-radius:14px;
   background:linear-gradient(90deg,var(--accent-soft),rgba(20,184,166,.14));
@@ -1651,7 +1656,19 @@ input[type=file]{display:none}
     <h2 id="storeSheetTitle" data-i18n="store_sheet_new_title">Новый магазин</h2>
     <div class="field">
       <label data-i18n="field_name">Название</label>
-      <input id="storeNameInput" type="text" placeholder="Например: LUB" data-i18n-ph="store_name_ph" autocomplete="off" enterkeyhint="next">
+      <input id="storeNameInput" type="text" placeholder="Например: LUB" data-i18n-ph="store_name_ph" autocomplete="off" enterkeyhint="next" oninput="renderStoreNameChips()">
+      <div class="chips" id="storeNameChips" style="display:none;margin-top:8px"></div>
+    </div>
+    <div class="field">
+      <div class="sku-head">
+        <label style="margin-bottom:0" data-i18n="store_type_label">Тип точки</label>
+        <button type="button" class="info-toggle" onclick="toggleStoreTypeHint()" aria-label="Пояснение" data-i18n-aria="aria_info"><span class="ic" data-icon="info"></span></button>
+      </div>
+      <div class="seg seg-wide" style="margin-top:6px">
+        <button type="button" id="storeTypeSimpleBtn" onclick="setStoreType('simple')" data-i18n="store_type_simple">Магазин</button>
+        <button type="button" id="storeTypeComplexBtn" onclick="setStoreType('complex')" data-i18n="store_type_complex">Торговый комплекс</button>
+      </div>
+      <div class="store-type-hint" id="storeTypeHint" data-i18n="store_type_hint">В «Магазине» это одна точка — места для товаров не нужны. В «Торговом комплексе» несколько точек (павильоны, поставщики) — товары можно сортировать по месту.</div>
     </div>
     <div class="field">
       <label data-i18n="store_fullname_label">Полное название (необязательно)</label>
@@ -2074,12 +2091,13 @@ input[type=file]{display:none}
     </button>
     <div class="cp-more" id="catProdMore">
       <div class="field">
+        <label data-i18n="field_store">Магазин</label>
+        <select id="catProdLocStore" onchange="onCatProdStoreChange()"></select>
+      </div>
+      <div class="field" id="catProdLocField" style="display:none">
         <label data-i18n="field_location">Место (ряд, полка)</label>
         <div class="chips" id="catProdLocChips"></div>
-        <div style="display:flex;gap:8px">
-          <input id="catProdLoc" type="text" placeholder="Например: 2Г, линия 2А" data-i18n-ph="field_location_ph" autocomplete="off" oninput="renderCatProdLocChips();refreshCatProdLocStore()" style="flex:1.3;min-width:0">
-          <select id="catProdLocStore" onchange="onCatProdLocStoreChange()" style="flex:1;min-width:0"></select>
-        </div>
+        <input id="catProdLoc" type="text" placeholder="Например: 2Г, линия 2А" data-i18n-ph="field_location_ph" autocomplete="off" oninput="renderCatProdLocChips();markEmptyFields('catProductSheet')">
       </div>
       <div class="field-row">
         <div class="field">
@@ -2135,7 +2153,7 @@ input[type=file]{display:none}
         <select id="catAddStore"></select>
       </div>
     </div>
-    <div class="field">
+    <div class="field" id="catAddLocField">
       <label data-i18n="field_location">Место (ряд, полка)</label>
       <input id="catAddLoc" type="text" placeholder="Например: 2Г, линия 2А" data-i18n-ph="field_location_ph" autocomplete="off">
     </div>
@@ -2968,6 +2986,11 @@ const I18N = {
     store_sheet_edit_title: 'Переименовать магазин',
     field_name: 'Название',
     store_name_ph: 'Например: Пятёрочка',
+    store_type_label: 'Тип точки',
+    store_type_simple: 'Магазин',
+    store_type_complex: 'Торговый комплекс',
+    store_type_hint: 'В «Магазине» это одна точка — места для товаров не нужны. В «Торговом комплексе» несколько точек (павильоны, поставщики) — товары можно сортировать по месту.',
+    aria_info: 'Пояснение',
     store_fullname_label: 'Полное название (необязательно)',
     store_fullname_ph: 'Например: ТЯК Москва Люблино',
     btn_add: 'Добавить',
@@ -3584,6 +3607,11 @@ const I18N = {
     store_sheet_edit_title: 'Rename store',
     field_name: 'Name',
     store_name_ph: 'E.g.: Whole Foods',
+    store_type_label: 'Store type',
+    store_type_simple: 'Store',
+    store_type_complex: 'Mall / market',
+    store_type_hint: 'A "Store" is one single spot — no need for item locations. A "Mall / market" has several spots (stalls, suppliers) — items can be sorted by location.',
+    aria_info: 'Info',
     store_fullname_label: 'Full name (optional)',
     store_fullname_ph: 'E.g.: Downtown Mall',
     btn_add: 'Add',
@@ -4200,6 +4228,11 @@ const I18N = {
     store_sheet_edit_title: 'Laden umbenennen',
     field_name: 'Name',
     store_name_ph: 'Z. B.: Rewe',
+    store_type_label: 'Art der Verkaufsstelle',
+    store_type_simple: 'Geschäft',
+    store_type_complex: 'Einkaufszentrum/Markt',
+    store_type_hint: 'Ein „Geschäft" ist ein einzelner Standort – keine Orte für Artikel nötig. Ein „Einkaufszentrum/Markt" hat mehrere Standorte (Stände, Lieferanten) – Artikel lassen sich nach Ort sortieren.',
+    aria_info: 'Erklärung',
     store_fullname_label: 'Vollständiger Name (optional)',
     store_fullname_ph: 'Z. B.: Innenstadt-Center',
     btn_add: 'Hinzufügen',
@@ -4814,6 +4847,11 @@ const I18N = {
     store_sheet_edit_title: 'Renombrar tienda',
     field_name: 'Nombre',
     store_name_ph: 'Ej.: Mercadona',
+    store_type_label: 'Tipo de punto',
+    store_type_simple: 'Tienda',
+    store_type_complex: 'Centro comercial/mercado',
+    store_type_hint: 'Una "Tienda" es un único punto: no hace falta indicar ubicaciones. Un "Centro comercial/mercado" tiene varios puntos (puestos, proveedores): los productos se pueden ordenar por ubicación.',
+    aria_info: 'Información',
     store_fullname_label: 'Nombre completo (opcional)',
     store_fullname_ph: 'Ej.: Centro Comercial Norte',
     btn_add: 'Añadir',
@@ -5428,6 +5466,11 @@ const I18N = {
     store_sheet_edit_title: 'Renommer le magasin',
     field_name: 'Nom',
     store_name_ph: 'Ex. : Carrefour',
+    store_type_label: 'Type de point de vente',
+    store_type_simple: 'Magasin',
+    store_type_complex: 'Centre commercial/marché',
+    store_type_hint: 'Un « Magasin » est un point unique : pas besoin d\'emplacements pour les produits. Un « Centre commercial/marché » a plusieurs points (stands, fournisseurs) : les produits peuvent être triés par emplacement.',
+    aria_info: 'Info',
     store_fullname_label: 'Nom complet (facultatif)',
     store_fullname_ph: 'Ex. : Centre commercial Nord',
     btn_add: 'Ajouter',
@@ -6042,6 +6085,11 @@ const I18N = {
     store_sheet_edit_title: '重命名商店',
     field_name: '名称',
     store_name_ph: '例如：全食超市',
+    store_type_label: '点的类型',
+    store_type_simple: '商店',
+    store_type_complex: '商场/市场',
+    store_type_hint: '"商店"是单一地点——商品不需要指定位置。"商场/市场"有多个地点（摊位、供应商）——商品可以按位置排序。',
+    aria_info: '说明',
     store_fullname_label: '完整名称（可选）',
     store_fullname_ph: '例如：市中心商场',
     btn_add: '添加',
@@ -6656,6 +6704,11 @@ const I18N = {
     store_sheet_edit_title: 'Đổi tên cửa hàng',
     field_name: 'Tên',
     store_name_ph: 'VD: Big C',
+    store_type_label: 'Loại điểm bán',
+    store_type_simple: 'Cửa hàng',
+    store_type_complex: 'Trung tâm thương mại/chợ',
+    store_type_hint: '"Cửa hàng" là một điểm duy nhất — không cần chỉ định vị trí cho sản phẩm. "Trung tâm thương mại/chợ" có nhiều điểm (gian hàng, nhà cung cấp) — có thể sắp xếp sản phẩm theo vị trí.',
+    aria_info: 'Thông tin',
     store_fullname_label: 'Tên đầy đủ (không bắt buộc)',
     store_fullname_ph: 'VD: Trung tâm thương mại',
     btn_add: 'Thêm',
@@ -7270,6 +7323,11 @@ const I18N = {
     store_sheet_edit_title: 'Do‘kon nomini o‘zgartirish',
     field_name: 'Nomi',
     store_name_ph: 'Masalan: Korzinka',
+    store_type_label: 'Nuqta turi',
+    store_type_simple: 'Do\'kon',
+    store_type_complex: 'Savdo majmuasi/bozor',
+    store_type_hint: '"Do\'kon" — bitta nuqta, mahsulotlar uchun joy kerak emas. "Savdo majmuasi/bozor"da bir nechta nuqta bor (pavilyon, yetkazib beruvchi) — mahsulotlarni joyi bo\'yicha saralash mumkin.',
+    aria_info: 'Ma\'lumot',
     store_fullname_label: 'To\'liq nomi (ixtiyoriy)',
     store_fullname_ph: 'Masalan: Markaziy savdo markazi',
     btn_add: 'Qo‘shish',
@@ -7884,6 +7942,11 @@ const I18N = {
     store_sheet_edit_title: 'Дүкөндүн атын өзгөртүү',
     field_name: 'Аты',
     store_name_ph: 'Мисалы: Народный',
+    store_type_label: 'Түйүндүн түрү',
+    store_type_simple: 'Дүкөн',
+    store_type_complex: 'Соода борбору/базар',
+    store_type_hint: '"Дүкөндө" бир гана түйүн бар — товарларга орун көрсөтүүнүн кереги жок. "Соода борбору/базарда" бир нече түйүн бар (павильондор, жеткирүүчүлөр) — товарларды орду боюнча иреттесе болот.',
+    aria_info: 'Маалымат',
     store_fullname_label: 'Толук аталышы (милдеттүү эмес)',
     store_fullname_ph: 'Мисалы: Борбордук соода борбору',
     btn_add: 'Кошуу',
@@ -8498,6 +8561,11 @@ const I18N = {
     store_sheet_edit_title: 'Иваз кардани номи мағоза',
     field_name: 'Ном',
     store_name_ph: 'Масалан: Ашан',
+    store_type_label: 'Навъи нуқта',
+    store_type_simple: 'Мағоза',
+    store_type_complex: 'Маркази савдо/бозор',
+    store_type_hint: '"Мағоза" як нуқтаи ягона аст — ҷои молҳо лозим нест. "Маркази савдо/бозор" якчанд нуқта дорад (павильонҳо, таъминкунандагон) — молҳоро аз рӯи ҷой тартиб додан мумкин аст.',
+    aria_info: 'Маълумот',
     store_fullname_label: 'Номи пурра (ихтиёрӣ)',
     store_fullname_ph: 'Масалан: Маркази марказии савдо',
     btn_add: 'Илова кардан',
@@ -9112,6 +9180,11 @@ const I18N = {
     store_sheet_edit_title: 'მაღაზიის გადარქმევა',
     field_name: 'სახელი',
     store_name_ph: 'მაგ.: სუპერმარკეტი',
+    store_type_label: 'წერტილის ტიპი',
+    store_type_simple: 'მაღაზია',
+    store_type_complex: 'სავაჭრო ცენტრი/ბაზარი',
+    store_type_hint: '„მაღაზია" ერთი წერტილია — ადგილების მითითება საჭირო არ არის. „სავაჭრო ცენტრი/ბაზარი" რამდენიმე წერტილს მოიცავს (პავილიონები, მომწოდებლები) — პროდუქტების დახარისხება ადგილის მიხედვით შესაძლებელია.',
+    aria_info: 'ინფორმაცია',
     store_fullname_label: 'სრული სახელი (არასავალდებულო)',
     store_fullname_ph: 'მაგ.: ცენტრალური სავაჭრო ცენტრი',
     btn_add: 'დამატება',
@@ -9726,6 +9799,11 @@ const I18N = {
     store_sheet_edit_title: 'Վերանվանել խանութը',
     field_name: 'Անուն',
     store_name_ph: 'Օր.՝ Սուպերմարկետ',
+    store_type_label: 'Կետի տեսակը',
+    store_type_simple: 'Խանութ',
+    store_type_complex: 'Առևտրի կենտրոն/շուկա',
+    store_type_hint: '«Խանութը» մեկ կետ է՝ ապրանքների համար տեղեր նշելու կարիք չկա։ «Առևտրի կենտրոն/շուկան» ունի մի քանի կետ (տաղավարներ, մատակարարներ)՝ ապրանքները կարելի է դասավորել ըստ տեղի։',
+    aria_info: 'Տեղեկատվություն',
     store_fullname_label: 'Լրիվ անվանում (ոչ պարտադիր)',
     store_fullname_ph: 'Օր.՝ Կենտրոնական առևտրի կենտրոն',
     btn_add: 'Ավելացնել',
@@ -10340,6 +10418,11 @@ const I18N = {
     store_sheet_edit_title: 'Амаркет ахьӡ аԥсахра',
     field_name: 'Ахьӡ',
     store_name_ph: 'Абра: Маркет',
+    store_type_label: 'Ахкы азы',
+    store_type_simple: 'Амарҭаққа',
+    store_type_complex: 'Аиас маркет/абазар',
+    store_type_hint: '"Амарҭаққа" — акы ахкы, апродуктқәа рзы аҭыԥ ыҟаӡам иазхиоу. "Аиас маркет/абазар" — жәпалак ахкы (апавильонқәа, аҭыжьҩцәа) — апродуктқәа реиҭашьаҭаны еиҟарарц алшоит.',
+    aria_info: 'Аинформациа',
     store_fullname_label: 'Ахьӡ иалнакгаз (мап ацужь)',
     store_fullname_ph: 'Абра: Ациклатә аҵакырадгьыл',
     btn_add: 'Алышәх',
@@ -11519,7 +11602,7 @@ function openFabSheet() {
 }
 
 /* ---------- store add / rename ---------- */
-let storeSheetEditId = null;
+let storeSheetEditId = null, storeSheetType = 'simple';
 function openStoreSheet(editId) {
   storeSheetEditId = editId || null;
   document.getElementById('storeSheetTitle').textContent = editId ? t('store_sheet_edit_title') : t('store_sheet_new_title');
@@ -11528,8 +11611,38 @@ function openStoreSheet(editId) {
   const dir = st ? storeDirById(st.storeDirId) : null;
   document.getElementById('storeNameInput').value = st ? st.name : '';
   document.getElementById('storeFullNameInput').value = dir ? dir.fullName : '';
+  setStoreType(storeDirIsComplex(dir) ? 'complex' : 'simple');
+  document.getElementById('storeTypeHint').classList.remove('show');
+  renderStoreNameChips();
   openSheet('storeSheet');
   setTimeout(() => document.getElementById('storeNameInput').focus(), 320);
+}
+function setStoreType(v) {
+  storeSheetType = v === 'complex' ? 'complex' : 'simple';
+  document.getElementById('storeTypeSimpleBtn').classList.toggle('on', storeSheetType === 'simple');
+  document.getElementById('storeTypeComplexBtn').classList.toggle('on', storeSheetType === 'complex');
+}
+function toggleStoreTypeHint() {
+  document.getElementById('storeTypeHint').classList.toggle('show');
+}
+// пока печатаем название — подсказываем уже существующие магазины, чтобы не завести
+// второй такой же под чуть другим именем (опечатка, регистр и т.п.)
+function renderStoreNameChips() {
+  const q = document.getElementById('storeNameInput').value.trim();
+  const editingDirId = storeSheetEditId ? (findStore(storeSheetEditId) || {}).storeDirId : null;
+  const dirs = state.storeDirectory.filter(d => d.id !== editingDirId);
+  const matches = q ? dirs.filter(d => textMatch(d.code, q) || (d.fullName && textMatch(d.fullName, q))) : dirs;
+  const chips = document.getElementById('storeNameChips');
+  chips.style.display = matches.length ? 'flex' : 'none';
+  chips.innerHTML = matches.map(d =>
+    `<button type="button" class="chip" onclick="pickExistingStore('${d.id}')">${esc(storeDirLabel(d))}</button>`).join('');
+}
+function pickExistingStore(dirId) {
+  const dir = storeDirById(dirId); if (!dir) return;
+  document.getElementById('storeNameInput').value = dir.code;
+  document.getElementById('storeFullNameInput').value = dir.fullName || '';
+  setStoreType(storeDirIsComplex(dir) ? 'complex' : 'simple');
+  renderStoreNameChips();
 }
 function saveStoreSheet() {
   const name = document.getElementById('storeNameInput').value.trim();
@@ -11541,12 +11654,15 @@ function saveStoreSheet() {
     const st = findStore(storeSheetEditId);
     st.name = name;
     let dir = storeDirById(st.storeDirId);
-    if (!dir) { dir = { id: uid(), code: name, fullName: '' }; state.storeDirectory.push(dir); st.storeDirId = dir.id; }
+    if (!dir) { dir = { id: uid(), code: name, fullName: '', type: storeSheetType }; state.storeDirectory.push(dir); st.storeDirId = dir.id; }
     dir.code = name;
     dir.fullName = fullName;
+    dir.type = storeSheetType; // осознанное редактирование своего магазина — тип можно менять
   } else {
     let dir = state.storeDirectory.find(d => d.code.toLowerCase() === name.toLowerCase());
-    if (!dir) { dir = { id: uid(), code: name, fullName: '' }; state.storeDirectory.push(dir); }
+    // тип задаём только НОВОМУ магазину — если название совпало с уже существующим
+    // (выбрали его из подсказок или напечатали так же), его настройки не трогаем
+    if (!dir) { dir = { id: uid(), code: name, fullName: '', type: storeSheetType }; state.storeDirectory.push(dir); }
     if (fullName) dir.fullName = fullName;
     data().stores.push({ id: uid(), name, storeDirId: dir.id, collapsed: false, items: [] });
   }
@@ -13649,6 +13765,10 @@ let locManagePicked = new Set();
 const catById = id => state.catalogDB.categories.find(c => c.id === id);
 const prodById = id => state.catalogDB.products.find(p => p.id === id);
 const storeDirById = id => state.storeDirectory.find(d => d.id === id);
+// "Торговый комплекс" — у товаров есть отдельные места (павильоны/поставщики) для сортировки;
+// "Магазин" — одна точка, места не нужны. У старых магазинов тип ещё не проставлен —
+// по умолчанию считаем их комплексом, чтобы ничего не спрятать и не сломать то, что уже настроено
+const storeDirIsComplex = d => !!d && d.type !== 'simple';
 // один и тот же код (например LUB) в справочнике — одна и та же карточка магазина,
 // используется и при создании магазина в списке, и при приёме места от поставщика
 function findOrCreateStoreDir(code, fullName) {
@@ -13696,7 +13816,12 @@ function toggleFavorite(id) {
   const btn = document.getElementById('catProdFavBtn');
   if (btn && catEditProductId === id) btn.innerHTML = favStarSvg(p.favorite);
 }
-const distinctLocations = () => [...new Set(state.catalogDB.products.map(p => (p.loc || '').trim()).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'ru'));
+const distinctLocations = () => {
+  // у простых магазинов "место" — служебное, совпадает с кодом самого магазина;
+  // как реальный вариант места (павильона) в подсказках его показывать не нужно
+  const shadow = new Set(state.storeDirectory.filter(d => !storeDirIsComplex(d)).map(d => d.code));
+  return [...new Set(state.catalogDB.products.map(p => (p.loc || '').trim()).filter(x => x && !shadow.has(x)))].sort((a, b) => a.localeCompare(b, 'ru'));
+};
 // while typing a new location, bubble up the closest existing ones first so duplicates are easy to spot
 function locMatchScore(loc, q) {
   const l = loc.toLowerCase(), x = q.toLowerCase();
@@ -14298,30 +14423,46 @@ function renderCatProdLocChips() {
 }
 function pickCatProdLoc(loc) {
   document.getElementById('catProdLoc').value = loc;
+  const locRec = locByName(loc);
+  if (locRec && locRec.storeId) document.getElementById('catProdLocStore').value = locRec.storeId;
   renderCatProdLocChips();
-  refreshCatProdLocStore();
   markEmptyFields('catProductSheet');
 }
-// магазин привязан не к товару, а к самому месту (записи в state.catalogDB.locations) —
-// поэтому выпадающий список показывает/меняет магазин текущего введённого значения "Место"
 function renderCatProdLocStoreOptions() {
   document.getElementById('catProdLocStore').innerHTML =
     `<option value="">${t('loc_store_none')}</option>` +
     state.storeDirectory.map(d => `<option value="${d.id}">${esc(storeDirLabel(d))}</option>`).join('');
 }
+// поле "Место" нужно только для магазина типа "Торговый комплекс" (там несколько точек —
+// павильоны/поставщики). У обычного "Магазина" точка одна, отдельное место не нужно —
+// товар привязывается прямо к магазину, а его "место" ведётся скрыто (см. onCatProdStoreChange)
 function refreshCatProdLocStore() {
   const name = document.getElementById('catProdLoc').value.trim();
   const loc = name ? locByName(name) : null;
-  const sel = document.getElementById('catProdLocStore');
-  sel.value = loc && loc.storeId ? loc.storeId : '';
-  sel.disabled = !name;
+  document.getElementById('catProdLocStore').value = loc && loc.storeId ? loc.storeId : '';
+  const dir = storeDirById(document.getElementById('catProdLocStore').value);
+  document.getElementById('catProdLocField').style.display = storeDirIsComplex(dir) ? 'block' : 'none';
+  renderCatProdLocChips();
 }
-function onCatProdLocStoreChange() {
-  const name = document.getElementById('catProdLoc').value.trim();
-  if (!name) return;
-  const loc = findOrCreateLocation(name);
-  loc.storeId = document.getElementById('catProdLocStore').value || null;
-  save();
+function onCatProdStoreChange() {
+  const dir = storeDirById(document.getElementById('catProdLocStore').value);
+  const isComplex = storeDirIsComplex(dir);
+  document.getElementById('catProdLocField').style.display = isComplex ? 'block' : 'none';
+  if (!isComplex) {
+    // простой магазин (или магазин не выбран) — своих "мест" не бывает: товар привязывается
+    // напрямую к магазину через скрытое место с тем же именем, что и сам магазин — это не
+    // ломает подбор нужного магазина списка по месту при добавлении товара (см. openCatAddSheet)
+    document.getElementById('catProdLoc').value = dir ? dir.code : '';
+  } else {
+    // переключились на комплекс, а в поле осталось "теневое" место от простого магазина
+    // (с которого только что переключились) — это точно не то место, что имел в виду человек
+    const cur = document.getElementById('catProdLoc').value.trim();
+    if (cur && state.storeDirectory.some(d => d.code === cur && d.id !== dir.id)) {
+      document.getElementById('catProdLoc').value = '';
+    }
+  }
+  renderCatProdLocChips();
+  markEmptyFields('catProductSheet');
 }
 function renderItemLocChips() {
   const cur = document.getElementById('itemLocInput').value.trim();
@@ -14420,12 +14561,17 @@ function saveCatProduct() {
     if (!cat) { cat = { id: uid(), name: catName }; state.catalogDB.categories.push(cat); }
     categoryId = cat.id;
   }
-  const loc = document.getElementById('catProdLoc').value.trim();
+  const storeDirId = document.getElementById('catProdLocStore').value || null;
+  const storeDir = storeDirId ? storeDirById(storeDirId) : null;
+  // простому магазину место не нужно — товар привязывается прямо к нему через скрытое
+  // место с тем же именем, что и сам магазин; у "Торгового комплекса" место вводится вручную
+  const loc = storeDirIsComplex(storeDir) ? document.getElementById('catProdLoc').value.trim() : (storeDir ? storeDir.code : '');
   const sku = document.getElementById('catProdSku').value.trim();
   const pack = parseFloat(document.getElementById('catProdPack').value) || 1;
   const note = document.getElementById('catProdNote').value.trim();
   if (skuExists(sku, catEditProductId)) { onCatProdSkuInput(); return; }
-  findOrCreateLocation(loc);
+  const locRec = findOrCreateLocation(loc);
+  if (locRec) locRec.storeId = storeDirId;
   const photoId = catProdPhotoId;
   if (catEditProductId) {
     const prod = prodById(catEditProductId);
@@ -14515,6 +14661,8 @@ function openCatAddSheet(pid) {
   // если у товара есть место с привязанным магазином — сразу заводим/выбираем такой же
   // магазин в ТЕКУЩЕМ списке, чтобы не приходилось вручную угадывать, куда его положить
   const loc = p.loc ? locByName(p.loc) : null;
+  const dir = loc && loc.storeId ? storeDirById(loc.storeId) : null;
+  const isComplex = storeDirIsComplex(dir);
   const matchedStore = loc && loc.storeId ? ensureListStoreForDir(loc.storeId) : null;
   const preferredStore = catAddTargetSid ? findStore(catAddTargetSid) : null;
   if (!data().stores.length) {
@@ -14527,7 +14675,10 @@ function openCatAddSheet(pid) {
   document.getElementById('catAddTitle').textContent = p.name;
   document.getElementById('catAddQty').value = p.pack > 1 ? p.pack : 1;
   document.getElementById('catAddPrice').value = p.price || '';
-  document.getElementById('catAddLoc').value = p.loc || '';
+  // "Место" имеет смысл только для товара из "Торгового комплекса" — у обычного магазина
+  // это одна точка, отдельное место указывать незачем
+  document.getElementById('catAddLocField').style.display = isComplex ? 'block' : 'none';
+  document.getElementById('catAddLoc').value = isComplex ? (p.loc || '') : '';
   document.getElementById('catAddNote').value = p.note || '';
   document.getElementById('catAddStore').innerHTML = data().stores.map((s, i) =>
     `<option value="${s.id}" ${(preferredStore ? s.id === preferredStore.id : (matchedStore ? s.id === matchedStore.id : i === 0)) ? 'selected' : ''}>${esc(storeOptionLabel(s))}</option>`).join('');
@@ -14550,7 +14701,10 @@ function saveCatAdd() {
   const price = parseFloat(document.getElementById('catAddPrice').value) || 0;
   const store = findStore(document.getElementById('catAddStore').value);
   if (!store || isNaN(qty) || qty <= 0) return;
-  const addLoc = document.getElementById('catAddLoc').value.trim();
+  // поле места скрыто для товаров из обычного магазина — читаем его, только если оно
+  // реально показано, иначе оставляем как в карточке товара (не затираем пустым)
+  const locFieldShown = document.getElementById('catAddLocField').style.display !== 'none';
+  const addLoc = locFieldShown ? document.getElementById('catAddLoc').value.trim() : (p.loc || '');
   const addNote = document.getElementById('catAddNote').value.trim();
   // тот же товар по той же цене в этом магазине — не плодим вторую строку, складываем количество
   const merged = store.items.find(i => !i.bought && i.name.toLowerCase() === p.name.toLowerCase() && (+i.price || 0) === price);
