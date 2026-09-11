@@ -334,10 +334,15 @@ input,select{font-family:inherit}
 #catalogSheet.as-view .sheet{
   position:static;width:auto;max-width:none;height:auto;max-height:none;
   padding:0;border-radius:0;overflow:visible;
-  grid-template-rows:auto auto auto auto auto auto auto;
+  grid-template-areas:"actions actions" "search search" "chips chips" "locrow locrow" "list list" "bulkbar bulkbar";
+  grid-template-rows:auto auto auto auto auto auto;
 }
 #catalogSheet.as-view .cat-list{overflow-y:visible;max-height:none}
+/* на постоянной вкладке заголовок и крестик не нужны — на их месте кнопки
+   "Новый товар"/"Поделиться" (иначе на большом каталоге до них не долистать) */
+#catalogSheet.as-view .cat-title{display:none}
 #catalogSheet.as-view .cat-close{display:none}
+#catalogSheet.as-view .cat-actions{margin-bottom:12px}
 .cat-close{grid-area:close;align-self:center}
 .cat-searchrow{grid-area:search;align-self:start}
 .cat-chipsrow{grid-area:chips;align-self:start}
@@ -1393,8 +1398,17 @@ input[type=file]{display:none}
   }
   .cat-chipsrow .chip{width:100%;justify-content:flex-start;border-radius:12px}
   /* вкладка "Каталог" на десктопе — та же боковая панель категорий, только без
-     фиксированной высоты и внутренней прокрутки: страница скроллится целиком */
-  #catalogSheet.as-view .sheet{grid-template-rows:auto auto auto auto auto}
+     фиксированной высоты и внутренней прокрутки: страница скроллится целиком;
+     заголовка и крестика нет — кнопки действий растянуты на всю верхнюю строку */
+  #catalogSheet.as-view .sheet{
+    grid-template-areas:
+      ".       actions actions actions"
+      "sidebar search  search  search"
+      "sidebar locrow  locrow  locrow"
+      "sidebar list    list    list"
+      "sidebar bulkbar bulkbar bulkbar";
+    grid-template-rows:auto auto auto auto auto;
+  }
   #catalogSheet.as-view .cat-chipsrow{overflow-y:visible;max-height:none}
 }
 </style>
@@ -1733,7 +1747,7 @@ input[type=file]{display:none}
   <div class="sheet">
     <div class="grab"></div>
     <div class="action-list">
-      <button class="action-item" onclick="closeSheet('fabSheet');openCatalogSheet()"><span class="ic" data-icon="cart"></span><span data-i18n="fab_add_item">Добавить товар</span></button>
+      <button class="action-item" onclick="closeSheet('fabSheet');switchView('cat')"><span class="ic" data-icon="cart"></span><span data-i18n="fab_add_item">Добавить товар</span></button>
       <button class="action-item" onclick="closeSheet('fabSheet');openStoreSheet()"><span class="ic" data-icon="store"></span><span data-i18n="fab_add_store">Добавить магазин</span></button>
     </div>
   </div>
@@ -11658,10 +11672,20 @@ function openSheet(id) {
   document.getElementById(id).classList.add('open');
 }
 function closeSheet(id) {
-  // каталог как постоянная вкладка "Каталог" — не всплывающее окно, закрывать тут нечего;
-  // сама вкладка прячется через switchView, когда переключаемся на другую вкладку
-  if (id === 'catalogSheet' && currentView === 'cat') return;
-  document.getElementById(id).classList.remove('open');
+  const el = document.getElementById(id);
+  if (id === 'catalogSheet') {
+    // на самой вкладке "Каталог" (.as-view) закрывать нечего — это не всплывающее
+    // окно; проверяем именно класс, а не currentView, потому что тот остаётся
+    // "cat" даже если поверх вкладки на секунду открыли этот же каталог попапом
+    // (например «Добавить товар» из FAB) — иначе крестик такого попапа переставал
+    // бы работать, а выйти было бы некуда (баг, который поймал пользователь)
+    if (el.classList.contains('as-view')) return;
+    el.classList.remove('open');
+    // popup поверх вкладки закрыли — возвращаем саму вкладку на место
+    if (currentView === 'cat') openCatalogSheet(null, null, true);
+    return;
+  }
+  el.classList.remove('open');
 }
 function toggleAboutMore(id, btn) {
   const open = document.getElementById(id).classList.toggle('open');
