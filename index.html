@@ -86,25 +86,21 @@ input,select{font-family:inherit}
 @media(min-width:920px){
   .mobile-budget-bar{display:none !important}
 }
-.brand{display:flex;align-items:center;gap:11px;min-width:0}
-.brand-name{font-size:23px;font-weight:900;letter-spacing:-.01em;color:#fff;text-shadow:0 1px 6px rgba(15,23,42,.18)}
+.brand{display:flex;align-items:center;gap:2px;min-width:0;position:relative}
+/* фирменный значок — только на иконке приложения/фавиконе; в самой шапке —
+   чистая надпись BDG, без "логотипа", чтобы не выглядело аляповато. Бейдж
+   входящих предложений — display:none, а не нулевой размер: у нулевого
+   размера кликабельная область тоже нулевая, кнопка физически не нажимается */
+.brand-name{font-size:25px;font-weight:900;letter-spacing:-.02em;color:#fff}
 .brand-badge{
-  width:46px;height:46px;border-radius:15px;flex:none;border:2.5px solid rgba(255,255,255,.55);
-  padding:0;position:relative;cursor:default;
-  background:linear-gradient(135deg,#fff,#EEF0FE);
-  display:flex;align-items:center;justify-content:center;color:var(--accent);font-weight:900;font-size:20px;
-  box-shadow:0 4px 14px rgba(15,23,42,.22);
+  display:none;position:absolute;top:-9px;left:-6px;min-width:19px;height:19px;padding:0 5px;
+  border:none;border-radius:99px;background:var(--red);color:#fff;font-size:10.5px;font-weight:900;
+  align-items:center;justify-content:center;box-shadow:0 0 0 2px var(--accent);cursor:pointer;
 }
-.brand-badge-count{
-  display:none;position:absolute;top:-6px;right:-6px;min-width:18px;height:18px;padding:0 4px;
-  border-radius:99px;background:var(--red);color:#fff;font-size:10.5px;font-weight:900;
-  align-items:center;justify-content:center;box-shadow:0 0 0 2px #fff;
-}
-.brand-badge.has-shares{cursor:pointer;animation:badgeGlow 1.6s ease-in-out infinite}
-.brand-badge.has-shares .brand-badge-count{display:flex}
+.brand-badge.has-shares{display:flex;animation:badgeGlow 1.6s ease-in-out infinite}
 @keyframes badgeGlow{
-  0%,100%{box-shadow:0 4px 12px rgba(99,102,241,.35)}
-  50%{box-shadow:0 4px 20px rgba(16,185,129,.85),0 0 0 6px rgba(16,185,129,.18)}
+  0%,100%{box-shadow:0 0 0 2px var(--accent)}
+  50%{box-shadow:0 0 0 2px var(--accent),0 0 0 7px rgba(16,185,129,.35)}
 }
 .list-switch{
   display:flex;flex-direction:column;align-items:flex-start;gap:1px;min-width:0;
@@ -1403,16 +1399,18 @@ input[type=file]{display:none}
   .cat-chipsrow .chip{width:100%;justify-content:flex-start;border-radius:12px}
   /* вкладка "Каталог" на десктопе — та же боковая панель категорий, только без
      фиксированной высоты и внутренней прокрутки: страница скроллится целиком;
-     заголовка и крестика нет — кнопки действий растянуты на всю верхнюю строку */
+     заголовка и крестика нет — кнопки действий в той же строке, что и поиск
+     (строка поиска сокращается под них), отдельная строка под них не нужна */
   #catalogSheet.as-view .sheet{
     grid-template-areas:
-      ".       actions actions actions"
-      "sidebar search  search  search"
+      "sidebar search  actions actions"
       "sidebar locrow  locrow  locrow"
       "sidebar list    list    list"
       "sidebar bulkbar bulkbar bulkbar";
-    grid-template-rows:auto auto auto auto auto;
+    grid-template-rows:auto auto auto auto;
   }
+  #catalogSheet.as-view .cat-searchrow{margin-bottom:0;align-self:center}
+  #catalogSheet.as-view .cat-actions{margin-bottom:0;align-self:center}
   #catalogSheet.as-view .cat-chipsrow{overflow-y:visible;max-height:none}
 }
 </style>
@@ -1423,7 +1421,7 @@ input[type=file]{display:none}
   <div class="topbar-sticky">
   <header class="topbar">
     <div class="brand">
-      <button class="brand-badge" id="brandBadge" onclick="openIncomingSharesSheet()" aria-hidden="true" tabindex="-1">₽<span class="brand-badge-count" id="brandBadgeCount"></span></button>
+      <button class="brand-badge" id="brandBadge" onclick="openIncomingSharesSheet()" aria-hidden="true" tabindex="-1"></button>
       <span class="brand-name">BDG</span>
     </div>
     <div id="topNavSlot"></div>
@@ -13209,16 +13207,15 @@ function dismissBroadcastShare(id) {
 }
 function renderShareBadge() {
   const wrap = document.getElementById('brandBadge');
-  const count = document.getElementById('brandBadgeCount');
   const n = pendingShares.length;
   wrap.classList.toggle('has-shares', n > 0);
   if (n > 0) {
-    count.textContent = n > 99 ? '99+' : n;
+    wrap.textContent = n > 99 ? '99+' : n;
     wrap.setAttribute('aria-label', tf('share_badge_aria', { n }));
     wrap.removeAttribute('aria-hidden');
     wrap.setAttribute('tabindex', '0');
   } else {
-    count.textContent = '';
+    wrap.textContent = '';
     wrap.removeAttribute('aria-label');
     wrap.setAttribute('aria-hidden', 'true');
     wrap.setAttribute('tabindex', '-1');
@@ -13787,7 +13784,7 @@ function stampShow() {
 const TOUR_STEPS = [
   { el: '.budget-card' },
   { el: '.fab' },
-  { el: '#catalogBtn' },
+  { el: '#nav-cat' },
   { el: '#menuBtn' },
   { el: '.bottom-nav' },
   { el: null }
