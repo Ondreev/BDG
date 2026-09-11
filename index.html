@@ -11340,7 +11340,7 @@ function renderStores() {
       </div>
       <div class="items" data-store="${s.id}">
         ${rows || `<div class="empty-items">${t('store_empty_items')}</div>`}
-        <button class="add-item-row" onclick="openItemSheet('${s.id}')">
+        <button class="add-item-row" onclick="openCatalogSheet('list','${s.id}')">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
           ${t('store_add_item_btn')}
         </button>
@@ -13642,7 +13642,7 @@ function maybeOfferTour() {
 }
 
 /* ================= catalog ================= */
-let catFilter = null, catLocFilter = null, catEditProductId = null, catAddProductId = null, catEditCategoryId = null;
+let catFilter = null, catLocFilter = null, catEditProductId = null, catAddProductId = null, catEditCategoryId = null, catAddTargetSid = null;
 let catSelectMode = false, catSelectedIds = new Set();
 let locManagePicked = new Set();
 
@@ -13730,8 +13730,11 @@ function upsertCatalogProduct(name, price, categoryId, loc, sku, pack, note) {
 }
 
 let catTarget = 'list'; // 'list' — в список закупок, 'inv' — в инвентуру
-function openCatalogSheet(target) {
+function openCatalogSheet(target, sid) {
   catTarget = target === 'inv' ? 'inv' : 'list';
+  // если открыли "+ Товар" из карточки конкретного магазина — при выборе товара
+  // сразу подставим этот магазин, а не первый по списку
+  catAddTargetSid = sid || null;
   catFilter = null;
   catLocFilter = null;
   document.getElementById('catSearch').value = '';
@@ -14513,6 +14516,7 @@ function openCatAddSheet(pid) {
   // магазин в ТЕКУЩЕМ списке, чтобы не приходилось вручную угадывать, куда его положить
   const loc = p.loc ? locByName(p.loc) : null;
   const matchedStore = loc && loc.storeId ? ensureListStoreForDir(loc.storeId) : null;
+  const preferredStore = catAddTargetSid ? findStore(catAddTargetSid) : null;
   if (!data().stores.length) {
     closeSheet('catalogSheet');
     toast(t('cat_add_need_store'));
@@ -14526,7 +14530,7 @@ function openCatAddSheet(pid) {
   document.getElementById('catAddLoc').value = p.loc || '';
   document.getElementById('catAddNote').value = p.note || '';
   document.getElementById('catAddStore').innerHTML = data().stores.map((s, i) =>
-    `<option value="${s.id}" ${(matchedStore ? s.id === matchedStore.id : i === 0) ? 'selected' : ''}>${esc(storeOptionLabel(s))}</option>`).join('');
+    `<option value="${s.id}" ${(preferredStore ? s.id === preferredStore.id : (matchedStore ? s.id === matchedStore.id : i === 0)) ? 'selected' : ''}>${esc(storeOptionLabel(s))}</option>`).join('');
   const packHint = document.getElementById('catAddPackHint');
   packHint.style.display = p.pack > 1 ? 'block' : 'none';
   if (p.pack > 1) packHint.textContent = tf('field_pack_hint', { n: fmt(p.pack) });
