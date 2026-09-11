@@ -2097,7 +2097,8 @@ input[type=file]{display:none}
       <div class="field" id="catProdLocField" style="display:none">
         <label data-i18n="field_location">Место (ряд, полка)</label>
         <div class="chips" id="catProdLocChips"></div>
-        <input id="catProdLoc" type="text" placeholder="Например: 2Г, линия 2А" data-i18n-ph="field_location_ph" autocomplete="off" oninput="renderCatProdLocChips();markEmptyFields('catProductSheet')">
+        <input id="catProdLoc" type="text" placeholder="Например: 2Г, линия 2А" data-i18n-ph="field_location_ph" autocomplete="off" oninput="onCatProdLocInput()">
+        <div class="sku-warn" id="catProdLocWarn" data-i18n="field_location_dup_warn">Такое место уже привязано к другому магазину — укажите другое название</div>
       </div>
       <div class="field-row">
         <div class="field">
@@ -3012,6 +3013,7 @@ const I18N = {
     field_id_use: 'Использовать',
     field_id_ph: 'Например: 10234',
     field_id_dup_warn: 'Такой ID уже есть',
+    field_location_dup_warn: 'Такое место уже привязано к другому магазину — укажите другое название',
     catprod_more_toggle: 'Ещё параметры',
     catprod_list_qty_label: 'Количество в этом списке',
     catprod_remove_from_list_btn: 'Убрать из списка',
@@ -3633,6 +3635,7 @@ const I18N = {
     field_id_use: 'Use',
     field_id_ph: 'E.g.: 10234',
     field_id_dup_warn: 'This ID is already used',
+    field_location_dup_warn: 'This location already belongs to another store — pick a different name',
     catprod_more_toggle: 'More options',
     catprod_list_qty_label: 'Quantity in this list',
     catprod_remove_from_list_btn: 'Remove from list',
@@ -4254,6 +4257,7 @@ const I18N = {
     field_id_use: 'Verwenden',
     field_id_ph: 'Z. B.: 10234',
     field_id_dup_warn: 'Diese ID wird bereits verwendet',
+    field_location_dup_warn: 'Dieser Ort gehört bereits zu einem anderen Geschäft — wählen Sie einen anderen Namen',
     catprod_more_toggle: 'Weitere Optionen',
     catprod_list_qty_label: 'Menge in dieser Liste',
     catprod_remove_from_list_btn: 'Aus der Liste entfernen',
@@ -4873,6 +4877,7 @@ const I18N = {
     field_id_use: 'Usar',
     field_id_ph: 'Ej.: 10234',
     field_id_dup_warn: 'Este ID ya está en uso',
+    field_location_dup_warn: 'Este lugar ya pertenece a otra tienda — elige otro nombre',
     catprod_more_toggle: 'Más opciones',
     catprod_list_qty_label: 'Cantidad en esta lista',
     catprod_remove_from_list_btn: 'Quitar de la lista',
@@ -5492,6 +5497,7 @@ const I18N = {
     field_id_use: 'Utiliser',
     field_id_ph: 'Ex. : 10234',
     field_id_dup_warn: 'Cet ID est déjà utilisé',
+    field_location_dup_warn: 'Cet emplacement appartient déjà à un autre magasin — choisissez un autre nom',
     catprod_more_toggle: 'Plus d\'options',
     catprod_list_qty_label: 'Quantité dans cette liste',
     catprod_remove_from_list_btn: 'Retirer de la liste',
@@ -6111,6 +6117,7 @@ const I18N = {
     field_id_use: '使用',
     field_id_ph: '例如：10234',
     field_id_dup_warn: '此ID已被使用',
+    field_location_dup_warn: '该位置已属于另一家商店——请换一个名称',
     catprod_more_toggle: '更多选项',
     catprod_list_qty_label: '此清单中的数量',
     catprod_remove_from_list_btn: '从清单中移除',
@@ -6730,6 +6737,7 @@ const I18N = {
     field_id_use: 'Dùng',
     field_id_ph: 'VD: 10234',
     field_id_dup_warn: 'ID này đã được sử dụng',
+    field_location_dup_warn: 'Vị trí này đã thuộc về cửa hàng khác — hãy chọn tên khác',
     catprod_more_toggle: 'Thêm tùy chọn',
     catprod_list_qty_label: 'Số lượng trong danh sách này',
     catprod_remove_from_list_btn: 'Xóa khỏi danh sách',
@@ -7349,6 +7357,7 @@ const I18N = {
     field_id_use: 'Ishlatish',
     field_id_ph: 'Masalan: 10234',
     field_id_dup_warn: 'Bu ID allaqachon ishlatilgan',
+    field_location_dup_warn: 'Bu joy allaqachon boshqa do\'konga tegishli — boshqa nom tanlang',
     catprod_more_toggle: 'Yana parametrlar',
     catprod_list_qty_label: 'Ushbu ro\'yxatdagi miqdor',
     catprod_remove_from_list_btn: 'Ro\'yxatdan olib tashlash',
@@ -7968,6 +7977,7 @@ const I18N = {
     field_id_use: 'Колдонуу',
     field_id_ph: 'Мисалы: 10234',
     field_id_dup_warn: 'Бул ID мурунтан эле колдонулган',
+    field_location_dup_warn: 'Бул орун мурунтан эле башка дүкөнгө таандык — башка ат тандаңыз',
     catprod_more_toggle: 'Дагы параметрлер',
     catprod_list_qty_label: 'Ушул тизмедеги саны',
     catprod_remove_from_list_btn: 'Тизмеден алып салуу',
@@ -8587,6 +8597,7 @@ const I18N = {
     field_id_use: 'Истифода',
     field_id_ph: 'Масалан: 10234',
     field_id_dup_warn: 'Ин ID аллакай истифода шудааст',
+    field_location_dup_warn: 'Ин ҷой аллакай ба мағозаи дигар тааллуқ дорад — номи дигар интихоб кунед',
     catprod_more_toggle: 'Танзимоти иловагӣ',
     catprod_list_qty_label: 'Миқдор дар ин рӯйхат',
     catprod_remove_from_list_btn: 'Аз рӯйхат хориҷ кардан',
@@ -9206,6 +9217,7 @@ const I18N = {
     field_id_use: 'გამოყენება',
     field_id_ph: 'მაგ.: 10234',
     field_id_dup_warn: 'ეს ID უკვე გამოყენებულია',
+    field_location_dup_warn: 'ეს ადგილი უკვე სხვა მაღაზიას ეკუთვნის — აირჩიეთ სხვა სახელი',
     catprod_more_toggle: 'მეტი პარამეტრი',
     catprod_list_qty_label: 'რაოდენობა ამ სიაში',
     catprod_remove_from_list_btn: 'სიიდან წაშლა',
@@ -9825,6 +9837,7 @@ const I18N = {
     field_id_use: 'Օգտագործել',
     field_id_ph: 'Օր.՝ 10234',
     field_id_dup_warn: 'Այս ID-ն արդեն օգտագործվում է',
+    field_location_dup_warn: 'Այս վայրն արդեն պատկանում է այլ խանութի՝ ընտրեք այլ անուն',
     catprod_more_toggle: 'Ավելի շատ ընտրանքներ',
     catprod_list_qty_label: 'Քանակը այս ցանկում',
     catprod_remove_from_list_btn: 'Հեռացնել ցանկից',
@@ -10444,6 +10457,7 @@ const I18N = {
     field_id_use: 'Ахархәара',
     field_id_ph: 'Абра: 10234',
     field_id_dup_warn: 'Ари ID хазы иҟоуп',
+    field_location_dup_warn: 'Ари аҭыԥ хазы аиас амаркет ахь инхоит — иҭыжьит ихьӡ ҿыц',
     catprod_more_toggle: 'Аҵаира апараметрқәа',
     catprod_list_qty_label: 'Ари ахыҧхьаӡара ари ахыҵа аҟны',
     catprod_remove_from_list_btn: 'Ахыҵа аҟынтә иахкра',
@@ -13816,12 +13830,36 @@ function toggleFavorite(id) {
   const btn = document.getElementById('catProdFavBtn');
   if (btn && catEditProductId === id) btn.innerHTML = favStarSvg(p.favorite);
 }
-const distinctLocations = () => {
+// categoryId — необязательный фильтр: в каталоге при выборе категории показываем
+// только места товаров ЭТОЙ категории, а не вообще все места
+function distinctLocations(categoryId) {
   // у простых магазинов "место" — служебное, совпадает с кодом самого магазина;
   // как реальный вариант места (павильона) в подсказках его показывать не нужно
   const shadow = new Set(state.storeDirectory.filter(d => !storeDirIsComplex(d)).map(d => d.code));
-  return [...new Set(state.catalogDB.products.map(p => (p.loc || '').trim()).filter(x => x && !shadow.has(x)))].sort((a, b) => a.localeCompare(b, 'ru'));
-};
+  const prods = categoryId ? state.catalogDB.products.filter(p => p.categoryId === categoryId) : state.catalogDB.products;
+  return [...new Set(prods.map(p => (p.loc || '').trim()).filter(x => x && !shadow.has(x)))].sort((a, b) => a.localeCompare(b, 'ru'));
+}
+// места КОНКРЕТНОГО магазина — при выборе места для товара показываем только точки этого же
+// магазина, а не всего каталога, чтобы не путать павильоны разных магазинов между собой
+function locationsForStore(storeDirId) {
+  if (!storeDirId) return [];
+  const names = new Set();
+  state.catalogDB.products.forEach(p => {
+    const name = (p.loc || '').trim();
+    if (!name) return;
+    const loc = locByName(name);
+    if (loc && loc.storeId === storeDirId) names.add(name);
+  });
+  return [...names].sort((a, b) => a.localeCompare(b, 'ru'));
+}
+// одно и то же название места в двух РАЗНЫХ магазинах — почти наверняка случайное совпадение
+// короткой метки (например "1" или "2эт Б42" в разных комплексах), а не тот же павильон:
+// не даём молча переподвязать чужое место к другому магазину, предупреждаем
+function catProdLocConflict(name, storeDirId) {
+  if (!name) return false;
+  const loc = locByName(name);
+  return !!(loc && loc.storeId && loc.storeId !== storeDirId);
+}
 // while typing a new location, bubble up the closest existing ones first so duplicates are easy to spot
 function locMatchScore(loc, q) {
   const l = loc.toLowerCase(), x = q.toLowerCase();
@@ -14006,7 +14044,8 @@ function renderCatalog() {
   const db = state.catalogDB;
   const q = document.getElementById('catSearch').value.trim();
   if (catFilter && !catById(catFilter)) catFilter = null;
-  const locs = distinctLocations();
+  // при выбранной категории — только места её товаров, а не всего каталога
+  const locs = distinctLocations(catFilter);
   if (catLocFilter && !locs.includes(catLocFilter)) catLocFilter = null;
 
   // category chips
@@ -14415,7 +14454,9 @@ function toggleCatProdMore(forceOpen) {
 }
 function renderCatProdLocChips() {
   const cur = document.getElementById('catProdLoc').value.trim();
-  const locs = sortLocsByMatch(distinctLocations(), cur);
+  const storeDirId = document.getElementById('catProdLocStore').value || null;
+  // только места ЭТОГО магазина — точки других магазинов тут ни при чём
+  const locs = sortLocsByMatch(locationsForStore(storeDirId), cur);
   const chips = document.getElementById('catProdLocChips');
   chips.style.display = locs.length ? 'flex' : 'none';
   chips.innerHTML = locs.map(l =>
@@ -14423,15 +14464,28 @@ function renderCatProdLocChips() {
 }
 function pickCatProdLoc(loc) {
   document.getElementById('catProdLoc').value = loc;
-  const locRec = locByName(loc);
-  if (locRec && locRec.storeId) document.getElementById('catProdLocStore').value = locRec.storeId;
-  renderCatProdLocChips();
-  markEmptyFields('catProductSheet');
+  onCatProdLocInput();
 }
 function renderCatProdLocStoreOptions() {
   document.getElementById('catProdLocStore').innerHTML =
     `<option value="">${t('loc_store_none')}</option>` +
     state.storeDirectory.map(d => `<option value="${d.id}">${esc(storeDirLabel(d))}</option>`).join('');
+}
+// то же место, но уже привязанное к ДРУГОМУ магазину — предупреждаем и не даём сохранить,
+// вместо того чтобы молча переподвязать чужой павильон к текущему магазину (см. catProdLocConflict)
+function onCatProdLocInput() {
+  renderCatProdLocChips();
+  const name = document.getElementById('catProdLoc').value.trim();
+  const storeDirId = document.getElementById('catProdLocStore').value || null;
+  document.getElementById('catProdLocWarn').classList.toggle('show', catProdLocConflict(name, storeDirId));
+  updateCatProdSaveState();
+  markEmptyFields('catProductSheet');
+}
+function updateCatProdSaveState() {
+  const skuDup = skuExists(document.getElementById('catProdSku').value, catEditProductId);
+  const name = document.getElementById('catProdLoc').value.trim();
+  const storeDirId = document.getElementById('catProdLocStore').value || null;
+  document.getElementById('catProdSaveBtn').disabled = skuDup || catProdLocConflict(name, storeDirId);
 }
 // поле "Место" нужно только для магазина типа "Торговый комплекс" (там несколько точек —
 // павильоны/поставщики). У обычного "Магазина" точка одна, отдельное место не нужно —
@@ -14442,7 +14496,7 @@ function refreshCatProdLocStore() {
   document.getElementById('catProdLocStore').value = loc && loc.storeId ? loc.storeId : '';
   const dir = storeDirById(document.getElementById('catProdLocStore').value);
   document.getElementById('catProdLocField').style.display = storeDirIsComplex(dir) ? 'block' : 'none';
-  renderCatProdLocChips();
+  onCatProdLocInput();
 }
 function onCatProdStoreChange() {
   const dir = storeDirById(document.getElementById('catProdLocStore').value);
@@ -14461,8 +14515,7 @@ function onCatProdStoreChange() {
       document.getElementById('catProdLoc').value = '';
     }
   }
-  renderCatProdLocChips();
-  markEmptyFields('catProductSheet');
+  onCatProdLocInput();
 }
 function renderItemLocChips() {
   const cur = document.getElementById('itemLocInput').value.trim();
@@ -14497,9 +14550,8 @@ function toggleCatProdSku(checked) {
 function onCatProdSkuInput() {
   const val = document.getElementById('catProdSku').value;
   document.getElementById('catProdSkuOn').checked = !!val.trim();
-  const dup = skuExists(val, catEditProductId);
-  document.getElementById('catProdSkuWarn').classList.toggle('show', dup);
-  document.getElementById('catProdSaveBtn').disabled = dup;
+  document.getElementById('catProdSkuWarn').classList.toggle('show', skuExists(val, catEditProductId));
+  updateCatProdSaveState();
   markEmptyFields('catProductSheet');
 }
 function currentItemSkuExcludeId() {
@@ -14570,6 +14622,7 @@ function saveCatProduct() {
   const pack = parseFloat(document.getElementById('catProdPack').value) || 1;
   const note = document.getElementById('catProdNote').value.trim();
   if (skuExists(sku, catEditProductId)) { onCatProdSkuInput(); return; }
+  if (catProdLocConflict(loc, storeDirId)) { onCatProdLocInput(); return; }
   const locRec = findOrCreateLocation(loc);
   if (locRec) locRec.storeId = storeDirId;
   const photoId = catProdPhotoId;
