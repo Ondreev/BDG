@@ -52,7 +52,8 @@ input,select{font-family:inherit}
 /* ---------- top bar ---------- */
 .topbar-sticky{
   position:sticky;top:0;z-index:50;
-  background:rgba(245,247,251,.85);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+  background:rgba(222,226,252,.92);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+  border-radius:var(--radius);box-shadow:0 10px 24px rgba(79,70,229,.14);margin-bottom:8px;
 }
 .topbar{
   display:flex;align-items:center;justify-content:space-between;gap:8px;
@@ -320,6 +321,21 @@ input,select{font-family:inherit}
   grid-template-rows:auto auto auto auto 1fr auto auto;
 }
 .cat-title{grid-area:title;align-self:center}
+/* "Каталог" как отдельная постоянная вкладка (а не всплывающее окно) — тот же самый
+   #catalogSheet, но без подложки/анимации и вписан в обычный поток страницы: шапка и
+   нижняя навигация остаются на месте, а прокручивается вся страница целиком, как и
+   остальные вкладки. .open здесь намеренно не используем — по нему в других местах
+   приложения проверяется "открыто ли какое-то всплывающее окно", а вкладка — не оно */
+.sheet-wrap.as-view{position:static;inset:auto;z-index:auto;visibility:visible;display:none}
+.sheet-wrap.as-view.on{display:block}
+.sheet-wrap.as-view .backdrop{display:none}
+#catalogSheet.as-view .sheet{
+  position:static;width:auto;max-width:none;height:auto;max-height:none;
+  padding:0;border-radius:0;overflow:visible;
+  grid-template-rows:auto auto auto auto auto auto auto;
+}
+#catalogSheet.as-view .cat-list{overflow-y:visible;max-height:none}
+#catalogSheet.as-view .cat-close{display:none}
 .cat-close{grid-area:close;align-self:center}
 .cat-searchrow{grid-area:search;align-self:start}
 .cat-chipsrow{grid-area:chips;align-self:start}
@@ -966,15 +982,19 @@ input[type=file]{display:none}
 /* ---------- bottom navigation ---------- */
 .bottom-nav{
   position:fixed;left:0;right:0;bottom:0;
-  z-index:70;display:flex;gap:1px;background:rgba(255,255,255,.94);
+  z-index:70;display:flex;gap:1px;background:rgba(222,226,252,.92);
   backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
   border-radius:20px 20px 0 0;padding:6px 6px calc(6px + env(safe-area-inset-bottom));
-  box-shadow:0 -4px 20px rgba(30,41,59,.12);
+  box-shadow:0 -6px 22px rgba(79,70,229,.16);
+  overflow-x:auto;scrollbar-width:none;-ms-overflow-style:none;
 }
+.bottom-nav::-webkit-scrollbar{display:none}
+@media(hover:hover){.bottom-nav{cursor:grab}}
+.bottom-nav.panning{cursor:grabbing;user-select:none}
 .nav-btn{
   border:none;background:none;cursor:pointer;border-radius:14px;position:relative;
   display:flex;flex-direction:column;align-items:center;gap:2px;
-  padding:8px 8px;color:var(--muted);transition:all .18s;min-width:0;flex:1;
+  padding:8px 10px;color:var(--muted);transition:background .18s,color .18s;min-width:54px;flex:none;
 }
 .nav-badge{
   display:none;position:absolute;top:2px;right:10px;min-width:16px;height:16px;padding:0 4px;
@@ -986,7 +1006,7 @@ input[type=file]{display:none}
    срочных дел переезжают бейджами на вкладки План/Долги, а сама карточка
    остаётся видна только на десктопе, где места достаточно */
 @media(max-width:919.98px){#payCard{display:none !important}}
-.nav-btn.on{background:var(--accent-soft);color:var(--accent)}
+.nav-btn.on{background:var(--accent);color:#fff;box-shadow:0 3px 10px rgba(79,70,229,.35)}
 .nav-btn span{font-size:9.5px;font-weight:800;letter-spacing:.01em;white-space:nowrap}
 @media(min-width:420px){
   .nav-btn{padding:8px 13px;flex:none;min-width:60px}
@@ -994,6 +1014,9 @@ input[type=file]{display:none}
 }
 .view{display:none}
 .view.on{display:block}
+/* вкладка "Закупки" — тот же #view-shop, что и "Главная", но без сводки бюджета/структуры
+   расходов/баннера: только листы и сам список закупок (см. switchView/onNavShopClick) */
+#view-shop.compact .side{display:none}
 
 /* ---------- debts ---------- */
 .seg-wide{width:100%;margin:14px 0 0}
@@ -1307,6 +1330,9 @@ input[type=file]{display:none}
   }
   .layout{display:grid;grid-template-columns:410px minmax(0,1fr);gap:26px;align-items:start}
   .side{position:sticky;top:96px}
+  /* вкладка "Закупки" — только листы и сам список, без сводки: на десктопе убираем
+     колонку под боковую панель, чтобы список занимал всю ширину */
+  #view-shop.compact .layout{grid-template-columns:1fr}
   .main #stores .store-card:first-child{margin-top:6px}
   .store-title .name{font-size:18px}
   .store-sub{font-size:15.5px}
@@ -1361,6 +1387,10 @@ input[type=file]{display:none}
     border-right:1px solid var(--line);
   }
   .cat-chipsrow .chip{width:100%;justify-content:flex-start;border-radius:12px}
+  /* вкладка "Каталог" на десктопе — та же боковая панель категорий, только без
+     фиксированной высоты и внутренней прокрутки: страница скроллится целиком */
+  #catalogSheet.as-view .sheet{grid-template-rows:auto auto auto auto auto}
+  #catalogSheet.as-view .cat-chipsrow{overflow-y:visible;max-height:none}
 }
 </style>
 </head>
@@ -1385,7 +1415,7 @@ input[type=file]{display:none}
       <button class="curr-top-btn" id="currTopBtn" onclick="openCurrencySheet()" aria-label="Курсы валют" data-i18n-aria="curr_sheet_rates_title">
         <span class="ctc">$</span><span id="currTopRate">…</span>
       </button>
-      <button class="icon-btn" id="catalogBtn" onclick="openCatalogSheet()" aria-label="Каталог товаров" data-i18n-aria="cat_sheet_title">
+      <button class="icon-btn" id="catalogBtn" onclick="onCatalogBtnClick()" aria-label="Каталог товаров" data-i18n-aria="cat_sheet_title">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#475569" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.2 13.6 13.6 20.2a1.9 1.9 0 0 1-2.7 0L4 13.3V4h9.3l6.9 6.9a1.9 1.9 0 0 1 0 2.7z"/><circle cx="8.7" cy="8.7" r="1.3"/></svg>
       </button>
       <button class="icon-btn" id="menuBtn" onclick="openSheet('menuSheet')" aria-label="Меню" data-i18n-aria="menu_title">
@@ -1581,14 +1611,68 @@ input[type=file]{display:none}
     </section>
     <section class="store-card"><div id="planRows"></div></section>
   </div>
+
+  <div class="sheet-wrap" id="catalogSheet"><div class="backdrop" onclick="closeSheet('catalogSheet')"></div>
+    <div class="sheet">
+      <h2 class="cat-title" style="margin:0" data-i18n="cat_sheet_title">Каталог товаров</h2>
+      <button class="icon-btn cat-close" id="catalogCloseBtn" onclick="closeSheet('catalogSheet')" aria-label="Закрыть" data-i18n-aria="btn_close" style="width:42px;height:42px;border-radius:12px"><span class="ic" data-icon="close"></span></button>
+      <div class="cat-searchrow" style="display:flex;gap:8px;align-items:center;margin-bottom:12px">
+        <div class="search-wrap" style="flex:1;margin-bottom:0">
+          <span class="sic"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="6.5"/><path d="M20.2 20.2l-4.6-4.6"/></svg></span>
+          <input id="catSearch" type="text" placeholder="Название, цена или категория" data-i18n-ph="cat_search_ph" autocomplete="off" oninput="renderCatalog()" onkeydown="if(event.key==='Enter')catSearchEnter()">
+        </div>
+        <button class="icon-btn" id="catSelectModeBtn" onclick="toggleCatSelectMode()" aria-label="Выбрать несколько" data-i18n-aria="cat_select_mode_aria">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#475569" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4.5" width="6" height="6" rx="1.3"/><path d="M5.3 7.5 6.5 8.7 8.7 6.3"/><rect x="4" y="13.5" width="6" height="6" rx="1.3"/><path d="M13.5 7.5h6M13.5 16.5h6"/></svg>
+        </button>
+        <button class="icon-btn" onclick="openScanSheet()" aria-label="Сканировать QR-код" data-i18n-aria="aria_scan">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#475569" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8V5.5A1.5 1.5 0 0 1 5.5 4H8M16 4h2.5A1.5 1.5 0 0 1 20 5.5V8M20 16v2.5a1.5 1.5 0 0 1-1.5 1.5H16M8 20H5.5A1.5 1.5 0 0 1 4 18.5V16"/><rect x="9" y="9" width="6" height="6" rx="1"/></svg>
+        </button>
+      </div>
+      <div class="cat-chipsrow chips" id="catChips"></div>
+      <div class="cat-locrow" style="display:flex;align-items:center;gap:6px">
+        <div class="chips" id="catLocChips" style="flex:1"></div>
+        <button class="icon-btn" id="locManageBtn" onclick="openLocManageSheet()" style="width:36px;height:36px;border-radius:11px;flex:none;display:none" aria-label="Места и магазины" data-i18n-aria="loc_manage_aria">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#475569" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9.5 5.5 4h13L20 9.5M5 10v10h14V10M9.5 20v-5.5h5V20"/></svg>
+        </button>
+      </div>
+      <div class="cat-list" id="catList"></div>
+      <div class="cat-bulkbar" id="catBulkBar" style="display:none;margin-bottom:12px">
+        <p style="color:var(--muted);font-size:13px;margin:0 0 8px" id="catBulkCount"></p>
+        <div class="field-row">
+          <div class="field" style="margin-bottom:0">
+            <select id="catBulkCategorySelect"></select>
+          </div>
+          <button class="btn btn-primary" style="width:auto;padding:0 18px" onclick="applyCatBulkCategory()" data-i18n="btn_apply">Применить</button>
+        </div>
+      </div>
+      <div class="cat-actions">
+        <button class="btn btn-primary" id="catAddProductBtn" onclick="openCatProductSheet()">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.8" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+          <span data-i18n="cat_add_product_btn">Новый товар</span>
+        </button>
+        <button class="btn btn-accent2" id="shareCatalogBtn" onclick="openShareCatalogSheet()">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="12" r="2.5"/><circle cx="17" cy="6" r="2.5"/><circle cx="17" cy="18" r="2.5"/><path d="M8.4 10.9l6.2-3.7M8.4 13.1l6.2 3.7"/></svg>
+          <span data-i18n="share_catalog_btn">Поделиться</span>
+        </button>
+      </div>
+    </div>
+  </div>
 </div>
 
 <div id="bottomNavAnchor"></div>
 <nav class="bottom-nav" id="bottomNav">
-  <button class="nav-btn on" id="nav-shop" onclick="onNavShopClick()">
+  <button class="nav-btn on" id="nav-home" onclick="onNavShopClick('home')">
     <span class="nav-badge" id="navOrdersBadge"></span>
+    <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11.5 12 4l8 7.5M6 9.7V20h12V9.7"/></svg>
+    <span data-i18n="nav_home">Главная</span>
+  </button>
+  <button class="nav-btn" id="nav-zakup" onclick="onNavShopClick('zakup')">
     <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="20" r="1.4"/><circle cx="17" cy="20" r="1.4"/><path d="M3 4h2l2.3 11h10.4l2-8H6.2"/></svg>
     <span data-i18n="nav_shop">Закупки</span>
+  </button>
+  <button class="nav-btn" id="nav-cat" onclick="switchView('cat')">
+    <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.2 13.6 13.6 20.2a1.9 1.9 0 0 1-2.7 0L4 13.3V4h9.3l6.9 6.9a1.9 1.9 0 0 1 0 2.7z"/><circle cx="8.7" cy="8.7" r="1.3"/></svg>
+    <span data-i18n="nav_cat">Каталог</span>
   </button>
   <button class="nav-btn" id="nav-plan" onclick="switchView('plan')">
     <span class="nav-badge" id="navPlanBadge"></span>
@@ -1874,52 +1958,6 @@ input[type=file]{display:none}
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M7 8.5V4h10v4.5M7 17.5H5.5A1.5 1.5 0 0 1 4 16v-5a1.5 1.5 0 0 1 1.5-1.5h13A1.5 1.5 0 0 1 20 11v5a1.5 1.5 0 0 1-1.5 1.5H17M7 14.5h10v6H7z"/></svg>
       <span data-i18n="btn_print">Печать</span>
     </button>
-  </div>
-</div>
-
-<div class="sheet-wrap" id="catalogSheet"><div class="backdrop" onclick="closeSheet('catalogSheet')"></div>
-  <div class="sheet">
-    <h2 class="cat-title" style="margin:0" data-i18n="cat_sheet_title">Каталог товаров</h2>
-    <button class="icon-btn cat-close" id="catalogCloseBtn" onclick="closeSheet('catalogSheet')" aria-label="Закрыть" data-i18n-aria="btn_close" style="width:42px;height:42px;border-radius:12px"><span class="ic" data-icon="close"></span></button>
-    <div class="cat-searchrow" style="display:flex;gap:8px;align-items:center;margin-bottom:12px">
-      <div class="search-wrap" style="flex:1;margin-bottom:0">
-        <span class="sic"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="6.5"/><path d="M20.2 20.2l-4.6-4.6"/></svg></span>
-        <input id="catSearch" type="text" placeholder="Название, цена или категория" data-i18n-ph="cat_search_ph" autocomplete="off" oninput="renderCatalog()" onkeydown="if(event.key==='Enter')catSearchEnter()">
-      </div>
-      <button class="icon-btn" id="catSelectModeBtn" onclick="toggleCatSelectMode()" aria-label="Выбрать несколько" data-i18n-aria="cat_select_mode_aria">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#475569" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4.5" width="6" height="6" rx="1.3"/><path d="M5.3 7.5 6.5 8.7 8.7 6.3"/><rect x="4" y="13.5" width="6" height="6" rx="1.3"/><path d="M13.5 7.5h6M13.5 16.5h6"/></svg>
-      </button>
-      <button class="icon-btn" onclick="openScanSheet()" aria-label="Сканировать QR-код" data-i18n-aria="aria_scan">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#475569" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8V5.5A1.5 1.5 0 0 1 5.5 4H8M16 4h2.5A1.5 1.5 0 0 1 20 5.5V8M20 16v2.5a1.5 1.5 0 0 1-1.5 1.5H16M8 20H5.5A1.5 1.5 0 0 1 4 18.5V16"/><rect x="9" y="9" width="6" height="6" rx="1"/></svg>
-      </button>
-    </div>
-    <div class="cat-chipsrow chips" id="catChips"></div>
-    <div class="cat-locrow" style="display:flex;align-items:center;gap:6px">
-      <div class="chips" id="catLocChips" style="flex:1"></div>
-      <button class="icon-btn" id="locManageBtn" onclick="openLocManageSheet()" style="width:36px;height:36px;border-radius:11px;flex:none;display:none" aria-label="Места и магазины" data-i18n-aria="loc_manage_aria">
-        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#475569" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9.5 5.5 4h13L20 9.5M5 10v10h14V10M9.5 20v-5.5h5V20"/></svg>
-      </button>
-    </div>
-    <div class="cat-list" id="catList"></div>
-    <div class="cat-bulkbar" id="catBulkBar" style="display:none;margin-bottom:12px">
-      <p style="color:var(--muted);font-size:13px;margin:0 0 8px" id="catBulkCount"></p>
-      <div class="field-row">
-        <div class="field" style="margin-bottom:0">
-          <select id="catBulkCategorySelect"></select>
-        </div>
-        <button class="btn btn-primary" style="width:auto;padding:0 18px" onclick="applyCatBulkCategory()" data-i18n="btn_apply">Применить</button>
-      </div>
-    </div>
-    <div class="cat-actions">
-      <button class="btn btn-primary" id="catAddProductBtn" onclick="openCatProductSheet()">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.8" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
-        <span data-i18n="cat_add_product_btn">Новый товар</span>
-      </button>
-      <button class="btn btn-accent2" id="shareCatalogBtn" onclick="openShareCatalogSheet()">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="12" r="2.5"/><circle cx="17" cy="6" r="2.5"/><circle cx="17" cy="18" r="2.5"/><path d="M8.4 10.9l6.2-3.7M8.4 13.1l6.2 3.7"/></svg>
-        <span data-i18n="share_catalog_btn">Поделиться</span>
-      </button>
-    </div>
   </div>
 </div>
 
@@ -2893,7 +2931,7 @@ const I18N = {
     lbl_debt_amount: 'Сумма, {cur}',
     lbl_emp_rate: 'Ставка, {cur}/час',
 
-    nav_shop: 'Закупки', nav_plan: 'План', nav_debts: 'Долги', nav_sched: 'График', nav_inv: 'Инвентура',
+    nav_home: 'Главная', nav_shop: 'Закупки', nav_cat: 'Каталог', nav_plan: 'План', nav_debts: 'Долги', nav_sched: 'График', nav_inv: 'Инвентура',
 
     ai_asks: [
       'Ты всё или ещё потужишься? Может, сохраню, чтобы ничего не пропало?',
@@ -3515,7 +3553,7 @@ const I18N = {
     lbl_debt_amount: 'Amount, {cur}',
     lbl_emp_rate: 'Rate, {cur}/hour',
 
-    nav_shop: 'Shopping', nav_plan: 'Plan', nav_debts: 'Debts', nav_sched: 'Schedule', nav_inv: 'Inventory',
+    nav_home: 'Home', nav_shop: 'Shopping', nav_cat: 'Catalog', nav_plan: 'Plan', nav_debts: 'Debts', nav_sched: 'Schedule', nav_inv: 'Inventory',
 
     ai_asks: [
       'All done, or still tinkering? Want me to save it so nothing gets lost?',
@@ -4137,7 +4175,7 @@ const I18N = {
     lbl_debt_amount: 'Betrag, {cur}',
     lbl_emp_rate: 'Lohn, {cur}/Std.',
 
-    nav_shop: 'Einkauf', nav_plan: 'Plan', nav_debts: 'Schulden', nav_sched: 'Dienstplan', nav_inv: 'Inventar',
+    nav_home: 'Start', nav_shop: 'Einkauf', nav_cat: 'Katalog', nav_plan: 'Plan', nav_debts: 'Schulden', nav_sched: 'Dienstplan', nav_inv: 'Inventar',
 
     ai_asks: [
       'Alles fertig oder bastelst du noch? Soll ich speichern, damit nichts verloren geht?',
@@ -4757,7 +4795,7 @@ const I18N = {
     lbl_debt_amount: 'Importe, {cur}',
     lbl_emp_rate: 'Tarifa, {cur}/hora',
 
-    nav_shop: 'Compras', nav_plan: 'Plan', nav_debts: 'Deudas', nav_sched: 'Horario', nav_inv: 'Inventario',
+    nav_home: 'Inicio', nav_shop: 'Compras', nav_cat: 'Catálogo', nav_plan: 'Plan', nav_debts: 'Deudas', nav_sched: 'Horario', nav_inv: 'Inventario',
 
     ai_asks: [
       '¿Ya terminaste o sigues trasteando? ¿Quieres que guarde para que no se pierda nada?',
@@ -5377,7 +5415,7 @@ const I18N = {
     lbl_debt_amount: 'Montant, {cur}',
     lbl_emp_rate: 'Taux, {cur}/heure',
 
-    nav_shop: 'Achats', nav_plan: 'Plan', nav_debts: 'Dettes', nav_sched: 'Planning', nav_inv: 'Inventaire',
+    nav_home: 'Accueil', nav_shop: 'Achats', nav_cat: 'Catalogue', nav_plan: 'Plan', nav_debts: 'Dettes', nav_sched: 'Planning', nav_inv: 'Inventaire',
 
     ai_asks: [
       'Tu as fini ou tu bricoles encore ? Je sauvegarde pour que rien ne se perde ?',
@@ -5997,7 +6035,7 @@ const I18N = {
     lbl_debt_amount: '金额，{cur}',
     lbl_emp_rate: '时薪，{cur}/小时',
 
-    nav_shop: '采购', nav_plan: '计划', nav_debts: '欠款', nav_sched: '排班', nav_inv: '库存',
+    nav_home: '首页', nav_shop: '采购', nav_cat: '目录', nav_plan: '计划', nav_debts: '欠款', nav_sched: '排班', nav_inv: '库存',
 
     ai_asks: [
       '都弄完了还是还在忙？要我保存一下吗，免得丢失？',
@@ -6617,7 +6655,7 @@ const I18N = {
     lbl_debt_amount: 'Số tiền, {cur}',
     lbl_emp_rate: 'Lương, {cur}/giờ',
 
-    nav_shop: 'Mua sắm', nav_plan: 'Kế hoạch', nav_debts: 'Nợ', nav_sched: 'Lịch làm', nav_inv: 'Kho',
+    nav_home: 'Trang chủ', nav_shop: 'Mua sắm', nav_cat: 'Danh mục', nav_plan: 'Kế hoạch', nav_debts: 'Nợ', nav_sched: 'Lịch làm', nav_inv: 'Kho',
 
     ai_asks: [
       'Xong chưa hay vẫn đang chỉnh sửa? Để tôi lưu lại nhé, kẻo mất dữ liệu?',
@@ -7237,7 +7275,7 @@ const I18N = {
     lbl_debt_amount: 'Summa, {cur}',
     lbl_emp_rate: 'Stavka, {cur}/soat',
 
-    nav_shop: 'Xaridlar', nav_plan: 'Reja', nav_debts: 'Qarzlar', nav_sched: 'Jadval', nav_inv: 'Inventar',
+    nav_home: 'Bosh sahifa', nav_shop: 'Xaridlar', nav_cat: 'Katalog', nav_plan: 'Reja', nav_debts: 'Qarzlar', nav_sched: 'Jadval', nav_inv: 'Inventar',
 
     ai_asks: [
       'Hammasi tayyor bo‘ldimi yoki hali band bo‘lyapsizmi? Saqlab qo‘yaymi, hech narsa yo‘qolmasin?',
@@ -7857,7 +7895,7 @@ const I18N = {
     lbl_debt_amount: 'Сумма, {cur}',
     lbl_emp_rate: 'Тарифи, {cur}/саат',
 
-    nav_shop: 'Сатып алуу', nav_plan: 'План', nav_debts: 'Карыздар', nav_sched: 'Графика', nav_inv: 'Инвентарь',
+    nav_home: 'Башкы бет', nav_shop: 'Сатып алуу', nav_cat: 'Каталог', nav_plan: 'План', nav_debts: 'Карыздар', nav_sched: 'Графика', nav_inv: 'Инвентарь',
 
     ai_asks: [
       'Баары даярбы же дагы иштеп жатасызбы? Сактап коёюнбу, эч нерсе жоголбосун?',
@@ -8477,7 +8515,7 @@ const I18N = {
     lbl_debt_amount: 'Маблағ, {cur}',
     lbl_emp_rate: 'Меъёр, {cur}/соат',
 
-    nav_shop: 'Харид', nav_plan: 'Нақша', nav_debts: 'Қарзҳо', nav_sched: 'Ҷадвал', nav_inv: 'Инвентар',
+    nav_home: 'Асосӣ', nav_shop: 'Харид', nav_cat: 'Каталог', nav_plan: 'Нақша', nav_debts: 'Қарзҳо', nav_sched: 'Ҷадвал', nav_inv: 'Инвентар',
 
     ai_asks: [
       'Ҳама чиз тайёр аст ё ҳанӯз машғулед? Захира кунам, ки чизе гум нашавад?',
@@ -9097,7 +9135,7 @@ const I18N = {
     lbl_debt_amount: 'თანხა, {cur}',
     lbl_emp_rate: 'განაკვეთი, {cur}/საათი',
 
-    nav_shop: 'შესყიდვები', nav_plan: 'გეგმა', nav_debts: 'ვალები', nav_sched: 'გრაფიკი', nav_inv: 'ინვენტარი',
+    nav_home: 'მთავარი', nav_shop: 'შესყიდვები', nav_cat: 'კატალოგი', nav_plan: 'გეგმა', nav_debts: 'ვალები', nav_sched: 'გრაფიკი', nav_inv: 'ინვენტარი',
 
     ai_asks: [
       'ყველაფერი მზადაა თუ ჯერ კიდევ მუშაობთ? შევინახო, რომ არაფერი დაიკარგოს?',
@@ -9717,7 +9755,7 @@ const I18N = {
     lbl_debt_amount: 'Գումար, {cur}',
     lbl_emp_rate: 'Դրույքաչափ, {cur}/ժամ',
 
-    nav_shop: 'Գնումներ', nav_plan: 'Պլան', nav_debts: 'Պարտքեր', nav_sched: 'Գրաֆիկ', nav_inv: 'Գույքագրում',
+    nav_home: 'Գլխավոր', nav_shop: 'Գնումներ', nav_cat: 'Կատալոգ', nav_plan: 'Պլան', nav_debts: 'Պարտքեր', nav_sched: 'Գրաֆիկ', nav_inv: 'Գույքագրում',
 
     ai_asks: [
       'Ամեն ինչ պատրա՞ստ է, թե՞ դեռ զբաղված եք։ Պահպանե՞մ, որ ոչինչ չկորչի։',
@@ -10337,7 +10375,7 @@ const I18N = {
     lbl_debt_amount: 'Аԥсахра, {cur}',
     lbl_emp_rate: 'Астаука, {cur}/асааҭ',
 
-    nav_shop: 'Аиура', nav_plan: 'Аплан', nav_debts: 'Аӡрақәа', nav_sched: 'Аграфик', nav_inv: 'Аинвентар',
+    nav_home: 'Иреиҳау', nav_shop: 'Аиура', nav_cat: 'Акаталог', nav_plan: 'Аплан', nav_debts: 'Аӡрақәа', nav_sched: 'Аграфик', nav_inv: 'Аинвентар',
 
     ai_asks: [
       'Аус зегь ҟалеит, ца шәыҟаз? Сдырхарц сҭахуп, дара ргара ада амц',
@@ -11568,13 +11606,25 @@ function openItemEditor(sid, itemId) {
 }
 
 /* ================= views / navigation ================= */
-let currentView = 'shop';
-function switchView(v) {
+// "Главная" и "Закупки" — один и тот же #view-shop: на "Закупки" просто прячем сводку
+// (бюджет/структура расходов/баннер) классом .compact, оставляя только листы и сам список —
+// это не отдельный экран, а тот же движок, поэтому ничего в логике списков не меняется
+let currentView = 'shop', shopFlavor = 'home';
+function switchView(v, flavor) {
   currentView = v;
+  if (v === 'shop') shopFlavor = flavor === 'zakup' ? 'zakup' : 'home';
   ['shop', 'plan', 'debts', 'sched', 'inv'].forEach(x => {
     document.getElementById('view-' + x).classList.toggle('on', x === v);
-    document.getElementById('nav-' + x).classList.toggle('on', x === v);
   });
+  document.getElementById('view-shop').classList.toggle('compact', v === 'shop' && shopFlavor === 'zakup');
+  document.getElementById('nav-home').classList.toggle('on', v === 'shop' && shopFlavor === 'home');
+  document.getElementById('nav-zakup').classList.toggle('on', v === 'shop' && shopFlavor === 'zakup');
+  document.getElementById('nav-cat').classList.toggle('on', v === 'cat');
+  ['plan', 'debts', 'sched', 'inv'].forEach(x => document.getElementById('nav-' + x).classList.toggle('on', x === v));
+  // каталог — та же шторка, что открывается отовсюду попапом, но здесь она встроена в
+  // страницу постоянной вкладкой (см. openCatalogSheet, closeSheet)
+  if (v === 'cat') openCatalogSheet(null, null, true);
+  else document.getElementById('catalogSheet').classList.remove('on');
   document.getElementById('printTopBtn').classList.toggle('view-shop', v === 'shop');
   document.getElementById('mobileBudgetBar').classList.toggle('on', v === 'shop');
   if (v === 'shop') renderPayments();
@@ -11584,10 +11634,10 @@ function switchView(v) {
   if (v === 'inv') renderInv();
   window.scrollTo({ top: 0 });
 }
-// таб «Закупки» — если есть непринятые заказы, сразу показываем их: значок-бейдж
+// таб «Главная»/«Закупки» — если есть непринятые заказы, сразу показываем их: значок-бейдж
 // слишком мелкая цель для тычка пальцем, весь таб надёжнее и то же самое ожидание у юзера
-function onNavShopClick() {
-  switchView('shop');
+function onNavShopClick(flavor) {
+  switchView('shop', flavor);
   if (pendingOrders.length) openIncomingOrdersSheet();
 }
 function onFab() {
@@ -11603,6 +11653,9 @@ function openSheet(id) {
   document.getElementById(id).classList.add('open');
 }
 function closeSheet(id) {
+  // каталог как постоянная вкладка "Каталог" — не всплывающее окно, закрывать тут нечего;
+  // сама вкладка прячется через switchView, когда переключаемся на другую вкладку
+  if (id === 'catalogSheet' && currentView === 'cat') return;
   document.getElementById(id).classList.remove('open');
 }
 function toggleAboutMore(id, btn) {
@@ -13893,7 +13946,11 @@ function upsertCatalogProduct(name, price, categoryId, loc, sku, pack, note) {
 }
 
 let catTarget = 'list'; // 'list' — в список закупок, 'inv' — в инвентуру
-function openCatalogSheet(target, sid) {
+// asView: true — открыть как постоянную вкладку "Каталог" (без подложки и крестика
+// закрытия, встроено в страницу); иначе — как всплывающее окно поверх текущего экрана,
+// как это было раньше и остаётся для всех остальных мест приложения
+function openCatalogSheet(target, sid, asView) {
+  document.getElementById('catalogSheet').classList.toggle('as-view', !!asView);
   catTarget = target === 'inv' ? 'inv' : 'list';
   // если открыли "+ Товар" из карточки конкретного магазина — при выборе товара
   // сразу подставим этот магазин, а не первый по списку
@@ -13903,7 +13960,17 @@ function openCatalogSheet(target, sid) {
   document.getElementById('catSearch').value = '';
   if (catSelectMode) toggleCatSelectMode();
   renderCatalog();
-  openSheet('catalogSheet');
+  // как вкладка — просто показываем встроенный блок (.on, см. .sheet-wrap.as-view CSS);
+  // .open здесь не трогаем — по нему в других местах приложения проверяется, открыто ли
+  // какое-то ВСПЛЫВАЮЩЕЕ окно, а постоянная вкладка им не является
+  if (asView) document.getElementById('catalogSheet').classList.add('on');
+  else openSheet('catalogSheet');
+}
+// маленькая иконка каталога в шапке — быстрый доступ-попап отовсюду; если уже стоим на
+// вкладке "Каталог", открывать поверх неё нечего
+function onCatalogBtnClick() {
+  if (currentView === 'cat') return;
+  openCatalogSheet();
 }
 function catAddClick(pid) {
   if (catTarget === 'inv') invAddProduct(pid);
@@ -16360,11 +16427,13 @@ function rebuildInvOrderFromDOM() {
 }
 
 /* click-and-drag with the mouse to pan horizontally scrolling chip strips on desktop
-   (touch already scrolls them natively, so this only kicks in for mouse pointers) */
+   (touch already scrolls them natively, so this only kicks in for mouse pointers) —
+   нижняя навигация тоже сюда попадает: вкладок стало больше, на узком десктопном окне
+   она может не помещаться и должна так же панориться мышью */
 let chipDrag = null, chipDragMoved = false;
 document.addEventListener('pointerdown', e => {
   if (e.pointerType !== 'mouse') return;
-  const strip = e.target.closest('.chips');
+  const strip = e.target.closest('.chips, .bottom-nav');
   if (!strip) return;
   // на десктопе категории каталога — вертикальная боковая панель, а не
   // горизонтальная лента чипов; горизонтальный пан-по-клику тут не нужен и только
@@ -16386,7 +16455,7 @@ document.addEventListener('pointerup', () => {
   chipDrag = null;
 });
 document.addEventListener('click', e => {
-  if (chipDragMoved && e.target.closest('.chips')) { e.preventDefault(); e.stopPropagation(); }
+  if (chipDragMoved && e.target.closest('.chips, .bottom-nav')) { e.preventDefault(); e.stopPropagation(); }
   chipDragMoved = false;
 }, true);
 
