@@ -3,9 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<meta name="theme-color" content="#F5F7FB">
+<meta name="theme-color" content="#6366F1">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="BDG">
 <title>BDG — Планировщик закупок</title>
 <link rel="manifest" href="manifest.webmanifest">
@@ -52,8 +52,10 @@ input,select{font-family:inherit}
 /* ---------- top bar ---------- */
 .topbar-sticky{
   position:sticky;top:0;z-index:50;
-  background:rgba(222,226,252,.92);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
-  border-radius:var(--radius);box-shadow:0 10px 24px rgba(79,70,229,.14);margin-bottom:8px;
+  margin:0 -16px 10px;padding:0 16px;
+  background:linear-gradient(135deg,var(--accent),var(--accent2));
+  border-radius:0 0 var(--radius) var(--radius);
+  box-shadow:0 4px 12px rgba(79,70,229,.22);
 }
 .topbar{
   display:flex;align-items:center;justify-content:space-between;gap:8px;
@@ -64,10 +66,10 @@ input,select{font-family:inherit}
   display:none;align-items:center;gap:8px;padding:0 4px 8px;
 }
 .mobile-budget-bar.on{display:flex}
-.mbb-val{flex:none;font-size:16px;font-weight:800;color:var(--text);white-space:nowrap;font-variant-numeric:tabular-nums}
+.mbb-val{flex:none;font-size:16px;font-weight:800;color:#fff;white-space:nowrap;font-variant-numeric:tabular-nums}
 .mbb-val.neg{color:var(--red)}
-.mbb-cap{flex:none;font-size:10.5px;font-weight:700;color:var(--muted);letter-spacing:.04em;text-transform:uppercase}
-.mbb-scale{flex:1;height:18px;border-radius:99px;background:var(--line);overflow:hidden}
+.mbb-cap{flex:none;font-size:10.5px;font-weight:700;color:rgba(255,255,255,.8);letter-spacing:.04em;text-transform:uppercase}
+.mbb-scale{flex:1;height:18px;border-radius:99px;background:rgba(255,255,255,.28);overflow:hidden}
 .mbb-fill{
   display:block;position:relative;height:100%;width:0%;border-radius:99px;overflow:hidden;
   background:linear-gradient(90deg,#38BDF8,#0EA5E9);
@@ -85,7 +87,7 @@ input,select{font-family:inherit}
   .mobile-budget-bar{display:none !important}
 }
 .brand{display:flex;align-items:center;gap:10px;min-width:0}
-.brand-name{font-size:20px;font-weight:900;letter-spacing:-.01em;color:var(--text)}
+.brand-name{font-size:20px;font-weight:900;letter-spacing:-.01em;color:#fff}
 .brand-badge{
   width:38px;height:38px;border-radius:12px;flex:none;border:none;padding:0;position:relative;cursor:default;
   background:linear-gradient(135deg,var(--accent),var(--accent2));
@@ -982,10 +984,9 @@ input[type=file]{display:none}
 /* ---------- bottom navigation ---------- */
 .bottom-nav{
   position:fixed;left:0;right:0;bottom:0;
-  z-index:70;display:flex;gap:1px;background:rgba(222,226,252,.92);
-  backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+  z-index:70;display:flex;gap:1px;background:linear-gradient(135deg,var(--accent),var(--accent2));
   border-radius:20px 20px 0 0;padding:6px 6px calc(6px + env(safe-area-inset-bottom));
-  box-shadow:0 -6px 22px rgba(79,70,229,.16);
+  box-shadow:0 -3px 10px rgba(79,70,229,.2);
   overflow-x:auto;scrollbar-width:none;-ms-overflow-style:none;
 }
 .bottom-nav::-webkit-scrollbar{display:none}
@@ -994,19 +995,19 @@ input[type=file]{display:none}
 .nav-btn{
   border:none;background:none;cursor:pointer;border-radius:14px;position:relative;
   display:flex;flex-direction:column;align-items:center;gap:2px;
-  padding:8px 10px;color:var(--muted);transition:background .18s,color .18s;min-width:54px;flex:none;
+  padding:8px 10px;color:rgba(255,255,255,.72);transition:background .18s,color .18s;min-width:54px;flex:none;
 }
 .nav-badge{
   display:none;position:absolute;top:2px;right:10px;min-width:16px;height:16px;padding:0 4px;
   border-radius:99px;background:var(--red);color:#fff;font-size:9.5px;font-weight:900;
-  align-items:center;justify-content:center;box-shadow:0 0 0 2px #fff;
+  align-items:center;justify-content:center;box-shadow:0 0 0 2px var(--accent2);
 }
 .nav-badge.on{display:flex}
 /* карточка «Важное» перегружает мобильный экран закупок — там счётчики
    срочных дел переезжают бейджами на вкладки План/Долги, а сама карточка
    остаётся видна только на десктопе, где места достаточно */
 @media(max-width:919.98px){#payCard{display:none !important}}
-.nav-btn.on{background:var(--accent);color:#fff;box-shadow:0 3px 10px rgba(79,70,229,.35)}
+.nav-btn.on{background:#fff;color:var(--accent);box-shadow:0 3px 8px rgba(15,23,42,.18)}
 .nav-btn span{font-size:9.5px;font-weight:800;letter-spacing:.01em;white-space:nowrap}
 @media(min-width:420px){
   .nav-btn{padding:8px 13px;flex:none;min-width:60px}
@@ -1289,7 +1290,7 @@ input[type=file]{display:none}
 /* ---------- desktop ---------- */
 @media(hover:hover){
   .promo-banner:hover{transform:translateY(-2px)}
-  .nav-btn:hover{color:var(--accent)}
+  .nav-btn:not(.on):hover{color:#fff}
   .print-btn:hover{color:var(--accent)}
   .print-top-btn:hover{filter:brightness(1.06)}
   .print-primary-btn:hover{background:var(--line)}
@@ -1319,6 +1320,7 @@ input[type=file]{display:none}
 }
 @media(min-width:920px){
   .app{max-width:1140px;padding:0 32px 120px}
+  .topbar-sticky{margin:0 -32px 10px;padding:0 32px}
   .topbar{padding:18px 4px 16px}
   #topNavSlot{flex:1;display:flex;justify-content:center;min-width:0}
   .print-top-btn.view-shop{display:flex}
@@ -1332,7 +1334,10 @@ input[type=file]{display:none}
   .side{position:sticky;top:96px}
   /* вкладка "Закупки" — только листы и сам список, без сводки: на десктопе убираем
      колонку под боковую панель, чтобы список занимал всю ширину */
-  #view-shop.compact .layout{grid-template-columns:1fr}
+  /* minmax(0,...), а не просто 1fr — иначе колонка растягивается под ширину
+     содержимого горизонтальной ленты списков и мышиный пан по ней перестаёт
+     работать (скроллить уже нечего, вся страница вместо этого едет вбок) */
+  #view-shop.compact .layout{grid-template-columns:minmax(0,1fr)}
   .main #stores .store-card:first-child{margin-top:6px}
   .store-title .name{font-size:18px}
   .store-sub{font-size:15.5px}
