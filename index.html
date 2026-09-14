@@ -1023,6 +1023,18 @@ input[type=file]{display:none}
 /* вкладка "Закупки" — тот же #view-shop, что и "Главная", но без сводки бюджета/структуры
    расходов/баннера: только листы и сам список закупок (см. switchView/onNavShopClick) */
 #view-shop.compact .side{display:none}
+/* компактная сводка бюджета для "Закупки" — на "Главной" её заменяет полная карточка
+   в .side, поэтому по умолчанию скрыта; вне .layout, значит одинаково адаптивна
+   и на телефоне (в столбик через flex-wrap), и на широком экране */
+.zakup-summary{display:none;gap:8px;margin:0 0 14px;flex-wrap:wrap}
+#view-shop.compact .zakup-summary{display:flex}
+.zs-item{
+  flex:1;min-width:96px;background:var(--card);border-radius:14px;
+  padding:9px 12px;box-shadow:var(--shadow);text-align:center;
+}
+.zs-k{display:block;font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.03em;margin-bottom:3px}
+.zs-v{display:block;font-size:15px;font-weight:900;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.zs-v.neg{color:var(--red)}
 
 /* ---------- debts ---------- */
 .seg-wide{width:100%;margin:14px 0 0}
@@ -1453,6 +1465,14 @@ input[type=file]{display:none}
     <button id="segOutgoing" class="on" onclick="setShopMode('outgoing')" data-i18n="lists_outgoing_heading">Исходящие</button>
     <button id="segIncoming" onclick="setShopMode('incoming')" data-i18n="lists_incoming_heading">Входящие</button>
   </div>
+  <!-- компактная сводка только для вкладки "Закупки" (.compact) — на "Главной" её
+       заменяет полная карточка бюджета в .side; вне грид-раскладки, поэтому одна и
+       та же строка одинаково адаптивна и на мобиле, и на десктопе -->
+  <div class="zakup-summary" id="zakupSummary">
+    <div class="zs-item"><span class="zs-k" data-i18n="shop_budget_label">Бюджет</span><span class="zs-v" id="zakupBudgetVal">0 ₽</span></div>
+    <div class="zs-item"><span class="zs-k" data-i18n="shop_planned">План</span><span class="zs-v" id="zakupPlannedVal">0 ₽</span></div>
+    <div class="zs-item"><span class="zs-k" data-i18n="shop_remaining">Остаток</span><span class="zs-v" id="zakupRemainingVal">0 ₽</span></div>
+  </div>
   <div class="layout">
   <div class="side">
   <section class="budget-card">
@@ -1844,7 +1864,18 @@ input[type=file]{display:none}
       <select id="itemStoreSelect"></select>
     </div>
     <button class="btn btn-primary" id="itemSaveBtn" onclick="saveItemSheet()" data-i18n="btn_add">Добавить</button>
+    <button class="btn btn-ghost" id="itemMoveBtn" onclick="openMoveItemSheet(itemSheetStore, itemSheetEditId)" style="display:none">
+      <span class="ic" data-icon="move"></span><span data-i18n="item_move_btn">Переместить в другой список</span>
+    </button>
     <button class="btn btn-danger-ghost" id="itemDeleteBtn" onclick="deleteItemFromSheet()" style="display:none" data-i18n="item_delete_btn">Удалить товар</button>
+  </div>
+</div>
+
+<div class="sheet-wrap" id="moveItemSheet"><div class="backdrop" onclick="closeSheet('moveItemSheet')"></div>
+  <div class="sheet">
+    <div class="grab"></div>
+    <h2 data-i18n="move_item_title">Переместить в другой список</h2>
+    <div id="moveItemRows" style="max-height:52vh;overflow-y:auto"></div>
   </div>
 </div>
 
@@ -2179,6 +2210,9 @@ input[type=file]{display:none}
     <button class="btn btn-ghost" id="catProdPrintBtn" onclick="printLabel(catEditProductId)" style="display:none">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V3.5h12V9M6 17H4.5A1.5 1.5 0 0 1 3 15.5v-5A1.5 1.5 0 0 1 4.5 9h15A1.5 1.5 0 0 1 21 10.5v5a1.5 1.5 0 0 1-1.5 1.5H18M6 14h12v6.5H6z"/></svg>
       <span data-i18n="catprod_print_label_btn">Печать этикетки 40×30</span>
+    </button>
+    <button class="btn btn-ghost" id="catProdMoveBtn" onclick="openMoveItemSheet(catProdListCtx.sid, catProdListCtx.itemId)" style="display:none">
+      <span class="ic" data-icon="move"></span><span data-i18n="item_move_btn">Переместить в другой список</span>
     </button>
     <button class="btn btn-danger-ghost" id="catProdDeleteBtn" onclick="deleteCatProduct()" style="display:none" data-i18n="catprod_delete_btn">Удалить из каталога</button>
     <button class="btn btn-danger-ghost" id="catProdRemoveFromListBtn" onclick="removeItemFromListViaCatalog()" style="display:none" data-i18n="catprod_remove_from_list_btn">Убрать из списка</button>
@@ -3076,6 +3110,10 @@ const I18N = {
     catprod_from_pack_hint: 'От {n} шт',
     field_store: 'Магазин',
     item_delete_btn: 'Удалить товар',
+    item_move_btn: 'Переместить в другой список',
+    move_item_title: 'Переместить в другой список',
+    move_item_none: 'Больше нет других списков',
+    move_item_snack: '«{name}» перемещён в «{list}»',
     item_deleted_snack: '«{name}» удалён',
 
     lists_sheet_title: 'Мои списки',
@@ -3698,6 +3736,10 @@ const I18N = {
     catprod_from_pack_hint: 'From {n} pcs',
     field_store: 'Store',
     item_delete_btn: 'Delete item',
+    item_move_btn: 'Move to another list',
+    move_item_title: 'Move to another list',
+    move_item_none: 'No other lists yet',
+    move_item_snack: '"{name}" moved to "{list}"',
     item_deleted_snack: '«{name}» deleted',
 
     lists_sheet_title: 'My lists',
@@ -4320,6 +4362,10 @@ const I18N = {
     catprod_from_pack_hint: 'Ab {n} Stk.',
     field_store: 'Laden',
     item_delete_btn: 'Artikel löschen',
+    item_move_btn: 'In eine andere Liste verschieben',
+    move_item_title: 'In eine andere Liste verschieben',
+    move_item_none: 'Es gibt noch keine anderen Listen',
+    move_item_snack: '„{name}" wurde nach „{list}" verschoben',
     item_deleted_snack: '"{name}" gelöscht',
 
     lists_sheet_title: 'Meine Listen',
@@ -4940,6 +4986,10 @@ const I18N = {
     catprod_from_pack_hint: 'Desde {n} uds',
     field_store: 'Tienda',
     item_delete_btn: 'Eliminar artículo',
+    item_move_btn: 'Mover a otra lista',
+    move_item_title: 'Mover a otra lista',
+    move_item_none: 'Todavía no hay otras listas',
+    move_item_snack: '"{name}" se movió a "{list}"',
     item_deleted_snack: '"{name}" eliminado',
 
     lists_sheet_title: 'Mis listas',
@@ -5560,6 +5610,10 @@ const I18N = {
     catprod_from_pack_hint: 'À partir de {n} pcs',
     field_store: 'Magasin',
     item_delete_btn: 'Supprimer l’article',
+    item_move_btn: 'Déplacer vers une autre liste',
+    move_item_title: 'Déplacer vers une autre liste',
+    move_item_none: 'Pas encore d’autre liste',
+    move_item_snack: '« {name} » déplacé vers « {list} »',
     item_deleted_snack: '"{name}" supprimé',
 
     lists_sheet_title: 'Mes listes',
@@ -6180,6 +6234,10 @@ const I18N = {
     catprod_from_pack_hint: '{n}件起',
     field_store: '商店',
     item_delete_btn: '删除商品',
+    item_move_btn: '移动到其他清单',
+    move_item_title: '移动到其他清单',
+    move_item_none: '暂时没有其他清单',
+    move_item_snack: '"{name}" 已移动到 "{list}"',
     item_deleted_snack: '"{name}"已删除',
 
     lists_sheet_title: '我的清单',
@@ -6800,6 +6858,10 @@ const I18N = {
     catprod_from_pack_hint: 'Từ {n} cái',
     field_store: 'Cửa hàng',
     item_delete_btn: 'Xóa sản phẩm',
+    item_move_btn: 'Chuyển sang danh sách khác',
+    move_item_title: 'Chuyển sang danh sách khác',
+    move_item_none: 'Chưa có danh sách nào khác',
+    move_item_snack: '"{name}" đã chuyển sang "{list}"',
     item_deleted_snack: 'Đã xóa "{name}"',
 
     lists_sheet_title: 'Danh sách của tôi',
@@ -7420,6 +7482,10 @@ const I18N = {
     catprod_from_pack_hint: '{n} donadan',
     field_store: 'Do‘kon',
     item_delete_btn: 'Mahsulotni o‘chirish',
+    item_move_btn: 'Boshqa ro‘yxatga ko‘chirish',
+    move_item_title: 'Boshqa ro‘yxatga ko‘chirish',
+    move_item_none: 'Hozircha boshqa ro‘yxat yo‘q',
+    move_item_snack: '"{name}" "{list}"ga ko‘chirildi',
     item_deleted_snack: '"{name}" o‘chirildi',
 
     lists_sheet_title: 'Mening ro‘yxatlarim',
@@ -8040,6 +8106,10 @@ const I18N = {
     catprod_from_pack_hint: '{n} даанадан',
     field_store: 'Дүкөн',
     item_delete_btn: 'Товарды өчүрүү',
+    item_move_btn: 'Башка тизмеге жылдыруу',
+    move_item_title: 'Башка тизмеге жылдыруу',
+    move_item_none: 'Азырынча башка тизме жок',
+    move_item_snack: '"{name}" "{list}" тизмесине жылдырылды',
     item_deleted_snack: '"{name}" өчүрүлдү',
 
     lists_sheet_title: 'Менин тизмелерим',
@@ -8660,6 +8730,10 @@ const I18N = {
     catprod_from_pack_hint: 'Аз {n} дона',
     field_store: 'Мағоза',
     item_delete_btn: 'Нест кардани маҳсулот',
+    item_move_btn: 'Ба рӯйхати дигар гузарондан',
+    move_item_title: 'Ба рӯйхати дигар гузарондан',
+    move_item_none: 'Ҳанӯз рӯйхати дигар нест',
+    move_item_snack: '"{name}" ба "{list}" гузаронида шуд',
     item_deleted_snack: '"{name}" нест карда шуд',
 
     lists_sheet_title: 'Рӯйхатҳои ман',
@@ -9280,6 +9354,10 @@ const I18N = {
     catprod_from_pack_hint: '{n}-დან',
     field_store: 'მაღაზია',
     item_delete_btn: 'პროდუქტის წაშლა',
+    item_move_btn: 'სხვა სიაში გადატანა',
+    move_item_title: 'სხვა სიაში გადატანა',
+    move_item_none: 'ჯერ სხვა სია არ არის',
+    move_item_snack: '"{name}" გადატანილია "{list}"-ში',
     item_deleted_snack: '"{name}" წაიშალა',
 
     lists_sheet_title: 'ჩემი სიები',
@@ -9900,6 +9978,10 @@ const I18N = {
     catprod_from_pack_hint: '{n}-ից',
     field_store: 'Խանութ',
     item_delete_btn: 'Ջնջել ապրանքը',
+    item_move_btn: 'Տեղափոխել այլ ցանկ',
+    move_item_title: 'Տեղափոխել այլ ցանկ',
+    move_item_none: 'Այլ ցանկեր դեռ չկան',
+    move_item_snack: '«{name}»-ը տեղափոխվեց «{list}»',
     item_deleted_snack: '«{name}»-ը ջնջվեց',
 
     lists_sheet_title: 'Իմ ցանկերը',
@@ -10520,6 +10602,10 @@ const I18N = {
     catprod_from_pack_hint: '{n} аҟынтә',
     field_store: 'Амаркет',
     item_delete_btn: 'Апродукт ахкра',
+    item_move_btn: 'Егьырҭ атизме ахь аҭагалара',
+    move_item_title: 'Егьырҭ атизме ахь аҭагалара',
+    move_item_none: 'Егьырҭ атизмақәа рацәаӡам',
+    move_item_snack: '"{name}" "{list}" ахь аҭагаз',
     item_deleted_snack: '"{name}" ахкыз',
 
     lists_sheet_title: 'Сара исысу ахьӡынҵақәа',
@@ -11215,7 +11301,8 @@ const ICONS = {
   currency: '<path d="M4 8.5h11M4 8.5l3.5-3.5M4 8.5l3.5 3.5M20 15.5H9M20 15.5l-3.5-3.5M20 15.5l-3.5 3.5"/>',
   star: '<path d="M12 3.6l2.5 5.1 5.6.8-4 4 1 5.6-5.1-2.7-5.1 2.7 1-5.6-4-4 5.6-.8z"/>',
   camera: '<path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/>',
-  close: '<path d="M6 6l12 12M18 6 6 18"/>'
+  close: '<path d="M6 6l12 12M18 6 6 18"/>',
+  move: '<path d="M4 12h13M12 6.5 18 12l-6 5.5"/>'
 };
 function ic(name, size) {
   return `<svg width="${size || 19}" height="${size || 19}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${ICONS[name] || ''}</svg>`;
@@ -11314,6 +11401,12 @@ function renderSummary() {
     if (budget > 0 && remPct < 15) mbbFill.classList.add('danger');
     else if (budget > 0 && remPct < 50) mbbFill.classList.add('warn');
   }
+
+  document.getElementById('zakupBudgetVal').textContent = money(budget);
+  document.getElementById('zakupPlannedVal').textContent = money(planned);
+  const zrv = document.getElementById('zakupRemainingVal');
+  zrv.textContent = money(remaining);
+  zrv.classList.toggle('neg', remaining < 0);
 }
 
 /* ---------- upcoming payments (next 7 days) ---------- */
@@ -11819,6 +11912,7 @@ function openItemSheet(sid, itemId) {
   document.getElementById('itemSheetTitle').textContent = editing ? t('item_sheet_edit_title') : t('item_sheet_new_title');
   document.getElementById('itemSaveBtn').textContent = editing ? t('btn_save') : t('btn_add');
   document.getElementById('itemDeleteBtn').style.display = editing ? 'flex' : 'none';
+  document.getElementById('itemMoveBtn').style.display = (editing && state.lists.some(l => !l.incoming && l.id !== state.currentId)) ? 'flex' : 'none';
   document.getElementById('itemNameInput').value = it ? it.name : '';
   document.getElementById('itemQtyInput').value = it ? it.qty : 1;
   document.getElementById('itemPriceInput').value = it ? (it.price || '') : '';
@@ -11966,6 +12060,67 @@ function deleteItemFromSheet() {
     const i = data().deletedItemIds.indexOf(removed.id);
     if (i !== -1) data().deletedItemIds.splice(i, 1);
     s.items.splice(Math.min(idx, s.items.length), 0, removed);
+    save(); render();
+  });
+}
+
+/* ---------- перенос позиции в другой список ---------- */
+let moveItemCtx = null;
+function openMoveItemSheet(sid, itemId) {
+  if (!sid || !itemId) return;
+  moveItemCtx = { sid, itemId };
+  renderMoveItemRows();
+  openSheet('moveItemSheet');
+}
+function renderMoveItemRows() {
+  // переносим только между своими списками закупок — во "Входящие" (чужие заказы)
+  // это не имеет смысла, у них другая природа
+  const targets = state.lists.filter(l => !l.incoming && l.id !== state.currentId)
+    .sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+  document.getElementById('moveItemRows').innerHTML = targets.length ? targets.map(l => {
+    const items = l.data.stores.reduce((t, s) => t + s.items.length, 0);
+    const sum = l.data.stores.reduce((t, s) => t + s.items.reduce((x, i) => x + (+i.qty || 0) * (+i.price || 0), 0), 0);
+    return `
+    <div class="list-row" style="cursor:pointer" onclick="moveItemToList('${l.id}')">
+      <div class="info">
+        <div class="nm">${esc(l.name)}</div>
+        <div class="mt">${tf('list_items_count', { n: items })} · ${money(sum)}</div>
+      </div>
+    </div>`;
+  }).join('') : `<div class="cat-empty">${t('move_item_none')}</div>`;
+}
+function moveItemToList(targetListId) {
+  if (!moveItemCtx) return;
+  const { sid, itemId } = moveItemCtx;
+  const srcStore = findStore(sid);
+  const idx = srcStore ? srcStore.items.findIndex(i => i.id === itemId) : -1;
+  if (idx === -1) { closeSheet('moveItemSheet'); return; }
+  const targetList = state.lists.find(l => l.id === targetListId);
+  if (!targetList) return;
+
+  const removed = srcStore.items.splice(idx, 1)[0];
+  data().deletedItemIds.push(removed.id);
+
+  // тот же магазин (по общему справочнику storeDirectory) в целевом списке —
+  // или заводим такой же по имени, если там его ещё не было
+  let targetStore = srcStore.storeDirId ? targetList.data.stores.find(s => s.storeDirId === srcStore.storeDirId) : null;
+  if (!targetStore) {
+    targetStore = { id: uid(), name: srcStore.name, storeDirId: srcStore.storeDirId || null, collapsed: false, items: [] };
+    targetList.data.stores.push(targetStore);
+  }
+  const moved = { ...removed, id: uid(), updatedAt: Date.now() };
+  targetStore.items.push(moved);
+
+  save(); render();
+  closeSheet('moveItemSheet');
+  closeSheet('itemSheet');
+  closeSheet('catProductSheet');
+  snackbar(tf('move_item_snack', { name: removed.name, list: targetList.name }), () => {
+    const ti = targetStore.items.findIndex(i => i.id === moved.id);
+    if (ti !== -1) targetStore.items.splice(ti, 1);
+    const di = data().deletedItemIds.indexOf(removed.id);
+    if (di !== -1) data().deletedItemIds.splice(di, 1);
+    srcStore.items.splice(Math.min(idx, srcStore.items.length), 0, removed);
     save(); render();
   });
 }
@@ -14486,6 +14641,7 @@ function openCatProductSheet(id, listCtx) {
   // а не стереть сам товар из каталога (он может быть ещё в других списках)
   document.getElementById('catProdDeleteBtn').style.display = (p && !catProdListCtx) ? 'flex' : 'none';
   document.getElementById('catProdRemoveFromListBtn').style.display = catProdListCtx ? 'flex' : 'none';
+  document.getElementById('catProdMoveBtn').style.display = (catProdListCtx && state.lists.some(l => !l.incoming && l.id !== state.currentId)) ? 'flex' : 'none';
   const qtyField = document.getElementById('catProdListQtyField');
   if (catProdListCtx) {
     const it = findStore(catProdListCtx.sid).items.find(i => i.id === catProdListCtx.itemId);
