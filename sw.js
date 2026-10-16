@@ -1,7 +1,12 @@
-const CACHE = 'bdg-v4-117';
+const CACHE = 'bdg-v4-118';
 const PHOTO_CACHE = 'bdg-photos-v1';
 const ASSETS = ['./', './index.html', './manifest.webmanifest', './icon.svg', './qrcode.min.js', './jsqr.min.js'];
 const PHOTO_HOSTS = ['lh3.googleusercontent.com'];
+// новые фото на Bunny отдаёт прокси Маркетплейса (/api/cdn-proxy) — кешируем так же,
+// но только его, а не весь домен (там же живут API, которые кешировать нельзя)
+const PHOTO_PROXY = { host: 'delivery-food-puce.vercel.app', path: '/api/cdn-proxy' };
+const isPhotoRequest = url => PHOTO_HOSTS.includes(url.hostname) ||
+  (url.hostname === PHOTO_PROXY.host && url.pathname === PHOTO_PROXY.path);
 
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(ASSETS)));
@@ -25,12 +30,17 @@ self.addEventListener('fetch', e => {
   // фото товаров с Google Диска: снимок один раз загруженный меняется редко —
   // отдаём мгновенно из кэша, если он есть, и параллельно тихо обновляем его на
   // будущее в фоне (stale-while-revalidate), а не ждём сеть на каждый повторный показ
-  if (PHOTO_HOSTS.includes(url.hostname)) {
+  if (isPhotoRequest(url)) {
     e.respondWith(
       caches.open(PHOTO_CACHE).then(cache =>
         cache.match(e.request).then(cached => {
-          const network = fetch(e.request)
-            .then(res => { cache.put(e.request, res.clone()); return res; })
+          // <img> шлёт запрос "вслепую" (no-cors) — ответ непрозрачный, и сломанный ответ
+          // (5xx прокси на холодном старте) не отличить от нормального, а в кэше он
+          // застрял бы навсегда. Для нашего прокси повторяем запрос как обычный cors
+          // (он отдаёт Access-Control-Allow-Origin: *) и кладём в кэш только успешный
+          const isProxy = url.hostname === PHOTO_PROXY.host;
+          const network = fetch(isProxy ? new Request(e.request.url, { mode: 'cors' }) : e.request)
+            .then(res => { if (res.ok || res.type === 'opaque') cache.put(e.request, res.clone()); return res; })
             .catch(() => null);
           return cached || network;
         })
