@@ -87,6 +87,14 @@ function doPost(e) {
     // фото с телефона (само по себе более тяжёлое и медленное, чем обычное
     // сохранение) стало заметно чаще упираться в чужую блокировку и не укладываться
     // в таймаут запроса — отсюда "то идёт, то не идёт, нет связи с облаком"
+    // лёгкая проверка логина+PIN без обращения к данным и без общей блокировки —
+    // ею пользуется сервер фото на Bunny (Vercel, /api/bdg-photo), чтобы убедиться,
+    // что запрос на загрузку/удаление фото пришёл от настоящего владельца аккаунта
+    if (req.action === 'auth_check') {
+      if (row === -1) return out({ ok: false, error: 'not_found' });
+      if (getPin(sh, row) !== pin) return out({ ok: false, error: 'wrong_pin' });
+      return out({ ok: true });
+    }
     if (req.action === 'photo_upload') {
       if (row === -1) return out({ ok: false, error: 'not_found' });
       if (getPin(sh, row) !== pin) return out({ ok: false, error: 'wrong_pin' });

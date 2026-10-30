@@ -12813,6 +12813,7 @@ function finishApplyingPayload(payload, creds, at) {
   if (!state.plans.some(p => p.id === state.currentPlanId)) state.currentPlanId = state.plans[0].id;
   save(true); render();
   prefetchProductPhotos();
+  setTimeout(migrateLegacyPhotos, 3000);
 }
 // "жёсткая" замена БЕЗ слияния — в отличие от applyRemotePayload (используется для
 // обычной сверки с облаком и намеренно СЛИВАЕТ входящее с локальным, чтобы никогда не
@@ -14456,8 +14457,57 @@ function stepCatProdListQty(dir) {
   inp.value = Math.round(v * 100) / 100;
 }
 
+// Фото хранятся в поле photoId двух видов: старые — id файла на Google Диске,
+// новые — путь на нашем Bunny ("bdg/<логин>/<файл>.webp"). Новые показываем через
+// /api/cdn-proxy Маркетплейса: он обходит блокировку Bunny в России, сам уменьшает
+// картинку под нужную ширину и кеширует её. Старые продолжают работать как раньше,
+// пока их не перенесёт migrateLegacyPhotos().
+const PHOTO_API = 'https://delivery-food-puce.vercel.app';
+const PHOTO_CDN = 'https://markets-cdn.b-cdn.net';
+function isBunnyPhotoId(id) { return typeof id === 'string' && id.indexOf('bdg/') === 0; }
 function photoDisplayUrl(id, size) {
-  return id ? 'https://lh3.googleusercontent.com/d/' + id + '=w' + (size || 200) : null;
+  if (!id) return null;
+  if (isBunnyPhotoId(id)) {
+    return PHOTO_API + '/api/cdn-proxy?url=' + encodeURIComponent(PHOTO_CDN + '/' + id) +
+      '&width=' + (size || 200) + '&quality=75';
+  }
+  return 'https://lh3.googleusercontent.com/d/' + id + '=w' + (size || 200);
+}
+// вызов сервера фото (Vercel). Осмысленные ответы сервера бросаем как "#код" — как и
+// syncCall, чтобы errToMsg показал понятное сообщение; сетевой сбой — обычная ошибка
+function bunnyPhotoCall(creds, payload, timeoutMs) {
+  const ctrl = new AbortController();
+  const kill = setTimeout(() => ctrl.abort(), timeoutMs || 30000);
+  return fetch(PHOTO_API + '/api/bdg-photo', {
+    method: 'POST',
+    signal: ctrl.signal,
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(Object.assign({ login: creds.login, pin: creds.pin }, payload))
+  }).finally(() => clearTimeout(kill)).then(r =>
+    r.json().catch(() => ({ ok: false, error: 'server_error' })).then(res => {
+      if (!res || !res.ok) {
+        const code = (res && res.error) || 'server_error';
+        throw new Error('#' + (code === 'unauthorized' ? 'wrong_pin' : code));
+      }
+      return res;
+    }));
+}
+// своё сервер-фото доступно только для облака по умолчанию: у тех, кто подключил
+// собственный Apps Script, нашего логина в таблице нет — для них остаётся Google Диск
+function bunnyPhotosEnabled(creds) {
+  return (creds.url || DEFAULT_SYNC_URL) === DEFAULT_SYNC_URL;
+}
+// заливка: сначала Bunny; если наш сервер недоступен (сеть/5xx) — не теряем снимок,
+// кладём на Диск, как раньше. Неверный PIN, лимит и т.п. отдаём человеку как есть
+function uploadPhotoData(creds, base64, mime) {
+  const viaDrive = () => syncCallRetry(creds, 'photo_upload', { data: base64, mime }, 3, 40000).then(res => res.id);
+  if (!bunnyPhotosEnabled(creds)) return viaDrive();
+  return bunnyPhotoCall(creds, { action: 'upload', data: base64, mime }, 40000).then(res => res.path).catch(err => {
+    const m = String(err && err.message || err);
+    const soft = !m.startsWith('#') || m === '#server_error' || m === '#auth_unavailable' || m === '#not_configured';
+    if (!soft) throw err;
+    return viaDrive();
+  });
 }
 // тихо прогреваем кэш сервис-воркера для всех фото товаров в фоне — иначе каждая
 // миниатюра грузится по отдельности только тогда, когда реально попадает на экран,
@@ -14577,10 +14627,9 @@ function onCatProdPhotoSelected(evt) {
   resizeImageForUpload(file).then(({ base64, mime, dataUrl }) => {
     const s = syncState();
     const creds = { login: s.login, pin: s.pin, url: s.url || DEFAULT_SYNC_URL };
-    // до 3 попыток и таймаут подольше обычного (40с вместо 25с) — фото тяжелее
-    // обычного сохранения и на мобильном интернете чаще упирается в разрыв связи
-    return syncCallRetry(creds, 'photo_upload', { data: base64, mime }, 3, 40000).then(res => {
-      catProdPhotoId = res.id;
+    // Bunny через наш сервер, при его недоступности — Google Диск (см. uploadPhotoData)
+    return uploadPhotoData(creds, base64, mime).then(newId => {
+      catProdPhotoId = newId;
       catProdPhotoPreview = dataUrl;
       catProdPhotoBusy = false;
       renderCatProdPhotoTile();
@@ -14625,7 +14674,71 @@ function deletePhotoRemote(id) {
   const s = syncState();
   if (!s.login || !s.pin) return;
   const creds = { login: s.login, pin: s.pin, url: s.url || DEFAULT_SYNC_URL };
+  if (isBunnyPhotoId(id)) {
+    bunnyPhotoCall(creds, { action: 'delete', path: id }).catch(() => {});
+    return;
+  }
   syncCall(creds, 'photo_delete', { id }).catch(() => {});
+}
+
+/* ---------- перенос старых фото с Google Диска на Bunny ----------
+   Идёт тихо в фоне после входа/синхронизации: для каждого старого photoId сервер сам
+   скачивает файл с Диска (он открыт по ссылке), пересжимает и кладёт на Bunny, а мы
+   подменяем id в карточках каталога и позициях списков и сохраняем обычным путём.
+   Оригиналы на Диске не удаляем — это резервная копия, пока всё не проверено. */
+let photoMigrationRunning = false;
+const PHOTO_MIG_FAIL_KEY = 'bdg-photo-mig-fail';
+function photoMigrationFailed() {
+  try { return JSON.parse(localStorage.getItem(PHOTO_MIG_FAIL_KEY) || '{}'); } catch (e) { return {}; }
+}
+function rememberPhotoMigrationFail(id) {
+  try {
+    const f = photoMigrationFailed(); f[id] = Date.now();
+    localStorage.setItem(PHOTO_MIG_FAIL_KEY, JSON.stringify(f));
+  } catch (e) {}
+}
+function eachPhotoHolder(fn) {
+  (state.catalogDB.products || []).forEach(p => fn(p));
+  (state.lists || []).forEach(l => ((l.data && l.data.stores) || []).forEach(st => (st.items || []).forEach(it => fn(it))));
+}
+function migrateLegacyPhotos() {
+  if (photoMigrationRunning) return;
+  const s = syncState();
+  if (!s.login || !s.pin) return;
+  const creds = { login: s.login, pin: s.pin, url: s.url || DEFAULT_SYNC_URL };
+  if (!bunnyPhotosEnabled(creds)) return;
+  const failed = photoMigrationFailed();
+  const RETRY_MS = 7 * 24 * 3600 * 1000; // недоступные файлы пробуем снова не чаще раза в неделю
+  const ids = new Set();
+  eachPhotoHolder(h => {
+    if (h.photoId && !isBunnyPhotoId(h.photoId) && !(failed[h.photoId] && Date.now() - failed[h.photoId] < RETRY_MS)) ids.add(h.photoId);
+  });
+  if (!ids.size) return;
+  photoMigrationRunning = true;
+  const queue = [...ids];
+  const done = new Map();
+  let stop = false;
+  const worker = () => {
+    if (stop || !queue.length) return Promise.resolve();
+    const id = queue.shift();
+    return bunnyPhotoCall(creds, { action: 'migrate', driveId: id }, 45000).then(res => {
+      done.set(id, res.path);
+    }).catch(err => {
+      const m = String(err && err.message || err);
+      if (m === '#source_unavailable' || m === '#bad_id' || m === '#too_big') rememberPhotoMigrationFail(id);
+      else stop = true; // неверный PIN, лимит, сбой сети/сервера — дальше не долбим, повторим при следующем входе
+    }).then(worker);
+  };
+  Promise.all([worker(), worker()]).then(() => {
+    photoMigrationRunning = false;
+    if (!done.size) return;
+    let changed = 0;
+    const now = Date.now();
+    eachPhotoHolder(h => {
+      if (h.photoId && done.has(h.photoId)) { h.photoId = done.get(h.photoId); h.updatedAt = now; changed++; }
+    });
+    if (changed) { save(); render(); prefetchProductPhotos(); }
+  }).catch(() => { photoMigrationRunning = false; });
 }
 
 function openCatProductSheet(id, listCtx) {
@@ -16705,6 +16818,7 @@ load();
 applyI18n();
 render();
 prefetchProductPhotos();
+setTimeout(migrateLegacyPhotos, 6000);
 enableStripDrag(document.getElementById('listsStrip'));
 if (printReceiverOn()) startPrintReceiver(); // приём переживает перезагрузку страницы на этом устройстве
 renderCurrTopBadge();
