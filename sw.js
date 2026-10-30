@@ -1,12 +1,12 @@
-const CACHE = 'bdg-v4-118';
+const CACHE = 'bdg-v4-119';
 const PHOTO_CACHE = 'bdg-photos-v1';
 const ASSETS = ['./', './index.html', './manifest.webmanifest', './icon.svg', './qrcode.min.js', './jsqr.min.js'];
 const PHOTO_HOSTS = ['lh3.googleusercontent.com'];
 // новые фото на Bunny отдаёт прокси Маркетплейса (/api/cdn-proxy) — кешируем так же,
 // но только его, а не весь домен (там же живут API, которые кешировать нельзя)
-const PHOTO_PROXY = { host: 'delivery-food-puce.vercel.app', path: '/api/cdn-proxy' };
+const PHOTO_PROXY = { hosts: ['karatmarket.ru', 'delivery-food-puce.vercel.app'], path: '/api/cdn-proxy' };
 const isPhotoRequest = url => PHOTO_HOSTS.includes(url.hostname) ||
-  (url.hostname === PHOTO_PROXY.host && url.pathname === PHOTO_PROXY.path);
+  (PHOTO_PROXY.hosts.includes(url.hostname) && url.pathname === PHOTO_PROXY.path);
 
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(ASSETS)));
@@ -38,7 +38,7 @@ self.addEventListener('fetch', e => {
           // (5xx прокси на холодном старте) не отличить от нормального, а в кэше он
           // застрял бы навсегда. Для нашего прокси повторяем запрос как обычный cors
           // (он отдаёт Access-Control-Allow-Origin: *) и кладём в кэш только успешный
-          const isProxy = url.hostname === PHOTO_PROXY.host;
+          const isProxy = PHOTO_PROXY.hosts.includes(url.hostname);
           const network = fetch(isProxy ? new Request(e.request.url, { mode: 'cors' }) : e.request)
             .then(res => { if (res.ok || res.type === 'opaque') cache.put(e.request, res.clone()); return res; })
             .catch(() => null);
