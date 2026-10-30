@@ -14463,13 +14463,34 @@ function stepCatProdListQty(dir) {
 // /api/cdn-proxy Маркетплейса: он обходит блокировку Bunny в России, сам уменьшает
 // картинку под нужную ширину и кеширует её. Старые продолжают работать как раньше,
 // пока их не перенесёт migrateLegacyPhotos().
-const PHOTO_API = 'https://delivery-food-puce.vercel.app';
+// Адреса сервера фото: основной — наш домен Маркетплейса (стоит перед Vercel и доступен из России,
+// тот же обход блокировки, что и у самого Маркетплейса), запасной — прямой адрес Vercel. При сетевом
+// сбое приложение само переключается на другой адрес — и при загрузке, и при показе фото.
+const PHOTO_HOSTS = ['https://karatmarket.ru', 'https://delivery-food-puce.vercel.app'];
+let photoHostIdx = 0, photoHostVerified = false;
+try { photoHostIdx = Math.min(PHOTO_HOSTS.length - 1, Math.max(0, parseInt(sessionStorage.getItem('bdg-photo-host') || '0', 10) || 0)); } catch (e) {}
+function photoHost() { return PHOTO_HOSTS[photoHostIdx]; }
+function photoHostSwitch() {
+  photoHostIdx = (photoHostIdx + 1) % PHOTO_HOSTS.length; photoHostVerified = false;
+  try { sessionStorage.setItem('bdg-photo-host', String(photoHostIdx)); } catch (e) {}
+}
+// картинка не загрузилась с одного адреса — один раз пробуем другой (и дальше показываем с него)
+document.addEventListener('error', e => {
+  const im = e.target;
+  if (!im || im.tagName !== 'IMG' || im.dataset.hostSwap || typeof im.src !== 'string' || im.src.indexOf('/api/cdn-proxy?') < 0) return;
+  const cur = PHOTO_HOSTS.find(h => im.src.indexOf(h + '/') === 0);
+  if (!cur) return;
+  im.dataset.hostSwap = '1';
+  const alt = PHOTO_HOSTS[(PHOTO_HOSTS.indexOf(cur) + 1) % PHOTO_HOSTS.length];
+  if (photoHost() === cur) { photoHostIdx = PHOTO_HOSTS.indexOf(alt); try { sessionStorage.setItem('bdg-photo-host', String(photoHostIdx)); } catch (x) {} }
+  im.src = alt + im.src.slice(cur.length);
+}, true);
 const PHOTO_CDN = 'https://markets-cdn.b-cdn.net';
 function isBunnyPhotoId(id) { return typeof id === 'string' && id.indexOf('bdg/') === 0; }
 function photoDisplayUrl(id, size) {
   if (!id) return null;
   if (isBunnyPhotoId(id)) {
-    return PHOTO_API + '/api/cdn-proxy?url=' + encodeURIComponent(PHOTO_CDN + '/' + id) +
+    return photoHost() + '/api/cdn-proxy?url=' + encodeURIComponent(PHOTO_CDN + '/' + id) +
       '&width=' + (size || 200) + '&quality=75';
   }
   return 'https://lh3.googleusercontent.com/d/' + id + '=w' + (size || 200);
@@ -14487,29 +14508,37 @@ function photoAuthSet(login, token, exp) {
   photoAuth = token ? { login, token, exp } : null;
   try { if (photoAuth) sessionStorage.setItem('bdg-photo-auth', JSON.stringify(photoAuth)); else sessionStorage.removeItem('bdg-photo-auth'); } catch (e) {}
 }
-function bunnyPhotoCall(creds, payload, timeoutMs, retried) {
+function bunnyPhotoCall(creds, payload, timeoutMs, retried, hostTries) {
+  hostTries = hostTries || 0;
   const ctrl = new AbortController();
-  const kill = setTimeout(() => ctrl.abort(), timeoutMs || 30000);
+  // пока адрес не проверен, ждём недолго: если он недоступен, быстрее переключимся на запасной
+  const limit = photoHostVerified ? (timeoutMs || 30000) : Math.min(timeoutMs || 30000, 20000);
+  const kill = setTimeout(() => ctrl.abort(), limit);
   const token = photoAuthGet(creds.login);
   const auth = token ? { login: creds.login, token } : { login: creds.login, pin: creds.pin };
-  return fetch(PHOTO_API + '/api/bdg-photo', {
+  return fetch(photoHost() + '/api/bdg-photo', {
     method: 'POST',
     signal: ctrl.signal,
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(Object.assign(auth, payload))
   }).finally(() => clearTimeout(kill)).then(r =>
     r.json().catch(() => ({ ok: false, error: 'server_error' })).then(res => {
+      photoHostVerified = true; // сервер ответил — адрес рабочий
       if (res && res.token) photoAuthSet(creds.login, res.token, res.tokenExp);
       if (!res || !res.ok) {
         const code = (res && res.error) || 'server_error';
         // токен устарел/недействителен — один раз повторяем с PIN
-        if (code === 'token_invalid' && token && !retried) { photoAuthSet(creds.login, null); return bunnyPhotoCall(creds, payload, timeoutMs, true); }
+        if (code === 'token_invalid' && token && !retried) { photoAuthSet(creds.login, null); return bunnyPhotoCall(creds, payload, timeoutMs, true, hostTries); }
         const e = new Error('#' + (code === 'unauthorized' ? 'wrong_pin' : code));
         if (res && res.detail) e.detail = res.detail;
         throw e;
       }
       return res;
-    }));
+    }), netErr => {
+      // до сервера не достучались (блокировка/обрыв/таймаут) — пробуем другой адрес
+      if (hostTries < PHOTO_HOSTS.length - 1) { photoHostSwitch(); return bunnyPhotoCall(creds, payload, timeoutMs, retried, hostTries + 1); }
+      throw netErr;
+    });
 }
 // прогрев: получить токен заранее, чтобы первая загрузка фото не ждала проверку логина
 let photoWarmed = false;
