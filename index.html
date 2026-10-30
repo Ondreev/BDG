@@ -14750,30 +14750,43 @@ function migrateLegacyPhotos() {
   });
   if (!ids.size) return;
   photoMigrationRunning = true;
-  const queue = [...ids];
-  const done = new Map();
-  let stop = false;
+  const total = ids.size, queue = [...ids];
+  const pending = new Map(); // перенесено, но ещё не записано в данные
+  let ok = 0, bad = 0, stop = '', firstBad = '';
+  // результат записываем порциями — закрытие приложения посреди переноса ничего не теряет
+  const flush = () => {
+    if (!pending.size) return;
+    let changed = 0; const now = Date.now();
+    eachPhotoHolder(h => { if (h.photoId && pending.has(h.photoId)) { h.photoId = pending.get(h.photoId); h.updatedAt = now; changed++; } });
+    pending.clear();
+    if (changed) { save(); render(); }
+  };
+  toast('Переношу фото на быстрое хранилище: ' + total + ' шт. Можно продолжать работу');
+  let lastNote = Date.now();
   const worker = () => {
     if (stop || !queue.length) return Promise.resolve();
     const id = queue.shift();
     return bunnyPhotoCall(creds, { action: 'migrate', driveId: id }, 45000).then(res => {
-      done.set(id, res.path);
+      pending.set(id, res.path); ok++;
+      if (pending.size >= 5) flush();
+      if (Date.now() - lastNote > 15000) { lastNote = Date.now(); toast('Перенесено фото: ' + ok + ' из ' + total); }
     }).catch(err => {
       const m = String(err && err.message || err);
-      if (m === '#source_unavailable' || m === '#bad_id' || m === '#too_big') rememberPhotoMigrationFail(id);
-      else stop = true; // неверный PIN, лимит, сбой сети/сервера — дальше не долбим, повторим при следующем входе
+      if (m === '#source_unavailable' || m === '#bad_id' || m === '#too_big') { rememberPhotoMigrationFail(id); bad++; if (!firstBad) firstBad = m.slice(1); }
+      else stop = m.startsWith('#') ? m.slice(1) : 'нет связи с сервером'; // неверный PIN, лимит, сбой — дальше не долбим, повторим при следующем входе
     }).then(worker);
   };
-  Promise.all([worker(), worker()]).then(() => {
+  Promise.all([worker(), worker(), worker()]).then(() => {
+    flush(); prefetchProductPhotos();
     photoMigrationRunning = false;
-    if (!done.size) return;
-    let changed = 0;
-    const now = Date.now();
-    eachPhotoHolder(h => {
-      if (h.photoId && done.has(h.photoId)) { h.photoId = done.get(h.photoId); h.updatedAt = now; changed++; }
-    });
-    if (changed) { save(); render(); prefetchProductPhotos(); }
-  }).catch(() => { photoMigrationRunning = false; });
+    const left = total - ok - bad;
+    let msg = 'Перенос фото: перенесено ' + ok + ' из ' + total;
+    if (bad) msg += '; недоступны на Диске: ' + bad + (firstBad ? ' (' + firstBad + ')' : '');
+    if (stop) msg += '; остановлено: ' + stop + ', продолжу при следующем входе';
+    else if (left > 0) msg += '; осталось: ' + left;
+    toast(msg);
+    try { console.info('bdg photo migration:', { total, ok, bad, stop }); } catch (e) {}
+  }).catch(() => { flush(); photoMigrationRunning = false; });
 }
 
 function openCatProductSheet(id, listCtx) {
