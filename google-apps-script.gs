@@ -92,12 +92,12 @@ function doPost(e) {
     // что запрос на загрузку/удаление фото пришёл от настоящего владельца аккаунта
     if (req.action === 'auth_check') {
       if (row === -1) return out({ ok: false, error: 'not_found' });
-      if (getPin(sh, row) !== pin) return out({ ok: false, error: 'wrong_pin' });
+      { var pg = pinCheck(login, sh, row, pin); if (pg) return out(pg); }
       return out({ ok: true });
     }
     if (req.action === 'photo_upload') {
       if (row === -1) return out({ ok: false, error: 'not_found' });
-      if (getPin(sh, row) !== pin) return out({ ok: false, error: 'wrong_pin' });
+      { var pg = pinCheck(login, sh, row, pin); if (pg) return out(pg); }
       var b64 = String((req.payload && req.payload.data) || '');
       if (!b64) return out({ ok: false, error: 'no_data' });
       if (b64.length > PHOTO_MAX_BASE64_LEN) return out({ ok: false, error: 'too_big' });
@@ -111,7 +111,7 @@ function doPost(e) {
     }
     if (req.action === 'photo_delete') {
       if (row === -1) return out({ ok: false, error: 'not_found' });
-      if (getPin(sh, row) !== pin) return out({ ok: false, error: 'wrong_pin' });
+      { var pg = pinCheck(login, sh, row, pin); if (pg) return out(pg); }
       var pid0 = String((req.payload && req.payload.id) || '');
       if (pid0) {
         try {
@@ -143,7 +143,7 @@ function doPost(e) {
           appendHistoryEntry(login, payload, json0);
           return out({ ok: true, at: now });
         }
-        if (getPin(sh, row) !== pin) return out({ ok: false, error: 'wrong_pin' });
+        { var pg = pinCheck(login, sh, row, pin); if (pg) return out(pg); }
         var existingVals = sh.getRange(row, 4, 1, MAXCH).getDisplayValues()[0];
         var existingJson = existingVals.join('');
         var existingLen = existingJson.length;
@@ -205,7 +205,7 @@ function doPost(e) {
 
       if (req.action === 'load') {
         if (row === -1) return out({ ok: false, error: 'not_found' });
-        if (getPin(sh, row) !== pin) return out({ ok: false, error: 'wrong_pin' });
+        { var pg = pinCheck(login, sh, row, pin); if (pg) return out(pg); }
         var vals = sh.getRange(row, 4, 1, MAXCH).getDisplayValues()[0];
         var data = vals.join('');
         var backupInfo = getBackupInfo(login);
@@ -222,7 +222,7 @@ function doPost(e) {
       // с момента замены, с любого устройства, вошедшего тем же логином+PIN
       if (req.action === 'restore_backup') {
         if (row === -1) return out({ ok: false, error: 'not_found' });
-        if (getPin(sh, row) !== pin) return out({ ok: false, error: 'wrong_pin' });
+        { var pg = pinCheck(login, sh, row, pin); if (pg) return out(pg); }
         var bsh = getBackupSheet();
         var brow = findRow(bsh, login);
         if (brow === -1) return out({ ok: false, error: 'backup_not_found' });
@@ -241,7 +241,7 @@ function doPost(e) {
       // без самих данных (тяжёлые колонки не читаем, чтобы не гонять зря лишний объём)
       if (req.action === 'history_list') {
         if (row === -1) return out({ ok: false, error: 'not_found' });
-        if (getPin(sh, row) !== pin) return out({ ok: false, error: 'wrong_pin' });
+        { var pg = pinCheck(login, sh, row, pin); if (pg) return out(pg); }
         var hsh2 = getHistorySheet();
         var hlast = hsh2.getLastRow();
         var history = [];
@@ -262,7 +262,7 @@ function doPost(e) {
       // поэтому сам откат тоже можно отменить, выбрав снимок "до отката"
       if (req.action === 'history_restore') {
         if (row === -1) return out({ ok: false, error: 'not_found' });
-        if (getPin(sh, row) !== pin) return out({ ok: false, error: 'wrong_pin' });
+        { var pg = pinCheck(login, sh, row, pin); if (pg) return out(pg); }
         var targetAt = String((req.payload && req.payload.at) || '');
         var hsh3 = getHistorySheet();
         var hRows = findHistoryRows(hsh3, login);
@@ -298,7 +298,7 @@ function doPost(e) {
       // парой логин/PIN на другом устройстве — компьютер сам его печатает и удаляет из очереди
       if (req.action === 'print_push') {
         if (row === -1) return out({ ok: false, error: 'not_found' });
-        if (getPin(sh, row) !== pin) return out({ ok: false, error: 'wrong_pin' });
+        { var pg = pinCheck(login, sh, row, pin); if (pg) return out(pg); }
         var pjson = JSON.stringify(req.payload || {});
         if (pjson.length > CHUNK * PRINT_MAXCH) return out({ ok: false, error: 'too_big' });
         var pchunks = [];
@@ -311,7 +311,7 @@ function doPost(e) {
 
       if (req.action === 'print_poll') {
         if (row === -1) return out({ ok: false, error: 'not_found' });
-        if (getPin(sh, row) !== pin) return out({ ok: false, error: 'wrong_pin' });
+        { var pg = pinCheck(login, sh, row, pin); if (pg) return out(pg); }
         var psh2 = getPrintSheet();
         var prow = findRow(psh2, login);
         if (prow === -1) return out({ ok: true, job: null });
@@ -331,7 +331,7 @@ function doPost(e) {
       // её у себя локально (state.dismissedShares), поэтому share_remove для него не зовём.
       if (req.action === 'share_push') {
         if (row === -1) return out({ ok: false, error: 'not_found' });
-        if (getPin(sh, row) !== pin) return out({ ok: false, error: 'wrong_pin' });
+        { var pg = pinCheck(login, sh, row, pin); if (pg) return out(pg); }
         var rawTo = String((req.payload && req.payload.toLogin) || '');
         var toLogin = rawTo === 'ALL' ? 'ALL' : rawTo.replace(/\D/g, '');
         if (toLogin !== 'ALL' && !/^\d{10,15}$/.test(toLogin)) return out({ ok: false, error: 'bad_to_login' });
@@ -351,7 +351,7 @@ function doPost(e) {
 
       if (req.action === 'share_list') {
         if (row === -1) return out({ ok: false, error: 'not_found' });
-        if (getPin(sh, row) !== pin) return out({ ok: false, error: 'wrong_pin' });
+        { var pg = pinCheck(login, sh, row, pin); if (pg) return out(pg); }
         var ssh2 = getShareSheet();
         var last2 = ssh2.getLastRow();
         var shares = [];
@@ -372,7 +372,7 @@ function doPost(e) {
 
       if (req.action === 'share_fetch') {
         if (row === -1) return out({ ok: false, error: 'not_found' });
-        if (getPin(sh, row) !== pin) return out({ ok: false, error: 'wrong_pin' });
+        { var pg = pinCheck(login, sh, row, pin); if (pg) return out(pg); }
         var frow = findShareRowForRecipient(getShareSheet(), String((req.payload && req.payload.id) || ''), login);
         if (frow === -1) return out({ ok: false, error: 'share_not_found' });
         var fvals = getShareSheet().getRange(frow, 8, 1, SHARE_MAXCH).getDisplayValues()[0];
@@ -382,7 +382,7 @@ function doPost(e) {
 
       if (req.action === 'share_remove') {
         if (row === -1) return out({ ok: false, error: 'not_found' });
-        if (getPin(sh, row) !== pin) return out({ ok: false, error: 'wrong_pin' });
+        { var pg = pinCheck(login, sh, row, pin); if (pg) return out(pg); }
         var rrow = findShareRowForRecipient(getShareSheet(), String((req.payload && req.payload.id) || ''), login);
         if (rrow === -1) return out({ ok: false, error: 'share_not_found' });
         getShareSheet().deleteRow(rrow);
@@ -396,7 +396,7 @@ function doPost(e) {
       // данных (есть qty, нет sku) и другая логика приёма.
       if (req.action === 'order_push') {
         if (row === -1) return out({ ok: false, error: 'not_found' });
-        if (getPin(sh, row) !== pin) return out({ ok: false, error: 'wrong_pin' });
+        { var pg = pinCheck(login, sh, row, pin); if (pg) return out(pg); }
         var oToLogin = String((req.payload && req.payload.toLogin) || '').replace(/\D/g, '');
         if (!/^\d{10,15}$/.test(oToLogin)) return out({ ok: false, error: 'bad_to_login' });
         var storeName = String((req.payload && req.payload.storeName) || '').slice(0, 80);
@@ -415,7 +415,7 @@ function doPost(e) {
 
       if (req.action === 'order_list') {
         if (row === -1) return out({ ok: false, error: 'not_found' });
-        if (getPin(sh, row) !== pin) return out({ ok: false, error: 'wrong_pin' });
+        { var pg = pinCheck(login, sh, row, pin); if (pg) return out(pg); }
         var osh2 = getOrderSheet();
         var olast = osh2.getLastRow();
         var orders = [];
@@ -435,7 +435,7 @@ function doPost(e) {
 
       if (req.action === 'order_fetch') {
         if (row === -1) return out({ ok: false, error: 'not_found' });
-        if (getPin(sh, row) !== pin) return out({ ok: false, error: 'wrong_pin' });
+        { var pg = pinCheck(login, sh, row, pin); if (pg) return out(pg); }
         var ofrow = findOrderRowForRecipient(getOrderSheet(), String((req.payload && req.payload.id) || ''), login);
         if (ofrow === -1) return out({ ok: false, error: 'order_not_found' });
         var ovals = getOrderSheet().getRange(ofrow, 8, 1, ORDER_MAXCH).getDisplayValues()[0];
@@ -445,7 +445,7 @@ function doPost(e) {
 
       if (req.action === 'order_remove') {
         if (row === -1) return out({ ok: false, error: 'not_found' });
-        if (getPin(sh, row) !== pin) return out({ ok: false, error: 'wrong_pin' });
+        { var pg = pinCheck(login, sh, row, pin); if (pg) return out(pg); }
         var orrow = findOrderRowForRecipient(getOrderSheet(), String((req.payload && req.payload.id) || ''), login);
         if (orrow === -1) return out({ ok: false, error: 'order_not_found' });
         getOrderSheet().deleteRow(orrow);
@@ -549,6 +549,26 @@ function findOrderRowForRecipient(sh, id, toLogin) {
     if (String(vals[i][0]) === id && String(vals[i][2]).replace(/\D/g, '') === toLogin) return i + 2;
   }
   return -1;
+}
+
+// защита от перебора PIN: 3 неверные попытки подряд для одного логина — блокировка на 30 минут.
+// Счётчики лежат в CacheService (живут сами, не засоряют таблицу). Пока логин заблокирован, даже
+// верный PIN не принимается — иначе блокировка бессмысленна. Верный PIN сбрасывает счётчик.
+var PIN_MAX_FAILS = 3;
+var PIN_LOCK_SEC = 30 * 60;
+function pinCheck(login, sh, row, pin) {
+  var cache = CacheService.getScriptCache();
+  var until = parseInt(cache.get('pinlock_' + login), 10);
+  if (until && until > Date.now()) return { ok: false, error: 'locked', retryAfter: Math.ceil((until - Date.now()) / 1000) };
+  if (getPin(sh, row) === pin) { cache.remove('pinfail_' + login); return null; }
+  var n = (parseInt(cache.get('pinfail_' + login), 10) || 0) + 1;
+  if (n >= PIN_MAX_FAILS) {
+    cache.put('pinlock_' + login, String(Date.now() + PIN_LOCK_SEC * 1000), PIN_LOCK_SEC);
+    cache.remove('pinfail_' + login);
+    return { ok: false, error: 'locked', retryAfter: PIN_LOCK_SEC };
+  }
+  cache.put('pinfail_' + login, String(n), PIN_LOCK_SEC);
+  return { ok: false, error: 'wrong_pin', left: PIN_MAX_FAILS - n };
 }
 
 function getPin(sh, row) {
