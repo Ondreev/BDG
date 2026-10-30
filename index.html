@@ -12813,6 +12813,7 @@ function finishApplyingPayload(payload, creds, at) {
   if (!state.plans.some(p => p.id === state.currentPlanId)) state.currentPlanId = state.plans[0].id;
   save(true); render();
   prefetchProductPhotos();
+  setTimeout(bunnyPhotoWarm, 500);
   setTimeout(migrateLegacyPhotos, 3000);
 }
 // "жёсткая" замена БЕЗ слияния — в отличие от applyRemotePayload (используется для
@@ -14475,22 +14476,49 @@ function photoDisplayUrl(id, size) {
 }
 // вызов сервера фото (Vercel). Осмысленные ответы сервера бросаем как "#код" — как и
 // syncCall, чтобы errToMsg показал понятное сообщение; сетевой сбой — обычная ошибка
-function bunnyPhotoCall(creds, payload, timeoutMs) {
+// Логин+PIN сервер проверяет через Apps Script (~2 с) ОДИН раз и выдаёт короткий токен — дальше
+// все запросы идут по токену, без Apps Script: быстрее и не зависит от его сбоев
+let photoAuth = null; // { login, token, exp }
+function photoAuthGet(login) {
+  if (!photoAuth) { try { photoAuth = JSON.parse(sessionStorage.getItem('bdg-photo-auth') || 'null'); } catch (e) {} }
+  return photoAuth && photoAuth.login === login && photoAuth.exp * 1000 > Date.now() + 120000 ? photoAuth.token : null;
+}
+function photoAuthSet(login, token, exp) {
+  photoAuth = token ? { login, token, exp } : null;
+  try { if (photoAuth) sessionStorage.setItem('bdg-photo-auth', JSON.stringify(photoAuth)); else sessionStorage.removeItem('bdg-photo-auth'); } catch (e) {}
+}
+function bunnyPhotoCall(creds, payload, timeoutMs, retried) {
   const ctrl = new AbortController();
   const kill = setTimeout(() => ctrl.abort(), timeoutMs || 30000);
+  const token = photoAuthGet(creds.login);
+  const auth = token ? { login: creds.login, token } : { login: creds.login, pin: creds.pin };
   return fetch(PHOTO_API + '/api/bdg-photo', {
     method: 'POST',
     signal: ctrl.signal,
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(Object.assign({ login: creds.login, pin: creds.pin }, payload))
+    body: JSON.stringify(Object.assign(auth, payload))
   }).finally(() => clearTimeout(kill)).then(r =>
     r.json().catch(() => ({ ok: false, error: 'server_error' })).then(res => {
+      if (res && res.token) photoAuthSet(creds.login, res.token, res.tokenExp);
       if (!res || !res.ok) {
         const code = (res && res.error) || 'server_error';
-        throw new Error('#' + (code === 'unauthorized' ? 'wrong_pin' : code));
+        // токен устарел/недействителен — один раз повторяем с PIN
+        if (code === 'token_invalid' && token && !retried) { photoAuthSet(creds.login, null); return bunnyPhotoCall(creds, payload, timeoutMs, true); }
+        const e = new Error('#' + (code === 'unauthorized' ? 'wrong_pin' : code));
+        if (res && res.detail) e.detail = res.detail;
+        throw e;
       }
       return res;
     }));
+}
+// прогрев: получить токен заранее, чтобы первая загрузка фото не ждала проверку логина
+let photoWarmed = false;
+function bunnyPhotoWarm() {
+  const s = syncState(); if (photoWarmed || !s.login || !s.pin) return;
+  const creds = { login: s.login, pin: s.pin, url: s.url || DEFAULT_SYNC_URL };
+  if (!bunnyPhotosEnabled(creds) || photoAuthGet(creds.login)) return;
+  photoWarmed = true;
+  bunnyPhotoCall(creds, { action: 'auth' }, 20000).catch(() => { photoWarmed = false; });
 }
 // своё сервер-фото доступно только для облака по умолчанию: у тех, кто подключил
 // собственный Apps Script, нашего логина в таблице нет — для них остаётся Google Диск
@@ -14500,14 +14528,21 @@ function bunnyPhotosEnabled(creds) {
 // заливка: сначала Bunny; если наш сервер недоступен (сеть/5xx) — не теряем снимок,
 // кладём на Диск, как раньше. Неверный PIN, лимит и т.п. отдаём человеку как есть
 function uploadPhotoData(creds, base64, mime) {
-  const viaDrive = () => syncCallRetry(creds, 'photo_upload', { data: base64, mime }, 3, 40000).then(res => res.id);
+  const viaDrive = why => {
+    if (why) { toast('Фото сохранено на Диск (' + why + ')'); try { console.warn('bdg photo → Drive:', why); } catch (e) {} }
+    return syncCallRetry(creds, 'photo_upload', { data: base64, mime }, 3, 40000).then(res => res.id);
+  };
   if (!bunnyPhotosEnabled(creds)) return viaDrive();
-  return bunnyPhotoCall(creds, { action: 'upload', data: base64, mime }, 40000).then(res => res.path).catch(err => {
+  const attempt = n => bunnyPhotoCall(creds, { action: 'upload', data: base64, mime }, 25000).then(res => res.path).catch(err => {
     const m = String(err && err.message || err);
-    const soft = !m.startsWith('#') || m === '#server_error' || m === '#auth_unavailable' || m === '#not_configured';
+    const soft = !m.startsWith('#') || ['#server_error', '#auth_unavailable', '#not_configured', '#bunny_failed'].includes(m);
     if (!soft) throw err;
-    return viaDrive();
+    // одна быстрая повторная попытка через Bunny — Диск медленный, на него уходим в последнюю очередь
+    if (n < 2) return new Promise(r => setTimeout(r, 800)).then(() => attempt(n + 1));
+    const why = (m.startsWith('#') ? m.slice(1) : 'нет связи с сервером') + (err && err.detail ? ' ' + err.detail : '');
+    return viaDrive(why);
   });
+  return attempt(1);
 }
 // тихо прогреваем кэш сервис-воркера для всех фото товаров в фоне — иначе каждая
 // миниатюра грузится по отдельности только тогда, когда реально попадает на экран,
@@ -16818,6 +16853,7 @@ load();
 applyI18n();
 render();
 prefetchProductPhotos();
+setTimeout(bunnyPhotoWarm, 1500);
 setTimeout(migrateLegacyPhotos, 6000);
 enableStripDrag(document.getElementById('listsStrip'));
 if (printReceiverOn()) startPrintReceiver(); // приём переживает перезагрузку страницы на этом устройстве
